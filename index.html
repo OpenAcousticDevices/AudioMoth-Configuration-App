@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+		<link rel="stylesheet" href="ui.css">
+		<title>AudioMoth</title>
+	</head>
+	<body style="background: #FFFFFF; font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif; -webkit-user-select: none; -webkit-app-region: drag;">
+		<div class="container">
+
+			<div class="row" style="margin-top: 10px;">
+				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
+					<div class="row">
+						<div class="col-xs-12" style="text-align: center; padding-top: 8px">
+							<span id="time-display" style="font-size: 44px; font-family: 'Lucida Console', Monaco, monospace">00:00:00 00/00/0000</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
+					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+						<div class="col-xs-6" style="text-align: left;">
+							<span id="id-label" style="margin-left: 8%;">ID:</span>
+						</div>
+						<div class="col-xs-6" style="text-align: right;">
+							<input id= id-display style="margin-right: 20px; border: none; text-align: right;" readonly>
+						</div>
+					</div>
+					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+						<div class="col-xs-6" style="text-align: left;">
+							<span id="battery-label" style="margin-left: 8%;">Battery:</span>
+						</div>
+						<div class="col-xs-6" style="text-align: right;">
+							<span id= battery-display style="margin-right: 20px;">0.0V</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="">
+				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
+					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+						<div class="row" style="text-align: center; margin-bottom: 10px;">
+							<canvas id="label-canvas" width="502px" height="10px"></canvas>
+							<canvas id="time-canvas" width="502px" height="30px" style="border:1px solid #000000;"></canvas>
+						</div>
+						<div class="col-xs-6">
+							<div class="row" style="margin-left: 4px">
+								<div class="col-xs-6" id="start-time-label" style="text-align: left; margin-top: 1%;">Start recording:</div>
+								<div class="col-xs-6"><input id="start-time-input" type="text" style="width: 60%; float: right; text-align: right;" placeholder="00:00"></div>
+							</div>
+							<div class="row" style="margin-top: 2px; margin-left: 4px;">
+								<div class="col-xs-6" id="end-time-label" style="text-align: left; margin-top: 1%;">End recording:</div>
+								<div class="col-xs-6"><input id="end-time-input" type="text" style="width: 60%; float: right; text-align: right;" placeholder="00:00"></div>
+							</div>
+							<div class="row" style="margin-top: 7px; margin-left: 4px;">
+								<div class="col-xs-12">
+									<button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 9pt;">Add recording period</button>
+									<button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 9pt; margin-top: 5px;" disabled>Remove selected period</button>
+									<button id="clear-time-button" class="btn btn-primary" style="width: 100%; font-size: 9pt; margin-top: 5px;" disabled>Clear all periods</button>
+								</div>
+							</div>
+						</div>
+						<div class="col-xs-6" style="text-align: right;">
+							<select id="time-list" size="10" style="width: 90%; margin-right: 20px; text-align: center;"></select>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
+					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+						<div class="col-xs-6" style="text-align: left;">
+							<span style="margin-left: 8%;">Enable LED:</span>
+						</div>
+						<div class="col-xs-6" style="text-align: right;">
+							<input id="led-checkbox" type="checkbox" checked style="margin-right: 8%;">
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="margin-top: 10px;">
+				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
+					<div class="row" style="margin-top: 10px;">
+						<div class="col-xs-8" style="margin-left: 31%;">
+							<div class="row">
+								<div class="col-xs-12">
+									<div class="row" style="text-align: center; font-size: 8pt;">
+										<div class="col-xs-2">8</div>
+										<div class="col-xs-2">16</div>
+										<div class="col-xs-2">32</div>
+										<div class="col-xs-2">48</div>
+										<div class="col-xs-2">96</div>
+										<div class="col-xs-2">192</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row" style="margin-top: 2px;">
+						<div class="col-xs-3" style="text-align: left; margin-left: 3%; width: 150px;">Sample rate (kHz):</div>
+						<div class="col-xs-8" style="margin-left: 0%;">
+							<div class="row">
+								<div class="col-xs-12">
+									<div class="row" style="text-align: right;">
+										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio0" value=0 name="sample-rate-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio1" value=1 name="sample-rate-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio2" value=2 name="sample-rate-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio3" value=3 name="sample-rate-radio" checked></div>
+										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio4" value=4 name="sample-rate-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio5" value=5 name="sample-rate-radio"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row" style="margin-top: 10px;">
+						<div class="col-xs-8" style="margin-left: 31.5%;">
+							<div class="row">
+								<div class="col-xs-12">
+									<div class="row" style="font-size: 8pt;">
+										<div class="col-xs-2"></div>
+										<div class="col-xs-2" style="text-align: center;">Low</div>
+										<div class="col-xs-2"></div>
+										<div class="col-xs-2" style="text-align: center;">Mid</div>
+										<div class="col-xs-2"></div>
+										<div class="col-xs-2" style="text-align: center;">High</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row" style="margin-top: 2px;">
+						<div class="col-xs-3" style="text-align: left; margin-left: 3%; width: 150px;">Gain:</div>
+						<div class="col-xs-8" style="margin-left: 0%;">
+							<div class="row">
+								<div class="col-xs-12">
+									<div class="row" style="text-align: right;">
+										<div class="col-xs-2" style=""></div>
+										<div class="col-xs-2" style=""><input type="radio" id="gain-radio0" value=0 name="gain-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="gain-radio1" value=1 name="gain-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="gain-radio2" value=2 name="gain-radio" checked></div>
+										<div class="col-xs-2" style=""><input type="radio" id="gain-radio3" value=3 name="gain-radio"></div>
+										<div class="col-xs-2" style=""><input type="radio" id="gain-radio4" value=4 name="gain-radio"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+						<div class="col-xs-12">
+							<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+								<div class="col-xs-6" style="text-align: left;">
+									<span id="sleep-duration-label" style="margin-left: 7%;">Sleep duration (s):</span>
+								</div>
+								<div class="col-xs-6" style="text-align: right;">
+									<input id="sleep-duration-input" type="number" style="width: 40%; margin-right: 8%; text-align: right;" value="5">
+								</div>
+							</div>
+							<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+								<div class="col-xs-6" style="text-align: left;">
+									<span id="recording-duration-label" style="margin-left: 7%;">Recording duration (s):</span>
+								</div>
+								<div class="col-xs-6" style="text-align: right;">
+									<input id="recording-duration-input" type="number" style="width: 40%; margin-right: 8%; text-align: right;" value="10">
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+			<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
+					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+						<div class="col-xs-12" style="height: 40px;">
+							<label id="life-display-panel" style="width: 100%; resize:none; text-align: center; font-weight: normal;"></label>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row" style="margin-top: 10px;">
+				<div style="text-align: center; margin-left: 2%; width: 96%;">
+					<button id="configure-button" class="btn btn-success" style="width: 100%;" disabled>Configure AudioMoth</button>
+				</div>
+			</div>
+		</div>
+		<script src="app.js" charset="utf-8"></script>
+	</body>
+</html>

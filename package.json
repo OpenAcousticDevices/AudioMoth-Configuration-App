@@ -1,0 +1,58 @@
+{
+  "name": "AudioMoth",
+  "version": "1.0.0",
+  "description": "The configuration app for the AudioMoth acoustic monitoring device.",
+  "main": "main.js",
+  "scripts": {
+    "postinstall": "install-app-deps",
+    "start": "electron-builder install-app-deps && electron .",
+    "pack": "build --dir",
+    "dist": "build && electron-builder install-app-deps"
+  },
+  "build": {
+  	"asar": {
+    	"smartUnpack": true
+	},
+    "appId": "info.openacousticdevices.audiomoth",
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 430,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "createDesktopShortcut": true
+    },
+    "linux": {
+      "icon": "build/"
+    }
+  },
+  "author": "openacousticdevices.info",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "1.4.13",
+    "electron-builder": "19.13.0"
+  },
+  "dependencies": {
+    "audiomoth-hid": "*",
+    "bootstrap": "3.3.7",
+    "jsonschema": "1.1.1",
+    "strftime": "0.10.0",
+    "electron-debug": "1.1.0"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  }
+}
