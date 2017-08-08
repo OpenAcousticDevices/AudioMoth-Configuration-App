@@ -137,7 +137,7 @@ exports.getSelectedRadioValue = getSelectedRadioValue;
 
 /* Initialise device information displays */
 
-exports.initialiseDisplay = function () {
+function initialiseDisplay() {
 
     idDisplay.value = "0000000000000000";
 
@@ -146,6 +146,8 @@ exports.initialiseDisplay = function () {
     batteryDisplay.textContent = "0.0V";
 
 };
+
+exports.initialiseDisplay = initialiseDisplay;
 
 /* Disable/enable device information display */
 
@@ -162,6 +164,8 @@ exports.disableDisplay = function () {
     batteryDisplay.style.color = "lightgrey";
 
     configureButton.disabled = true;
+
+    initialiseDisplay();
 
 };
 
