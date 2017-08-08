@@ -48,7 +48,7 @@ app.on('ready', function () {
     mainWindow = new BrowserWindow({
         width: 565,
         height: windowHeight,
-        resizable: true,
+        resizable: false,
         fullscreenable: false,
         icon: path.join(__dirname, "/build/icon.ico")
     });
