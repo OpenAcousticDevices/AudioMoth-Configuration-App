@@ -1,6 +1,6 @@
 {
   "name": "AudioMoth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "scripts": {
@@ -26,14 +26,16 @@
           "type": "link",
           "path": "/Applications"
         }
-      ]
+      ],
+      "artifactName": "AudioMothSetup${version}.dmg"
     },
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico"
     },
     "nsis": {
-      "createDesktopShortcut": true
+      "createDesktopShortcut": true,
+      "artifactName": "AudioMothSetup${version}.exe"
     },
     "linux": {
       "icon": "build/"
