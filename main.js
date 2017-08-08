@@ -82,6 +82,11 @@ app.on('ready', function () {
                 shell.openExternal("https://openacousticdevices.info");
             }
         }, {
+            label: "Support forum",
+            click: function () {
+                shell.openExternal("https://www.openacousticdevices.info/support");
+            }
+        }, {
             label: "About",
             click: function () {
                 openAboutWindow();
