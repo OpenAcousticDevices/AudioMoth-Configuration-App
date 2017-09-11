@@ -74,7 +74,7 @@ function formatFileSize(fileSize) {
 
     if (fileSize < 10000) {
 
-        return fileSize + " kB";
+        return fileSize + " KB";
 
     }
 
@@ -132,6 +132,7 @@ function updateLifeDisplay() {
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
     energyUsed = totalRecLength * configuration.current / 3600;
+
     energyUsed += (86400 - totalRecLength) * sleepEnergy / 3600;
 
     text += "Daily energy consumption will be approximately " + Math.round(energyUsed) + " mAh.";
