@@ -29,6 +29,12 @@ var endTimeInput = document.getElementById('end-time-input');
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
 
+var sampling240Label = document.getElementById('sampling-240-label');
+var sampling320Label = document.getElementById('sampling-320-label');
+
+var sampling240RadioButton = document.getElementById('sample-rate-radio6');
+var sampling320RadioButton = document.getElementById('sample-rate-radio7');
+
 var configureButton = document.getElementById('configure-button');
 
 /* Function to rescale */
@@ -85,7 +91,8 @@ function updateCanvas(timePeriods) {
 
     }
 
-    // 6am, midday and 6pm markers.
+    // 6am, midday and 6pm markers\
+
     timeContext.fillStyle = "#000000";
     timeContext.fillRect(0.25 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
     timeContext.fillRect(0.5 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
@@ -145,7 +152,7 @@ function initialiseDisplay() {
 
     batteryDisplay.textContent = "0.0V";
 
-};
+}
 
 exports.initialiseDisplay = initialiseDisplay;
 
@@ -186,6 +193,18 @@ exports.enableDisplayAndShowTime = function (date) {
     batteryDisplay.style.color = "black";
 
     configureButton.disabled = false;
+
+};
+
+/* Enable the high sample rates */
+
+exports.enableHighSamplingRate = function () {
+
+    sampling240Label.style.color = 'black';
+    sampling320Label.style.color = 'black';
+
+    sampling240RadioButton.removeAttribute("disabled");
+    sampling320RadioButton.removeAttribute("disabled");
 
 };
 

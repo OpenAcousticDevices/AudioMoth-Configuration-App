@@ -85,92 +85,75 @@
 
 			<div class="row" style="margin-top: 10px;">
 				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-					<div class="row" style="margin-top: 10px;">
-						<div class="col-xs-8" style="margin-left: 31%;">
-							<div class="row">
-								<div class="col-xs-12">
-									<div class="row" style="text-align: center; font-size: 8pt;">
-										<div class="col-xs-2">8</div>
-										<div class="col-xs-2">16</div>
-										<div class="col-xs-2">32</div>
-										<div class="col-xs-2">48</div>
-										<div class="col-xs-2">96</div>
-										<div class="col-xs-2">192</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="row" style="margin-top: 2px;">
-						<div class="col-xs-3" style="text-align: left; margin-left: 3%; width: 150px;">Sample rate (kHz):</div>
-						<div class="col-xs-8" style="margin-left: 0%;">
-							<div class="row">
-								<div class="col-xs-12">
-									<div class="row" style="text-align: right;">
-										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio0" value=0 name="sample-rate-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio1" value=1 name="sample-rate-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio2" value=2 name="sample-rate-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio3" value=3 name="sample-rate-radio" checked></div>
-										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio4" value=4 name="sample-rate-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="sample-rate-radio5" value=5 name="sample-rate-radio"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="row" style="margin-top: 10px;">
-						<div class="col-xs-8" style="margin-left: 31.5%;">
-							<div class="row">
-								<div class="col-xs-12">
-									<div class="row" style="font-size: 8pt;">
-										<div class="col-xs-2"></div>
-										<div class="col-xs-2" style="text-align: center;">Low</div>
-										<div class="col-xs-2"></div>
-										<div class="col-xs-2" style="text-align: center;">Mid</div>
-										<div class="col-xs-2"></div>
-										<div class="col-xs-2" style="text-align: center;">High</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="row" style="margin-top: 2px;">
-						<div class="col-xs-3" style="text-align: left; margin-left: 3%; width: 150px;">Gain:</div>
-						<div class="col-xs-8" style="margin-left: 0%;">
-							<div class="row">
-								<div class="col-xs-12">
-									<div class="row" style="text-align: right;">
-										<div class="col-xs-2" style=""></div>
-										<div class="col-xs-2" style=""><input type="radio" id="gain-radio0" value=0 name="gain-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="gain-radio1" value=1 name="gain-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="gain-radio2" value=2 name="gain-radio" checked></div>
-										<div class="col-xs-2" style=""><input type="radio" id="gain-radio3" value=3 name="gain-radio"></div>
-										<div class="col-xs-2" style=""><input type="radio" id="gain-radio4" value=4 name="gain-radio"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+					<div class="row" style="margin-top: 10px; margin-left: 0px; margin-bottom: 0px">
 						<div class="col-xs-12">
-							<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+							<div class='container-fuid' style="margin-right: 4px">
+							 	<table class='table'>
+								  	<tr style='font-size: 11px;'>
+								  		<td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'>8</td>
+									    <td align="center" style='padding: 2px'>16</td>
+									    <td align="center" style='padding: 2px'>32</td>
+									    <td align="center" style='padding: 2px'>48</td>
+									    <td align="center" style='padding: 2px'>96</td>
+									    <td align="center" style='padding: 2px'>192</td>
+									    <td id='sampling-240-label' align="center" style='padding: 2px; color: lightgray'>240</td>
+									    <td id='sampling-320-label' align="center" style='padding: 2px; color: lightgray'>320</td>
+								  	</tr>
+									<tr>
+										<td align="left" style='padding-top: 0px'>Sample rate (kHz):</td>
+							    		<td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio0" value=0 name="sample-rate-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio1" value=1 name="sample-rate-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio2" value=2 name="sample-rate-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio3" value=3 name="sample-rate-radio" checked></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio4" value=4 name="sample-rate-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio5" value=5 name="sample-rate-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio6" value=6 name="sample-rate-radio" disabled></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="sample-rate-radio7" value=7 name="sample-rate-radio" disabled></td>
+							  		</tr>
+							  		<tr style='font-size: 11px;'>
+							  			<td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'>Low</td>
+									    <td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'>Med</td>
+									    <td align="center" style='padding: 2px'></td>
+									    <td align="center" style='padding: 2px'>High</td>
+								  	</tr>
+								  	<tr>
+								  		<td align="left" style='padding-top: 0px'>Gain:</td>
+									    <td align="center" style='padding-top: 0px'></td>
+									    <td align="center" style='padding-top: 0px'></td>
+									    <td align="center" style='padding-top: 0px'></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="gain-radio0" value=0 name="gain-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="gain-radio1" value=1 name="gain-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="gain-radio2" value=2 name="gain-radio" checked></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="gain-radio3" value=3 name="gain-radio"></td>
+									    <td align="center" style='padding-top: 0px'><input type="radio" id="gain-radio4" value=4 name="gain-radio"></td>
+								  	</tr>
+							 	</table>
+							 </div>
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-xs-12">
+							<div class="row" style="margin-top: 0px; margin-bottom: 0px;">
 								<div class="col-xs-6" style="text-align: left;">
-									<span id="sleep-duration-label" style="margin-left: 7%;">Sleep duration (s):</span>
+									<span id="sleep-duration-label" style="margin-left: 9%;">Sleep duration (s):</span>
 								</div>
 								<div class="col-xs-6" style="text-align: right;">
-									<input id="sleep-duration-input" type="number" style="width: 40%; margin-right: 8%; text-align: right;" value="5">
+									<input id="sleep-duration-input" type="number" style="width: 40%; margin-right: 7%; text-align: right;" value="5">
 								</div>
 							</div>
 							<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
 								<div class="col-xs-6" style="text-align: left;">
-									<span id="recording-duration-label" style="margin-left: 7%;">Recording duration (s):</span>
+									<span id="recording-duration-label" style="margin-left: 9%;">Recording duration (s):</span>
 								</div>
 								<div class="col-xs-6" style="text-align: right;">
-									<input id="recording-duration-input" type="number" style="width: 40%; margin-right: 8%; text-align: right;" value="10">
+									<input id="recording-duration-input" type="number" style="width: 40%; margin-right: 7%; text-align: right;" value="10">
 								</div>
 							</div>
 						</div>
@@ -179,7 +162,7 @@
 				</div>
 			</div>
 
-			<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+			<div class="row" style="margin-top: 10px; margin-bottom: 2px;">
 				<div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
 					<div class="row" style="margin-top: 10px; margin-bottom: 10px;">
 						<div class="col-xs-12" style="height: 40px;">

@@ -56,17 +56,27 @@ app.on('ready', function () {
     menuTemplate = [{
         label: "File",
         submenu: [{
-            label: "Open configuration",
+            label: "Open Configuration",
             accelerator: "CommandOrControl+O",
             click: function () {
                 mainWindow.webContents.send("load");
             }
         }, {
-            label: "Save configuration",
+            label: "Save Configuration",
             accelerator: "CommandOrControl+S",
             click: function () {
                 mainWindow.webContents.send("save");
             }
+        }, {
+            type: 'separator'
+        }, {
+            label: "Enable High Sampling Rates",
+            accelerator: "CommandOrControl+H",
+            click: function () {
+                mainWindow.webContents.send("enable");
+            }
+        }, {
+            type: 'separator'
         }, {
             label: "Quit",
             accelerator: "CommandOrControl+Q",
@@ -77,19 +87,16 @@ app.on('ready', function () {
     }, {
         label: "Help",
         submenu: [{
-            label: "Open Acoustic Devices website",
-            click: function () {
-                shell.openExternal("https://openacousticdevices.info");
-            }
-        }, {
-            label: "Support forum",
-            click: function () {
-                shell.openExternal("https://www.openacousticdevices.info/support");
-            }
-        }, {
             label: "About",
             click: function () {
                 openAboutWindow();
+            }
+        }, {
+            type: 'separator'
+        }, {
+            label: "Open Acoustic Devices Website",
+            click: function () {
+                shell.openExternal("https://openacousticdevices.info");
             }
         }]
     }];

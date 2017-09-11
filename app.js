@@ -79,7 +79,22 @@ var configurations = [{
     acquisitionCycles: 1,
     oversampleRate: 4,
     current: 18.1
+}, {
+    sampleRate: 240000,
+    clockBand: AM_HFRCO_28MHZ,
+    clockDivider: 2,
+    acquisitionCycles: 1,
+    oversampleRate: 4,
+    current: 20.0
+}, {
+    sampleRate: 320000,
+    clockBand: AM_HFXO,
+    clockDivider: 5,
+    acquisitionCycles: 2,
+    oversampleRate: 2,
+    current: 24.0
 }];
+
 
 function errorOccurred(err) {
 
@@ -241,6 +256,10 @@ function configureDevice() {
     });
 
 }
+
+/* Enable the high sample rates */
+
+electron.ipcRenderer.on('enable', ui.enableHighSamplingRate);
 
 /* Initiliase lifeDisplay configuration data */
 
