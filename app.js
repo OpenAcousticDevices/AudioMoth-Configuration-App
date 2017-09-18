@@ -80,13 +80,6 @@ var configurations = [{
     oversampleRate: 4,
     current: 18.1
 }, {
-    sampleRate: 240000,
-    clockBand: AM_HFRCO_28MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 1,
-    oversampleRate: 4,
-    current: 20.0
-}, {
     sampleRate: 320000,
     clockBand: AM_HFXO,
     clockDivider: 5,
