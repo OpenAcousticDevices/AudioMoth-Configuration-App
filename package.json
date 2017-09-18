@@ -1,6 +1,6 @@
 {
   "name": "AudioMoth",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "scripts": {

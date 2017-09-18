@@ -26,7 +26,7 @@ function openAboutWindow() {
 
     var aboutWindow = new BrowserWindow({
         width: 400,
-        height: 300,
+        height: 325,
         resizable: false,
         fullscreenable: false,
         icon: path.join(__dirname, "/build/icon.ico")

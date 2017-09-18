@@ -93,6 +93,13 @@ var configurations = [{
     acquisitionCycles: 2,
     oversampleRate: 2,
     current: 24.0
+}, {
+    sampleRate: 400000,
+    clockBand: AM_HFXO,
+    clockDivider: 4,
+    acquisitionCycles: 2,
+    oversampleRate: 2,
+    current: 26.0
 }];
 
 

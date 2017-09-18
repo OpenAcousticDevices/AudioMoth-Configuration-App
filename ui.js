@@ -29,11 +29,13 @@ var endTimeInput = document.getElementById('end-time-input');
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
 
-var sampling240Label = document.getElementById('sampling-240-label');
-var sampling320Label = document.getElementById('sampling-320-label');
+var sampleRate240Label = document.getElementById('sample-rate-240-label');
+var sampleRate320Label = document.getElementById('sample-rate-320-label');
+var sampleRate400Label = document.getElementById('sample-rate-400-label');
 
-var sampling240RadioButton = document.getElementById('sample-rate-radio6');
-var sampling320RadioButton = document.getElementById('sample-rate-radio7');
+var sampleRate240RadioButton = document.getElementById('sample-rate-radio6');
+var sampleRate320RadioButton = document.getElementById('sample-rate-radio7');
+var sampleRate400RadioButton = document.getElementById('sample-rate-radio8');
 
 var configureButton = document.getElementById('configure-button');
 
@@ -200,11 +202,13 @@ exports.enableDisplayAndShowTime = function (date) {
 
 exports.enableHighSamplingRate = function () {
 
-    sampling240Label.style.color = 'black';
-    sampling320Label.style.color = 'black';
+    sampleRate240Label.style.color = 'black';
+    sampleRate320Label.style.color = 'black';
+    sampleRate400Label.style.color = 'black';
 
-    sampling240RadioButton.removeAttribute("disabled");
-    sampling320RadioButton.removeAttribute("disabled");
+    sampleRate240RadioButton.removeAttribute("disabled");
+    sampleRate320RadioButton.removeAttribute("disabled");
+    sampleRate400RadioButton.removeAttribute("disabled");
 
 };
 
