@@ -123,9 +123,9 @@ function updateLifeDisplay() {
 
     /* Calculate the size of a days worth of recordings */
 
-    recSize = configuration.sampleRate * 2 * recLength;
+    recSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * recLength;
 
-    totalSize = (recSize * recCount) + (truncatedRecordingTime * configuration.sampleRate * 2);
+    totalSize = (recSize * recCount) + (truncatedRecordingTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
 
     text = "Each day this will produce " + recCount + " files, each of size " + formatFileSize(recSize) + ", totalling " + formatFileSize(totalSize) + ".<br/>";
 

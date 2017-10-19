@@ -33,66 +33,55 @@ var endTimeInput = document.getElementById('end-time-input');
 
 /* Setting parameters */
 
-var AM_HFRCO_21MHZ = 4;
-var AM_HFRCO_28MHZ = 5;
-var AM_HFXO = 6;
-
 var configurations = [{
-    sampleRate: 8000,
-    clockBand: AM_HFRCO_21MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 8,
-    oversampleRate: 64,
-    current: 5.6
-}, {
-    sampleRate: 16000,
-    clockBand: AM_HFRCO_21MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 8,
-    oversampleRate: 32,
-    current: 6.1
-}, {
-    sampleRate: 32000,
-    clockBand: AM_HFRCO_21MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 8,
-    oversampleRate: 16,
-    current: 7.1
-}, {
-    sampleRate: 48000,
-    clockBand: AM_HFRCO_21MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 2,
-    oversampleRate: 16,
-    current: 7.6
-}, {
-    sampleRate: 96000,
-    clockBand: AM_HFRCO_21MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 1,
-    oversampleRate: 8,
-    current: 10.4
-}, {
-    sampleRate: 192000,
-    clockBand: AM_HFRCO_21MHZ,
-    clockDivider: 2,
-    acquisitionCycles: 1,
-    oversampleRate: 4,
-    current: 18.1
-}, {
-    sampleRate: 320000,
-    clockBand: AM_HFXO,
-    clockDivider: 5,
-    acquisitionCycles: 2,
-    oversampleRate: 2,
-    current: 24.0
-}, {
-    sampleRate: 400000,
-    clockBand: AM_HFXO,
     clockDivider: 4,
-    acquisitionCycles: 2,
-    oversampleRate: 2,
-    current: 26.0
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 256000,
+    sampleRateDivider: 32,
+    current: 10.5
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 256000,
+    sampleRateDivider: 16,
+    current: 12.0
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 256000,
+    sampleRateDivider: 8,
+    current: 12.5
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 384000,
+    sampleRateDivider: 8,
+    current: 13.5
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 384000,
+    sampleRateDivider: 4,
+    current: 17.5
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 384000,
+    sampleRateDivider: 2,
+    current: 24.5
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 384000,
+    sampleRateDivider: 1,
+    current: 39.0
 }];
 
 
@@ -172,8 +161,6 @@ function configureDevice() {
 
     configuration = configurations[parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10)];
 
-    packet[index] = configuration.clockBand;
-    index += 1;
     packet[index] = configuration.clockDivider;
     index += 1;
     packet[index] = configuration.acquisitionCycles;
@@ -182,6 +169,8 @@ function configureDevice() {
     index += 1;
     writeLittleEndianBytes(packet, index, 4, configuration.sampleRate);
     index += 4;
+    packet[index] = configuration.sampleRateDivider;
+    index += 1;
 
     writeLittleEndianBytes(packet, index, 2, sleepDurationInput.value);
     index += 2;
