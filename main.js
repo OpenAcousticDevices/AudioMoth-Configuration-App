@@ -70,14 +70,6 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
-            label: "Enable High Sampling Rates",
-            accelerator: "CommandOrControl+H",
-            click: function () {
-                mainWindow.webContents.send("enable");
-            }
-        }, {
-            type: 'separator'
-        }, {
             label: "Quit",
             accelerator: "CommandOrControl+Q",
             click: function () {
