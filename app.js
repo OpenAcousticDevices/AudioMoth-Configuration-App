@@ -257,10 +257,6 @@ function configureDevice() {
 
 }
 
-/* Enable the high sample rates */
-
-electron.ipcRenderer.on('enable', ui.enableHighSamplingRate);
-
 /* Initiliase lifeDisplay configuration data */
 
 lifeDisplay.setConfigurationData(configurations);

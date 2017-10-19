@@ -127,10 +127,6 @@ function useLoadedConfiguration(err, data) {
             sampleRateRadios = document.getElementsByName("sample-rate-radio");
             sampleRateRadios[jsonObj.sampleRateIndex].checked = true;
 
-            if (jsonObj.sampleRateIndex >= 6) {
-                ui.enableHighSamplingRate();
-            }
-
             gainRadios = document.getElementsByName("gain-radio");
             gainRadios[jsonObj.gainIndex].checked = true;
 

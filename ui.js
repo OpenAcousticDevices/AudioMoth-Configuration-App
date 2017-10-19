@@ -29,12 +29,6 @@ var endTimeInput = document.getElementById('end-time-input');
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
 
-var sampleRate320Label = document.getElementById('sample-rate-320-label');
-var sampleRate400Label = document.getElementById('sample-rate-400-label');
-
-var sampleRate320RadioButton = document.getElementById('sample-rate-radio6');
-var sampleRate400RadioButton = document.getElementById('sample-rate-radio7');
-
 var configureButton = document.getElementById('configure-button');
 
 /* Function to rescale */
@@ -193,18 +187,6 @@ exports.enableDisplayAndShowTime = function (date) {
     batteryDisplay.style.color = "black";
 
     configureButton.disabled = false;
-
-};
-
-/* Enable the high sample rates */
-
-exports.enableHighSamplingRate = function () {
-
-    sampleRate320Label.style.color = 'black';
-    sampleRate400Label.style.color = 'black';
-
-    sampleRate320RadioButton.removeAttribute("disabled");
-    sampleRate400RadioButton.removeAttribute("disabled");
 
 };
 
