@@ -41,7 +41,7 @@ app.on('ready', function () {
 
     var menu, mainWindow, menuTemplate, windowHeight = 880;
 
-    if (process.platform === 'darwin') {
+    if (process.platform === 'darwin' || process.platform === 'linux') {
         windowHeight = 828;
     }
 
