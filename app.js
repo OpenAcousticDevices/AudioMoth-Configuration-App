@@ -134,11 +134,15 @@ function getAudioMothPacket() {
 /* Write bytes into a buffer for transmission */
 
 function writeLittleEndianBytes(buffer, start, byteCount, value) {
+
     var i;
 
     for (i = 0; i < byteCount; i += 1) {
+
         buffer[start + i] = (value >> (i * 8)) & 255;
+
     }
+
 }
 
 /* Submit configuration packet and configure device */
@@ -220,16 +224,22 @@ function configureDevice() {
             matches = true;
 
             for (j = 0; j < Math.min(packet.length, data.length - 1); j += 1) {
+
                 if (packet[j] !== data[j + 1]) {
+
                     console.log(packet[j] + ' - ' + data[j + 1]);
                     matches = false;
+
                     break;
+
                 }
+
             }
 
             if (matches) {
 
                 configureButton.style.color = "green";
+
                 setTimeout(function () {
                     configureButton.style.color = "";
                 }, 1000);
