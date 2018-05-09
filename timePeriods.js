@@ -68,7 +68,7 @@ function updateTimeList() {
 
     /* Disable or enable action buttons in response to number time periods entered */
 
-    addTimeButton.disabled = (timePeriods.length === MAX_PERIODS);
+    addTimeButton.disabled = (timePeriods.length >= MAX_PERIODS);
     clearTimeButton.disabled = (timePeriods.length === 0);
 
 }
@@ -90,13 +90,18 @@ function updateUI() {
 function removeTime(value) {
 
     var i;
+
     for (i = 0; i < timePeriods.length; i += 1) {
+
         if (timePeriods[i].startMins === value) {
+
             timePeriods.splice(i, 1);
             updateUI();
             removeTimeButton.disabled = true;
             return;
+
         }
+
     }
 
 }
@@ -187,7 +192,12 @@ function addTimeOnClick() {
             /* Split time period into two periods either side of midnight */
 
             added = addTime(startTimestamp, 1440);
-            added = addTime(0, endTimestamp - 1440) && added;
+
+            if (timePeriods.length < MAX_PERIODS) {
+
+                added = addTime(0, endTimestamp - 1440) && added;
+
+            }
 
         } else {
 
