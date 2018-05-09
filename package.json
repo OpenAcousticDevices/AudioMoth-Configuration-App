@@ -10,9 +10,9 @@
     "dist": "build && electron-builder install-app-deps"
   },
   "build": {
-  	"asar": {
-    	"smartUnpack": true
-	},
+    "asar": {
+      "smartUnpack": true
+    },
     "appId": "info.openacousticdevices.audiomoth",
     "dmg": {
       "contents": [
