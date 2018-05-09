@@ -44,7 +44,7 @@
   "author": "openacousticdevices.info",
   "license": "ISC",
   "devDependencies": {
-    "electron": "1.4.13",
+    "electron": "^2.0.0",
     "electron-builder": "19.13.0"
   },
   "dependencies": {
