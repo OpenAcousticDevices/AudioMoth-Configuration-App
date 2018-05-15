@@ -39,7 +39,8 @@
       "artifactName": "AudioMothSetup${version}.exe"
     },
     "linux": {
-      "icon": "build/"
+      "icon": "build/",
+      "category": "Utility"
     }
   },
   "author": "openacousticdevices.info",
