@@ -46,8 +46,8 @@
   "author": "openacousticdevices.info",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^2.0.0",
-    "electron-builder": "19.13.0"
+    "electron": "2.0.0",
+    "electron-builder": "20.13.0"
   },
   "dependencies": {
     "audiomoth-hid": "*",
