@@ -8,3 +8,7 @@ input[type=number]::-webkit-outer-spin-button {
 .table>tbody>tr>th {
   border-top: none;
 }
+
+body {
+  background: #FFFFFF;
+}

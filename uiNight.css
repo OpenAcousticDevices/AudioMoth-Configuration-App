@@ -1,0 +1,31 @@
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+.table>tbody>tr>td,
+.table>tbody>tr>th {
+  border-top: none;
+}
+
+body {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+input {
+  color: #000000;
+}
+
+select {
+  color: #000000;
+}
+
+.info-display-input {
+  background-color: #000000;
+}
+
+#time-canvas {
+  border: #FFFFFF;
+}

@@ -13,6 +13,9 @@ var lifeDisplay = require('./lifeDisplay.js');
 
 var strftime = require('strftime').utc();
 
+var electron = require('electron');
+var menu = electron.remote.Menu;
+
 /* UI components */
 
 var idDisplay = document.getElementById('id-display');
@@ -30,6 +33,8 @@ var recordingDurationInput = document.getElementById('recording-duration-input')
 var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 var configureButton = document.getElementById('configure-button');
+
+var nightMode = false;
 
 /* Function to rescale */
 
@@ -120,6 +125,16 @@ exports.drawTimeLabels = function () {
 
     labelContext.font = Math.floor(0.25 * timeCanvas.height) + "pt Helvetica";
 
+    if (nightMode) {
+
+        labelContext.fillStyle = "#FFFFFF";
+
+    } else {
+
+        labelContext.fillStyle = "#000000";
+
+    }
+
     labelContext.fillText("00:00", 0, 0.3 * timeCanvas.height);
     labelContext.fillText("06:00", 0.225 * timeCanvas.width, 0.3 * timeCanvas.height);
     labelContext.fillText("12:00", 0.475 * timeCanvas.width, 0.3 * timeCanvas.height);
@@ -176,15 +191,26 @@ exports.enableDisplayAndShowTime = function (date) {
 
     timeDisplay.textContent = strftimeUTC("%H:%M:%S %d/%m/%Y", date);
 
-    timeDisplay.style.color = "black";
+    if (nightMode) {
 
-    idLabel.style.color = "black";
+        textColor = "white";
 
-    idDisplay.style.color = "black";
+    } else {
 
-    batteryLabel.style.color = "black";
+        textColor = "black";
 
-    batteryDisplay.style.color = "black";
+    }
+
+    timeDisplay.style.color = textColor;
+
+
+    idLabel.style.color = textColor;
+
+    idDisplay.style.color = textColor;
+
+    batteryLabel.style.color = textColor;
+
+    batteryDisplay.style.color = textColor;
 
     configureButton.disabled = false;
 
@@ -425,4 +451,35 @@ sleepDurationInput.addEventListener('change', function () {
 
 recordingDurationInput.addEventListener('change', function () {
     checkInputs(lifeDisplay.updateLifeDisplay);
-});
+});function toggleNightMode() {
+
+    var oldLink, newLink;
+
+    nightMode = !nightMode;
+
+    oldLink = document.getElementById("uiCSS");
+
+    newLink = document.createElement("link");
+
+    newLink.setAttribute("id", "uiCSS");
+    newLink.setAttribute("rel", "stylesheet");
+    newLink.setAttribute("type", "text/css");
+
+    if (nightMode) {
+
+        newLink.setAttribute("href", "uiNight.css");
+
+    } else {
+
+        newLink.setAttribute("href", "ui.css");
+
+    }
+
+    document.getElementsByTagName("head").item(0).replaceChild(newLink, oldLink);
+
+    updateCanvas(timeHandler.getTimePeriods());
+    drawTimeLabels();
+
+}
+
+electron.ipcRenderer.on('nightmode', toggleNightMode);
