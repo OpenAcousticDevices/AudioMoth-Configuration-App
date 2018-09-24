@@ -96,7 +96,7 @@ function formatFileSize(fileSize) {
 
 function updateLifeDisplay() {
 
-    var text, configuration, recLength, sleepLength, countResponse, recCount, recSize, totalSize, energyUsed, totalRecLength, truncatedRecordingTime;
+    var text, configuration, recLength, sleepLength, countResponse, recCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecordingTime;
 
     /* If no recording periods exist, do not perform energy calculations */
 
@@ -124,10 +124,35 @@ function updateLifeDisplay() {
     /* Calculate the size of a days worth of recordings */
 
     recSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * recLength;
+    truncatedRecordingSize = (truncatedRecordingTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
 
-    totalSize = (recSize * recCount) + (truncatedRecordingTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
+    totalSize = (recSize * recCount) + truncatedRecordingSize;
 
-    text = "Each day this will produce " + recCount + " files, each of size " + formatFileSize(recSize) + ", totalling " + formatFileSize(totalSize) + ".<br/>";
+    text = "Each day this will produce ";
+
+    if (truncatedRecordingTime > 0 && recCount === 0) {
+
+        text += "1 file, " + formatFileSize(truncatedRecordingSize) + " in size.<br/>";
+
+    } else {
+
+        if (truncatedRecordingTime > 0) {
+
+            recCount += 1;
+
+        }
+
+        text = "Each day this will produce " + recCount + " file";
+
+        if (recCount > 1) {
+
+            text += "s";
+
+        }
+
+        text += ", up to " + formatFileSize(recSize) + " in size, totalling " + formatFileSize(totalSize) + ".<br/>";
+
+    }
 
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
