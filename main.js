@@ -70,6 +70,26 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
+            type: "checkbox",
+            id: "localTime",
+            label: "Use local time (Toggling clears schedule)",
+            accelerator: "CommandOrControl+T",
+            checked: false,
+            click: function () {
+                mainWindow.webContents.send("localTime");
+            }
+        }, {
+            type: 'separator'
+        }, {
+            type: "checkbox",
+            id: "localTime",
+            label: "Night mode",
+            accelerator: "CommandOrControl+N",
+            checked: false,
+            click: function () {
+                mainWindow.webContents.send("nightmode");
+            }
+        }, {
             label: "Quit",
             accelerator: "CommandOrControl+Q",
             click: function () {
