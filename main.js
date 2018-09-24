@@ -39,10 +39,14 @@ function openAboutWindow() {
 
 app.on('ready', function () {
 
-    var menu, mainWindow, menuTemplate, windowHeight = 880;
+    var menu, mainWindow, menuTemplate, windowHeight;
 
-    if (process.platform === 'darwin' || process.platform === 'linux') {
-        windowHeight = 828;
+    if (process.platform === 'darwin') {
+        windowHeight = 724;
+    } else if (process.platform === 'linux') {
+        windowHeight = 726;
+    } else {
+        windowHeight = 748;
     }
 
     mainWindow = new BrowserWindow({

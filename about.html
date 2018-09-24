@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
-		<title>About AudioMoth</title>
-	</head>
-	<body style="text-align: center; -webkit-user-select: none; -webkit-app-region: drag;">
-		<div class="container">
-			<div class="row" style="margin-top: 5%; margin-bottom: 5%"><img src="1024x1024.png" width="128px"></div>
-			<div class="row" style="font-weight: bold;">AudioMoth configuration app</div>
-			<div class="row" id="version-display">Version 1.0</div>
-			<div class="row" id="electron-version-display">Running on Electron version 1.0</div>
-			<div class="row" id="audiomoth-hid-version-display">AudioMoth-HID module 1.0.0</div>
-			<div class="row"><a id="website-link">www.openacousticdevices.info</a></div>
-		</div>
-	</body>
-	<script src="about.js" charset="utf-8"></script>
+
+    <head>
+        <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <title>About AudioMoth</title>
+    </head>
+
+    <body style="text-align: center; -webkit-user-select: none; -webkit-app-region: drag;">
+        <div class="container" style="text-align: center;">
+            <div class="row" style="margin-top: 5%; margin-bottom: 5%;">
+                <div class="col-lg-12">
+                    <img src="icon-256.png" width="128px" height="128px">
+                </div>
+            </div>
+            <div class="row" style="font-weight: bold; ">
+                <div class="col-lg-12">AudioMoth configuration app</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12" id="version-display">Version 1.0</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12" id="electron-version-display">Running on Electron version 1.0</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12" id="audiomoth-hid-version-display">AudioMoth-HID module 1.0.0</div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <a href id="website-link">www.openacousticdevices.info</a>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script src="about.js" charset="utf-8"></script>
+
 </html>
