@@ -79,6 +79,13 @@ var configurations = [{
     clockDivider: 4,
     acquisitionCycles: 16,
     oversampleRate: 1,
+    sampleRate: 256000,
+    sampleRateDivider: 1,
+    current: 30.0
+}, {
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 1,
     current: 39.0
@@ -97,7 +104,7 @@ function errorOccurred(err) {
 
 function getAudioMothPacket() {
 
-    var id, date, batteryState;
+    var id, date, batteryState, firmwareVersionArr, firmwareVersion;
 
     audiomoth.getPacket(function (err, packet) {
 
@@ -117,9 +124,23 @@ function getAudioMothPacket() {
 
             batteryState = audiomoth.convertOneByteFromBufferToBatteryState(packet, 1 + 4 + 8);
 
+            firmwareVersionArr = audiomoth.convertThreeBytesFromBufferToFirmwareVersion(packet, 1 + 4 + 8 + 1);
+
+            if (firmwareVersionArr[0] === 0) {
+
+                firmwareVersion = "≤ 1.2.0";
+
+            } else {
+
+                firmwareVersion = firmwareVersionArr[0] + "." + firmwareVersionArr[1] + "." + firmwareVersionArr[2];
+
+            }
+
             ui.enableDisplayAndShowTime(date);
 
             ui.updateIdDisplay(id);
+
+            ui.updateFirmwareDisplay(firmwareVersion);
 
             ui.updateBatteryDisplay(batteryState);
 
@@ -149,7 +170,7 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 function configureDevice() {
 
-    var packet, index, date, configuration, i, timePeriods;
+    var packet, index, date, configuration, i, timePeriods, timezoneTimePeriods, startMins, endMins;
 
     /* Build configuration packet */
 
@@ -193,14 +214,69 @@ function configureDevice() {
     index += 1;
 
     timePeriods = timeHandler.getTimePeriods();
-    packet[index] = timePeriods.length;
+    timezoneTimePeriods = timePeriods;
+
+    if (ui.isLocalTime()) {
+
+        timezoneTimePeriods = [];
+
+        for (i = 0; i < timePeriods.length; i += 1) {
+
+            startMins = timePeriods[i].startMins;
+            endMins = timePeriods[i].endMins;
+
+            [startMins, endMins] = timeHandler.checkTimezoneOffset(startMins, endMins);
+
+            if (endMins < startMins) {
+
+                endMins += 1440;
+
+                if (endMins > 1440) {
+
+                    /* Split time period into two periods either side of midnight */
+
+                    timezoneTimePeriods.push({
+                        startMins: startMins,
+                        endMins: 1440
+                    });
+
+                    timezoneTimePeriods.push({
+                        startMins: 0,
+                        endMins: endMins - 1440
+                    });
+
+                } else {
+
+                    timezoneTimePeriods.push({
+                        startMins: startMins,
+                        endMins: endMins
+                    });
+
+                }
+
+            } else {
+
+                timezoneTimePeriods.push({
+                    startMins: startMins,
+                    endMins: endMins
+                });
+
+            }
+
+        }
+
+    }
+
+    /* Apply timezone changes to time period list */
+
+    packet[index] = timezoneTimePeriods.length;
     index += 1;
 
-    for (i = 0; i < timePeriods.length; i += 1) {
+    for (i = 0; i < timezoneTimePeriods.length; i += 1) {
 
-        writeLittleEndianBytes(packet, index, 2, timePeriods[i].startMins);
+        writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].startMins);
         index += 2;
-        writeLittleEndianBytes(packet, index, 2, timePeriods[i].endMins);
+        writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].endMins);
         index += 2;
 
     }

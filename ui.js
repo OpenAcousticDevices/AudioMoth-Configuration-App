@@ -25,6 +25,9 @@ var timezoneLabel = document.getElementById('timezone-label');
 var idDisplay = document.getElementById('id-display');
 var idLabel = document.getElementById('id-label');
 
+var firmwareDisplay = document.getElementById('firmware-display');
+var firmwareLabel = document.getElementById('firmware-label');
+
 var timeDisplay = document.getElementById('time-display');
 
 var batteryDisplay = document.getElementById('battery-display');
@@ -212,6 +215,8 @@ function initialiseDisplay() {
 
     batteryDisplay.textContent = "0.0V";
 
+    firmwareDisplay.value = "0.0.0";
+
 }
 
 exports.initialiseDisplay = initialiseDisplay;
@@ -227,6 +232,10 @@ exports.disableDisplay = function () {
     idLabel.style.color = "lightgrey";
 
     idDisplay.style.color = "lightgrey";
+
+    firmwareLabel.style.color = "lightgrey";
+
+    firmwareDisplay.style.color = "lightgrey";
 
     batteryLabel.style.color = "lightgrey";
 
@@ -274,6 +283,10 @@ exports.enableDisplayAndShowTime = function (date) {
 
     idDisplay.style.color = textColor;
 
+    firmwareLabel.style.color = textColor;
+
+    firmwareDisplay.style.color = textColor;
+
     batteryLabel.style.color = textColor;
 
     batteryDisplay.style.color = textColor;
@@ -289,6 +302,16 @@ exports.updateIdDisplay = function (id) {
     if (id !== idDisplay.value) {
 
         idDisplay.value = id;
+
+    }
+
+};
+
+exports.updateFirmwareDisplay = function (version) {
+
+    if (version !== firmwareDisplay.value) {
+
+        firmwareDisplay.value = version;
 
     }
 
@@ -347,13 +370,23 @@ function inputIsCorrect(input, min, max) {
 
 function checkInputs(callback) {
 
-    var complete = true;
+    var sleepDurationCorrect, recordingDurationCorrect;
 
-    complete = inputIsCorrect(sleepDurationInput, 0, 43200);
-    complete = inputIsCorrect(recordingDurationInput, 1, 43200) && complete;
+    sleepDurationCorrect = inputIsCorrect(sleepDurationInput, minSleepDuration, maxSleepDuration);
+    recordingDurationCorrect = inputIsCorrect(recordingDurationInput, minRecordingDuration, maxRecordingDuration);
 
-    if (complete) {
+    if (sleepDurationCorrect && recordingDurationCorrect) {
+
         callback();
+
+    } else if (!sleepDurationCorrect) {
+
+        dialog.showMessageBox({type: "warning", title: "Sleep length out of range.", message: "Please enter a sleep length in the range (" + minSleepDuration + " - " + maxSleepDuration + ")."});
+
+    } else if (!recordingDurationCorrect) {
+
+        dialog.showMessageBox({type: "warning", title: "Recording length out of range.", message: "Please enter a recording length in the range (" + minRecordingDuration + " - " + maxRecordingDuration + ")."});
+
     }
 
 }
