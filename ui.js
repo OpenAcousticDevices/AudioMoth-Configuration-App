@@ -18,6 +18,10 @@ var menu = electron.remote.Menu;
 
 /* UI components */
 
+var applicationMenu = menu.getApplicationMenu();
+
+var timezoneLabel = document.getElementById('timezone-label');
+
 var idDisplay = document.getElementById('id-display');
 var idLabel = document.getElementById('id-label');
 
@@ -31,6 +35,11 @@ var endTimeInput = document.getElementById('end-time-input');
 
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
+
+var minRecordingDuration = 1;
+var maxRecordingDuration = 43200;
+var minSleepDuration = 0;
+var maxSleepDuration = 43200;
 
 var configureButton = document.getElementById('configure-button');
 
@@ -72,18 +81,39 @@ var labelContext = labelCanvas.getContext("2d");
 
 rescale(labelCanvas);
 
+function isLocalTime() {
+
+    return applicationMenu.getMenuItemById("localTime").checked;
+
+}
+
+exports.isLocalTime = isLocalTime;
+
+function setLocalTime(localTime) {
+
+    applicationMenu.getMenuItemById("localTime").checked = localTime;
+
+}
+
+exports.setLocalTime = setLocalTime;
+
 /* Update time period canvas */
 
 function updateCanvas(timePeriods) {
 
-    var i, recX, recLen, currentDate, currentMins, currentX;
+    var i, startMins, endMins, recX, recLen, currentDate, currentMins, currentX;
+
+    currentDate = new Date();
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);
 
     for (i = 0; i < timePeriods.length; i += 1) {
 
-        recX = timePeriods[i].startMins * timeCanvas.width / 1440; // width / 1440 minutes
-        recLen = (timePeriods[i].endMins - timePeriods[i].startMins) * timeCanvas.width / 1440;
+        startMins = timePeriods[i].startMins;
+        endMins = timePeriods[i].endMins;
+
+        recX = startMins * timeCanvas.width / 1440; // width / 1440 minutes
+        recLen = (endMins - startMins) * timeCanvas.width / 1440;
 
         timeContext.fillStyle = "#FF0000";
         timeContext.fillRect(recX, 0, recLen, timeCanvas.height);
@@ -92,13 +122,30 @@ function updateCanvas(timePeriods) {
 
     // 6am, midday and 6pm markers\
 
-    timeContext.fillStyle = "#000000";
+    if (nightMode) {
+
+        timeContext.fillStyle = "#FFFFFF";
+
+    } else {
+
+        timeContext.fillStyle = "#000000";
+
+    }
+
     timeContext.fillRect(0.25 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
     timeContext.fillRect(0.5 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
     timeContext.fillRect(0.75 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
 
-    currentDate = new Date();
-    currentMins = (currentDate.getUTCHours() * 60) + currentDate.getUTCMinutes();
+    if (isLocalTime()) {
+
+        currentMins = (currentDate.getHours() * 60) + currentDate.getMinutes();
+
+    } else {
+
+        currentMins = (currentDate.getUTCHours() * 60) + currentDate.getUTCMinutes();
+
+    }
+
     currentX = currentMins * timeCanvas.width / 1440;
 
     timeContext.fillStyle = "#00AF00";
@@ -121,7 +168,9 @@ exports.updateCanvasTimer = updateCanvasTimer;
 
 /* Draw labels below time period canvas */
 
-exports.drawTimeLabels = function () {
+function drawTimeLabels() {
+
+    labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
 
     labelContext.font = Math.floor(0.25 * timeCanvas.height) + "pt Helvetica";
 
@@ -141,7 +190,9 @@ exports.drawTimeLabels = function () {
     labelContext.fillText("18:00", 0.725 * timeCanvas.width, 0.3 * timeCanvas.height);
     labelContext.fillText("24:00", 0.945 * timeCanvas.width, 0.3 * timeCanvas.height);
 
-};
+}
+
+exports.drawTimeLabels = drawTimeLabels;
 
 /* Retrieve the radio button selected from a group of named buttons */
 
@@ -171,6 +222,8 @@ exports.disableDisplay = function () {
 
     timeDisplay.style.color = "lightgrey";
 
+    timezoneLabel.style.color = "lightgrey";
+
     idLabel.style.color = "lightgrey";
 
     idDisplay.style.color = "lightgrey";
@@ -187,7 +240,19 @@ exports.disableDisplay = function () {
 
 exports.enableDisplayAndShowTime = function (date) {
 
-    var strftimeUTC = strftime.timezone(0);
+    var currentDate, timezoneOffset, strftimeUTC, textColor;
+
+    timezoneOffset = 0;
+
+    if (isLocalTime()) {
+
+        currentDate = new Date();
+
+        timezoneOffset = currentDate.getTimezoneOffset();
+
+    }
+
+    strftimeUTC = strftime.timezone(-1 * timezoneOffset);
 
     timeDisplay.textContent = strftimeUTC("%H:%M:%S %d/%m/%Y", date);
 
@@ -203,6 +268,7 @@ exports.enableDisplayAndShowTime = function (date) {
 
     timeDisplay.style.color = textColor;
 
+    timezoneLabel.style.color = textColor;
 
     idLabel.style.color = textColor;
 
@@ -451,7 +517,45 @@ sleepDurationInput.addEventListener('change', function () {
 
 recordingDurationInput.addEventListener('change', function () {
     checkInputs(lifeDisplay.updateLifeDisplay);
-});function toggleNightMode() {
+});
+
+/* If the local time checkbox changes, update the canvas */
+
+function updateTimezoneLabel() {
+
+    var timezoneText, currentDate, timezoneOffset;
+
+    timezoneText = "UTC";
+
+    if (isLocalTime()) {
+
+        currentDate = new Date();
+
+        /* Offset is given as UTC - local time in minutes */
+
+        timezoneOffset = -1 * currentDate.getTimezoneOffset();
+
+        if (timezoneOffset >= 0) {
+            timezoneText += "+";
+        }
+
+        timezoneText += (timezoneOffset / 60);
+
+    }
+
+    timezoneLabel.innerText = timezoneText;
+
+    timeHandler.clearTimes();
+    updateCanvas(timeHandler.getTimePeriods());
+
+}
+
+exports.updateTimezoneLabel = updateTimezoneLabel;
+
+electron.ipcRenderer.on('localTime', updateTimezoneLabel);
+
+
+function toggleNightMode() {
 
     var oldLink, newLink;
 

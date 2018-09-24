@@ -11,9 +11,12 @@
 var ui = require('./ui.js');
 var lifeDisplay = require('./lifeDisplay.js');
 
+var electron = require('electron');
+var menu = electron.remote.Menu;
+
 var timePeriods = [];
 
-var MAX_PERIODS = 5;
+var MAX_PERIODS = 4;
 
 /* UI components */
 
@@ -43,11 +46,52 @@ function minsToTimeString(mins) {
 
 }
 
+/* Check if the given times need to be altered to match the app's current timezone setting */
+
+function checkTimezoneOffset(startMins, endMins) {
+
+    var currentDate, timezoneOffset;
+
+    currentDate = new Date();
+
+    if (ui.isLocalTime()) {
+
+        /* Offset is given as UTC - local time in minutes */
+
+        timezoneOffset = -1 * currentDate.getTimezoneOffset();
+
+        startMins = (startMins + timezoneOffset) % 1440;
+        endMins = (endMins + timezoneOffset) % 1440;
+
+        /* If timezone offset move time over midnight */
+
+        if (startMins < 0) {
+
+            startMins += 1440;
+
+        }
+
+        if (endMins < 0) {
+
+            endMins += 1440;
+
+        }
+
+    }
+
+    return [startMins, endMins];
+
+}
+
+exports.checkTimezoneOffset = checkTimezoneOffset;
+
 /* Fill UI list with time periods from data structure */
 
 function updateTimeList() {
 
-    var i, option;
+    var currentDate, i, startMins, endMins, timezoneText, timezoneOffset, option;
+
+    currentDate = new Date();
 
     timeList.options.length = 0;
 
@@ -59,9 +103,25 @@ function updateTimeList() {
 
     for (i = 0; i < timePeriods.length; i += 1) {
 
+        startMins = timePeriods[i].startMins;
+        endMins = timePeriods[i].endMins;
+
+        timezoneText = "(UTC";
+        if (ui.isLocalTime()) {
+
+            timezoneOffset = -1 * currentDate.getTimezoneOffset();
+
+            if (timezoneOffset >= 0) {
+                timezoneText += "+";
+            }
+
+            timezoneText += (timezoneOffset / 60);
+        }
+        timezoneText += ")";
+
         option = document.createElement("option");
-        option.text = minsToTimeString(timePeriods[i].startMins) + " - " + minsToTimeString(timePeriods[i].endMins);
-        option.value = timePeriods[i].startMins;
+        option.text = minsToTimeString(startMins) + " - " + minsToTimeString(endMins) + " " + timezoneText;
+        option.value = startMins;
         timeList.add(option);
 
     }
@@ -114,6 +174,8 @@ function clearTimes() {
     updateUI();
 
 }
+
+exports.clearTimes = clearTimes;
 
 /* Check to see if two periods of time overlap */
 
