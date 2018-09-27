@@ -4,13 +4,13 @@
     <head>
         <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link id="uiCSS" rel="stylesheet" href="ui.css">
-        <title>AudioMoth</title>
+        <title>AudioMoth Configuration App</title>
     </head>
 
-    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
+    <body style="font-size: 10.5pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
         <div class="container">
             <div class="row">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%; margin-top: 5px;">
+                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%; margin-top: 8px;">
                     <div class="row">
                         <div class="col-12" style="text-align: center; padding-top: 8px">
                             <span style="font-size: 30px; font-family: &apos;Lucida Console&apos;, Monaco, monospace">
@@ -73,14 +73,14 @@
                             </div>
                             <div class="row" style="margin-top: 7px; margin-left: 4px;">
                                 <div class="col-12">
-                                    <button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 9pt;">Add recording period</button>
-                                    <button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 9pt; margin-top: 5px;" disabled>Remove selected period</button>
+                                    <button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt;">Add recording period</button>
+                                    <button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt; margin-top: 5px;" disabled>Remove selected period</button>
                                 </div>
                             </div>
                         </div>
                         <div class="col-6" style="text-align: right;">
                             <select id="time-list" size="5" style="width: 90%; margin-right: 20px; text-align: center;"></select>
-                            <button id="clear-time-button" class="btn btn-primary" style="width: 90%; font-size: 9pt; margin-top: 10px; margin-right: 20px;" disabled>Clear all periods</button>
+                            <button id="clear-time-button" class="btn btn-primary" style="width: 90%; font-size: 11pt; margin-top: 10px; margin-right: 20px;" disabled>Clear all periods</button>
                         </div>
                     </div>
                 </div>
@@ -91,46 +91,46 @@
                         <div class="col-12">
                             <div style="margin-left: 2%; margin-right: 4px">
                                 <table class="table">
-                                    <tr style="font-size: 11px;">
-                                        <td align="center" style="padding: 2px"></td>
-                                        <td align="center" style="padding: 2px">8</td>
-                                        <td align="center" style="padding: 2px">16</td>
-                                        <td align="center" style="padding: 2px">32</td>
-                                        <td align="center" style="padding: 2px">48</td>
-                                        <td align="center" style="padding: 2px">96</td>
-                                        <td align="center" style="padding: 2px">192</td>
-                                        <td align="center" style="padding: 2px">256</td>
-                                        <td align="center" style="padding: 2px">384</td>
+                                    <tr style="font-size: 12px;">
+                                        <td align="center" style="padding: 2px; padding-left: 0px;"></td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">8</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">16</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">32</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">48</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">96</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">192</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">256</td>
+                                        <td align="center" style="padding: 2px; padding-left: 0px;">384</td>
                                     </tr>
                                     <tr>
-                                        <td align="left" style="padding-top: 0px;">Sample rate (kHz):</td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Sample rate (kHz):</td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio0" value="0" name="sample-rate-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio1" value="1" name="sample-rate-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio2" value="2" name="sample-rate-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio3" value="3" name="sample-rate-radio"
                                             checked>
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio4" value="4" name="sample-rate-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio5" value="5" name="sample-rate-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio6" value="6" name="sample-rate-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="sample-rate-radio6" value="7" name="sample-rate-radio">
                                         </td>
                                     </tr>
-                                    <tr style="font-size: 11px;">
+                                    <tr style="font-size: 12px;">
                                         <td align="center" style="padding: 2px"></td>
                                         <td align="center" style="padding: 2px"></td>
                                         <td align="center" style="padding: 2px"></td>
@@ -142,23 +142,23 @@
                                         <td align="center" style="padding: 2px">High</td>
                                     </tr>
                                     <tr>
-                                        <td align="left" style="padding-top: 0px;">Gain:</td>
-                                        <td align="center" style="padding-top: 0px"></td>
-                                        <td align="center" style="padding-top: 0px"></td>
-                                        <td align="center" style="padding-top: 0px"></td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Gain:</td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="gain-radio0" value="0" name="gain-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="gain-radio1" value="1" name="gain-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="gain-radio2" value="2" name="gain-radio" checked>
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="gain-radio3" value="3" name="gain-radio">
                                         </td>
-                                        <td align="center" style="padding-top: 0px">
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                             <input type="radio" id="gain-radio4" value="4" name="gain-radio">
                                         </td>
                                     </tr>
@@ -198,7 +198,7 @@
             </div>
             <div class="row" style="margin-top: 5px;">
                 <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+                    <div class="row" style="margin-top: 5px; margin-bottom: 5px;">
                         <div class="col-12" style="height: 40px;">
                             <label id="life-display-panel" style="width: 100%; resize:none; text-align: center; font-weight: normal;"></label>
                         </div>
