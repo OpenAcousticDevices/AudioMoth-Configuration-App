@@ -170,7 +170,7 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 function configureDevice() {
 
-    var packet, index, date, configuration, i, timePeriods, timezoneTimePeriods, startMins, endMins;
+    var packet, index, date, configuration, i, utcTimePeriod, timePeriods, timezoneTimePeriods, startMins, endMins, currentDate, timezoneOffset;
 
     /* Build configuration packet */
 
@@ -222,10 +222,9 @@ function configureDevice() {
 
         for (i = 0; i < timePeriods.length; i += 1) {
 
-            startMins = timePeriods[i].startMins;
-            endMins = timePeriods[i].endMins;
-
-            [startMins, endMins] = timeHandler.checkTimezoneOffset(startMins, endMins);
+            utcTimePeriod = timeHandler.convertTimePeriodToUTC(timePeriods[i]);
+            startMins = utcTimePeriod.startMins;
+            endMins = utcTimePeriod.endMins;
 
             if (endMins < startMins) {
 
@@ -280,6 +279,29 @@ function configureDevice() {
         index += 2;
 
     }
+
+    for (i = 0; i < (timeHandler.MAX_PERIODS + 1) - timezoneTimePeriods.length; i += 1) {
+
+        writeLittleEndianBytes(packet, index, 2, 0);
+        index += 2;
+        writeLittleEndianBytes(packet, index, 2, 0);
+        index += 2;
+
+    }
+
+    if (ui.isLocalTime()) {
+
+        currentDate = new Date();
+        timezoneOffset = -1 * currentDate.getTimezoneOffset() / 60;
+
+    } else {
+
+        timezoneOffset = 0;
+
+    }
+
+    packet[index] = timezoneOffset;
+    index += 1;
 
     /* Send packet to device */
 
