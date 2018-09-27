@@ -91,7 +91,6 @@ var configurations = [{
     current: 39.0
 }];
 
-
 function errorOccurred(err) {
 
     console.error(err);
@@ -128,7 +127,7 @@ function getAudioMothPacket() {
 
             if (firmwareVersionArr[0] === 0) {
 
-                firmwareVersion = "≤ 1.2.0";
+                firmwareVersion = "< 1.2.0";
 
             } else {
 
