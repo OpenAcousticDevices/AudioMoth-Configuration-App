@@ -29,7 +29,6 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 function saveConfiguration(timePeriods, ledEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, callback) {
 
     var configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',';
-    configuration += '"localTime": ' + ui.isLocalTime() + ', ';
     configuration += '"ledEnabled": ' + ledEnabled + ', ';
     configuration += '"sampleRateIndex": ' + sampleRateIndex + ', ';
     configuration += '"gainIndex": ' + gainIndex + ', ';
@@ -92,9 +91,6 @@ function useLoadedConfiguration(err, data) {
                             "required": ["startMins", "endMins"],
                         }
                     },
-                    "localTime": {
-                        "type": "boolean"
-                    },
                     "ledEnabled": {
                         "type": "boolean"
                     },
@@ -111,7 +107,7 @@ function useLoadedConfiguration(err, data) {
                         "type": "integer"
                     }
                 },
-                "required": ["timePeriods", "localTime", "ledEnabled", "sampleRateIndex", "gainIndex", "recDuration", "sleepDuration"]
+                "required": ["timePeriods", "ledEnabled", "sampleRateIndex", "gainIndex", "recDuration", "sleepDuration"]
             };
 
             if (!validator.validate(jsonObj, schema).valid) {
@@ -122,12 +118,9 @@ function useLoadedConfiguration(err, data) {
 
             /* Apply settings to UI */
 
-            ui.setLocalTime(jsonObj.localTime);
-            ui.updateTimezoneLabel();
-
             timeHandler.setTimePeriods(jsonObj.timePeriods);
             timeHandler.updateTimeList();
-            ui.updateCanvas(timeHandler.getTimePeriods());
+            ui.updateCanvas();
 
             ledCheckbox.checked = jsonObj.ledEnabled;
 
@@ -159,7 +152,7 @@ function saveConfigurationOnClick() {
 
     var sampleRateIndex, gainIndex, timePeriods;
 
-    timePeriods = timeHandler.getTimePeriods();
+    timePeriods = timeHandler.getUtcTimePeriods();
 
     sampleRateIndex = parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10);
     gainIndex = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);

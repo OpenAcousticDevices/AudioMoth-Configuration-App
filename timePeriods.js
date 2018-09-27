@@ -17,6 +17,7 @@ var menu = electron.remote.Menu;
 var timePeriods = [];
 
 var MAX_PERIODS = 4;
+exports.MAX_PERIODS = MAX_PERIODS;
 
 /* UI components */
 
@@ -48,48 +49,215 @@ function minsToTimeString(mins) {
 
 /* Check if the given times need to be altered to match the app's current timezone setting */
 
-function checkTimezoneOffset(startMins, endMins) {
+function convertTimePeriodToUTC(timePeriod) {
 
-    var currentDate, timezoneOffset;
+    var startMins, endMins, currentDate, timezoneOffset;
+
+    startMins = timePeriod.startMins;
+    endMins = timePeriod.endMins;
 
     currentDate = new Date();
 
-    if (ui.isLocalTime()) {
+    /* Offset is given as UTC - local time in minutes */
 
-        /* Offset is given as UTC - local time in minutes */
+    timezoneOffset = -1 * currentDate.getTimezoneOffset();
 
-        timezoneOffset = -1 * currentDate.getTimezoneOffset();
+    startMins = (startMins - timezoneOffset) % 1440;
+    endMins = (endMins - timezoneOffset) % 1440;
 
-        startMins = (startMins + timezoneOffset) % 1440;
-        endMins = (endMins + timezoneOffset) % 1440;
+    /* If timezone offset move time over midnight */
 
-        /* If timezone offset move time over midnight */
+    if (startMins < 0) {
 
-        if (startMins < 0) {
+        startMins += 1440;
 
-            startMins += 1440;
+    }
 
-        }
+    if (endMins < 0) {
 
-        if (endMins < 0) {
+        endMins += 1440;
 
-            endMins += 1440;
+    }
+
+
+    return {startMins: startMins, endMins: endMins};
+
+}
+
+exports.convertTimePeriodToUTC = convertTimePeriodToUTC;
+
+function convertTimePeriodToLocal(timePeriod) {
+
+    var startMins, endMins, currentDate, timezoneOffset;
+
+    startMins = timePeriod.startMins;
+    endMins = timePeriod.endMins;
+
+    currentDate = new Date();
+
+    /* Offset is given as UTC - local time in minutes */
+
+    timezoneOffset = -1 * currentDate.getTimezoneOffset();
+
+    startMins = (startMins + timezoneOffset) % 1440;
+    endMins = (endMins + timezoneOffset) % 1440;
+
+    /* If timezone offset move time over midnight */
+
+    if (startMins < 0) {
+
+        startMins += 1440;
+
+    }
+
+    if (endMins < 0) {
+
+        endMins += 1440;
+
+    }
+
+    return {startMins: startMins, endMins: endMins};
+
+}
+
+/* See if any periods are over midnight and have to be split */
+
+function checkTimePeriodsForSplits(localTimePeriods) {
+
+    var i, localTimePeriod;
+
+    for (i = 0; i < localTimePeriods.length; i += 1) {
+
+        localTimePeriod = localTimePeriods[i];
+
+        if (localTimePeriod.startMins > localTimePeriod.endMins) {
+
+            localTimePeriods.splice(i, 1);
+
+            localTimePeriods.push({
+                startMins: localTimePeriod.startMins,
+                endMins: 1440
+            });
+            localTimePeriods.push({
+                startMins: 0,
+                endMins: localTimePeriod.endMins
+            });
 
         }
 
     }
 
-    return [startMins, endMins];
+    return localTimePeriods;
 
 }
 
-exports.checkTimezoneOffset = checkTimezoneOffset;
+/* See if any newly created time periods overlap and can be merged */
+
+function checkTimePeriodsForOverlaps(localTimePeriods) {
+
+    var i, j;
+
+    for (i = 0; i < localTimePeriods.length; i += 1) {
+
+        for (j = 0; j < localTimePeriods.length; j += 1) {
+
+            if (localTimePeriods[i].endMins === localTimePeriods[j].startMins) {
+
+                localTimePeriods[i].endMins = localTimePeriods[j].endMins;
+                localTimePeriods.splice(j, 1);
+
+                return checkTimePeriodsForOverlaps(localTimePeriods);
+
+            }
+
+        }
+
+    }
+
+    return localTimePeriods;
+
+}
+
+/* Convert a list of time periods from UTC to local */
+
+function convertTimePeriodsToLocal(tps) {
+
+    var localTimePeriods, i, timePeriod, localTimePeriod;
+
+    localTimePeriods = [];
+
+    for (i = 0; i < tps.length; i += 1) {
+
+        timePeriod = tps[i];
+        localTimePeriod = convertTimePeriodToLocal(timePeriod);
+
+        localTimePeriods.push({
+            startMins: localTimePeriod.startMins,
+            endMins: localTimePeriod.endMins
+        });
+
+    }
+
+    localTimePeriods = checkTimePeriodsForSplits(localTimePeriods);
+
+    localTimePeriods = localTimePeriods.sort(function (a, b) {
+        return a.startMins - b.startMins;
+    });
+
+    localTimePeriods = checkTimePeriodsForOverlaps(localTimePeriods);
+
+    return localTimePeriods;
+
+}
+
+/* Convert a list of local time periods to UTC */
+
+function convertLocalTimePeriodsToUTC(localTimePeriods) {
+
+    var utcTimePeriods, i, localTimePeriod, utcTimePeriod;
+
+    utcTimePeriods = [];
+
+    for (i = 0; i < localTimePeriods.length; i += 1) {
+
+        localTimePeriod = localTimePeriods[i];
+
+        utcTimePeriod = convertTimePeriodToUTC(localTimePeriod);
+
+        utcTimePeriods.push({
+            startMins: utcTimePeriod.startMins,
+            endMins: utcTimePeriod.endMins
+        });
+
+    }
+
+    utcTimePeriods = checkTimePeriodsForSplits(utcTimePeriods);
+
+    utcTimePeriods = utcTimePeriods.sort(function (a, b) {
+        return a.startMins - b.startMins;
+    });
+
+    utcTimePeriods = checkTimePeriodsForOverlaps(utcTimePeriods);
+
+    return utcTimePeriods;
+
+}
 
 /* Fill UI list with time periods from data structure */
 
 function updateTimeList() {
 
-    var currentDate, i, startMins, endMins, timezoneText, timezoneOffset, option;
+    var tp, currentDate, i, startMins, endMins, timezoneText, timezoneOffset, option;
+
+    if (ui.isLocalTime()) {
+
+        tp = convertTimePeriodsToLocal(timePeriods);
+
+    } else {
+
+        tp = timePeriods;
+
+    }
 
     currentDate = new Date();
 
@@ -97,14 +265,14 @@ function updateTimeList() {
 
     /* Sort recording periods in order of occurrence */
 
-    timePeriods = timePeriods.sort(function (a, b) {
+    tp = tp.sort(function (a, b) {
         return a.startMins - b.startMins;
     });
 
-    for (i = 0; i < timePeriods.length; i += 1) {
+    for (i = 0; i < tp.length; i += 1) {
 
-        startMins = timePeriods[i].startMins;
-        endMins = timePeriods[i].endMins;
+        startMins = tp[i].startMins;
+        endMins = tp[i].endMins;
 
         timezoneText = "(UTC";
         if (ui.isLocalTime()) {
@@ -121,44 +289,31 @@ function updateTimeList() {
 
         option = document.createElement("option");
         option.text = minsToTimeString(startMins) + " - " + minsToTimeString(endMins) + " " + timezoneText;
-        option.value = startMins;
+        option.value = [startMins, endMins];
         timeList.add(option);
 
     }
 
     /* Disable or enable action buttons in response to number time periods entered */
 
-    addTimeButton.disabled = (timePeriods.length >= MAX_PERIODS);
-    clearTimeButton.disabled = (timePeriods.length === 0);
+    addTimeButton.disabled = (tp.length >= MAX_PERIODS);
+    clearTimeButton.disabled = (tp.length === 0);
 
 }
 
 exports.updateTimeList = updateTimeList;
 
-/* Run all UI update functions */
-
-function updateUI() {
-
-    updateTimeList();
-    ui.updateCanvas(timePeriods);
-    lifeDisplay.updateLifeDisplay(timePeriods);
-
-}
-
 /* Remove a time from the recording period data structure and update UI to reflect change */
 
-function removeTime(value) {
+function removeTime(startMins) {
 
     var i;
 
     for (i = 0; i < timePeriods.length; i += 1) {
 
-        if (timePeriods[i].startMins === value) {
+        if (timePeriods[i].startMins === startMins) {
 
             timePeriods.splice(i, 1);
-            updateUI();
-            removeTimeButton.disabled = true;
-            return;
 
         }
 
@@ -171,7 +326,7 @@ function removeTime(value) {
 function clearTimes() {
 
     timePeriods = [];
-    updateUI();
+    ui.updateUI();
 
 }
 
@@ -201,6 +356,7 @@ function addTime(startMins, endMins) {
 
                 newStart = Math.min(startMins, timePeriods[i].startMins);
                 newEnd = Math.max(endMins, timePeriods[i].endMins);
+
                 removeTime(timePeriods[i].startMins);
                 return addTime(newStart, newEnd);
 
@@ -217,7 +373,6 @@ function addTime(startMins, endMins) {
         endMins: endMins
     });
 
-    updateUI();
     return true;
 
 }
@@ -226,12 +381,30 @@ function addTime(startMins, endMins) {
 
 function addTimeOnClick() {
 
-    var startTimeSplit, endTimeSplit, startTimestamp, endTimestamp, added;
+    var startTimeSplit, endTimeSplit, startTimestamp, endTimestamp, timePeriod, utcPeriod, added;
 
     startTimeSplit = startTimeInput.value.split(":");
     endTimeSplit = endTimeInput.value.split(":");
     startTimestamp = (parseInt(startTimeSplit[0], 10) * 60) + parseInt(startTimeSplit[1], 10);
     endTimestamp = (parseInt(endTimeSplit[0], 10) * 60) + parseInt(endTimeSplit[1], 10);
+
+    timePeriod = {
+        startMins: startTimestamp,
+        endMins: endTimestamp
+    };
+
+    if (ui.isLocalTime()) {
+
+        utcPeriod = convertTimePeriodToUTC(timePeriod);
+
+    } else {
+
+        utcPeriod = timePeriod;
+
+    }
+
+    startTimestamp = utcPeriod.startMins;
+    endTimestamp = utcPeriod.endMins;
 
     /* If a start time entered exceeds the end of the day, subtract 24 hours */
 
@@ -283,6 +456,24 @@ function addTimeOnClick() {
 /* Recording period data structure getter and setter */
 
 exports.getTimePeriods = function () {
+
+    var tp;
+
+    if (ui.isLocalTime()) {
+
+        tp = convertTimePeriodsToLocal(timePeriods);
+
+    } else {
+
+        tp = timePeriods;
+
+    }
+
+    return tp;
+
+};
+
+exports.getUtcTimePeriods = function () {
     return timePeriods;
 };
 
@@ -294,10 +485,19 @@ exports.setTimePeriods = function (tp) {
 
 addTimeButton.addEventListener('click', function () {
     ui.checkTimeInputs(addTimeOnClick);
+    ui.updateUI();
 });
 
 removeTimeButton.addEventListener('click', function () {
-    removeTime(parseInt(timeList.value, 10));
+
+    var values, startMins;
+
+    values = timeList.value.split(",");
+    startMins = convertTimePeriodToUTC(parseInt(values[0], 10), parseInt(values[1], 10));
+    removeTime(startMins);
+
+    ui.updateUI();
+    removeTimeButton.disabled = true;
 });
 
 clearTimeButton.addEventListener('click', clearTimes);
@@ -305,5 +505,5 @@ clearTimeButton.addEventListener('click', clearTimes);
 /* If the time list is empty, disable the user's ability to remove more recording periods */
 
 timeList.addEventListener('change', function () {
-    removeTimeButton.disabled = (timeList.value === null);
+    removeTimeButton.disabled = (timeList.value === null || timeList.value === "");
 });

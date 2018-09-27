@@ -39,6 +39,9 @@ var endTimeInput = document.getElementById('end-time-input');
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
 
+var timeList = document.getElementById('time-list');
+var removeTimeButton = document.getElementById('remove-time-button');
+
 var minRecordingDuration = 1;
 var maxRecordingDuration = 43200;
 var minSleepDuration = 0;
@@ -47,6 +50,7 @@ var maxSleepDuration = 43200;
 var configureButton = document.getElementById('configure-button');
 
 var nightMode = false;
+var localTime = false;
 
 /* Function to rescale */
 
@@ -86,14 +90,15 @@ rescale(labelCanvas);
 
 function isLocalTime() {
 
-    return applicationMenu.getMenuItemById("localTime").checked;
+    return localTime;
 
 }
 
 exports.isLocalTime = isLocalTime;
 
-function setLocalTime(localTime) {
+function setLocalTime(lTime) {
 
+    localTime = lTime;
     applicationMenu.getMenuItemById("localTime").checked = localTime;
 
 }
@@ -102,9 +107,11 @@ exports.setLocalTime = setLocalTime;
 
 /* Update time period canvas */
 
-function updateCanvas(timePeriods) {
+function updateCanvas() {
 
-    var i, startMins, endMins, recX, recLen, currentDate, currentMins, currentX;
+    var timePeriods, i, startMins, endMins, recX, recLen, currentDate, currentMins, currentX;
+
+    timePeriods = timeHandler.getTimePeriods();
 
     currentDate = new Date();
 
@@ -115,7 +122,8 @@ function updateCanvas(timePeriods) {
         startMins = timePeriods[i].startMins;
         endMins = timePeriods[i].endMins;
 
-        recX = startMins * timeCanvas.width / 1440; // width / 1440 minutes
+        /* width / 1440 minutes */
+        recX = startMins * timeCanvas.width / 1440;
         recLen = (endMins - startMins) * timeCanvas.width / 1440;
 
         timeContext.fillStyle = "#FF0000";
@@ -123,7 +131,7 @@ function updateCanvas(timePeriods) {
 
     }
 
-    // 6am, midday and 6pm markers\
+    /* 6am, midday and 6pm markers */
 
     if (nightMode) {
 
@@ -162,12 +170,27 @@ exports.updateCanvas = updateCanvas;
 
 function updateCanvasTimer() {
 
-    updateCanvas(timeHandler.getTimePeriods());
+    updateCanvas();
     setTimeout(updateCanvasTimer, 60000);
 
 }
 
 exports.updateCanvasTimer = updateCanvasTimer;
+
+/* Run all UI update functions */
+
+function updateUI() {
+
+    timeHandler.updateTimeList();
+    updateCanvas();
+    lifeDisplay.updateLifeDisplay();
+
+    /* If no time period is selected, disable the removal button */
+    removeTimeButton.disabled = (timeList.value === null || timeList.value === "");
+
+}
+
+exports.updateUI = updateUI;
 
 /* Draw labels below time period canvas */
 
@@ -175,7 +198,7 @@ function drawTimeLabels() {
 
     labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
 
-    labelContext.font = Math.floor(0.25 * timeCanvas.height) + "pt Helvetica";
+    labelContext.font = Math.floor(0.3 * timeCanvas.height) + "pt Helvetica";
 
     if (nightMode) {
 
@@ -191,7 +214,7 @@ function drawTimeLabels() {
     labelContext.fillText("06:00", 0.225 * timeCanvas.width, 0.3 * timeCanvas.height);
     labelContext.fillText("12:00", 0.475 * timeCanvas.width, 0.3 * timeCanvas.height);
     labelContext.fillText("18:00", 0.725 * timeCanvas.width, 0.3 * timeCanvas.height);
-    labelContext.fillText("24:00", 0.945 * timeCanvas.width, 0.3 * timeCanvas.height);
+    labelContext.fillText("24:00", 0.94 * timeCanvas.width, 0.3 * timeCanvas.height);
 
 }
 
@@ -215,7 +238,7 @@ function initialiseDisplay() {
 
     batteryDisplay.textContent = "0.0V";
 
-    firmwareDisplay.value = "0.0.0";
+    firmwareDisplay.textContent = "0.0.0";
 
 }
 
@@ -311,7 +334,7 @@ exports.updateFirmwareDisplay = function (version) {
 
     if (version !== firmwareDisplay.value) {
 
-        firmwareDisplay.value = version;
+        firmwareDisplay.textContent = version;
 
     }
 
@@ -558,6 +581,8 @@ function updateTimezoneLabel() {
 
     var timezoneText, currentDate, timezoneOffset;
 
+    setLocalTime(!isLocalTime());
+
     timezoneText = "UTC";
 
     if (isLocalTime()) {
@@ -568,25 +593,25 @@ function updateTimezoneLabel() {
 
         timezoneOffset = -1 * currentDate.getTimezoneOffset();
 
-        if (timezoneOffset >= 0) {
-            timezoneText += "+";
-        }
+        if (timezoneOffset != 0) {
 
-        timezoneText += (timezoneOffset / 60);
+            if (timezoneOffset > 0) {
+                timezoneText += "+";
+            }
+
+            timezoneText += (timezoneOffset / 60);
+
+        }
 
     }
 
     timezoneLabel.innerText = timezoneText;
 
-    timeHandler.clearTimes();
-    updateCanvas(timeHandler.getTimePeriods());
+    updateUI();
 
 }
 
-exports.updateTimezoneLabel = updateTimezoneLabel;
-
 electron.ipcRenderer.on('localTime', updateTimezoneLabel);
-
 
 function toggleNightMode() {
 
@@ -614,7 +639,7 @@ function toggleNightMode() {
 
     document.getElementsByTagName("head").item(0).replaceChild(newLink, oldLink);
 
-    updateCanvas(timeHandler.getTimePeriods());
+    updateCanvas();
     drawTimeLabels();
 
 }
