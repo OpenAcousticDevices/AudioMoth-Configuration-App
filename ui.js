@@ -645,3 +645,19 @@ function toggleNightMode() {
 }
 
 electron.ipcRenderer.on('nightmode', toggleNightMode);
+
+function checkUtcToggleability() {
+
+    var currentDate = new Date();
+
+    var timezoneOffset = -1 * currentDate.getTimezoneOffset();
+
+    if (timezoneOffset === 0) {
+
+        applicationMenu.getMenuItemById("localTime").enabled = false;
+
+    }
+
+}
+
+exports.checkUtcToggleability = checkUtcToggleability;

@@ -371,6 +371,8 @@ ui.initialiseDisplay();
 
 ui.addRadioButtonListeners();
 
+ui.checkUtcToggleability();
+
 setTimeout(getAudioMothPacket, 1000);
 
 configureButton.addEventListener('click', function () {
