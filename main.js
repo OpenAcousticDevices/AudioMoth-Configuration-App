@@ -76,7 +76,7 @@ app.on('ready', function () {
         }, {
             type: "checkbox",
             id: "localTime",
-            label: "Use local time (Toggling clears schedule)",
+            label: "Use Local Time",
             accelerator: "CommandOrControl+T",
             checked: false,
             click: function () {
@@ -86,8 +86,8 @@ app.on('ready', function () {
             type: 'separator'
         }, {
             type: "checkbox",
-            id: "localTime",
-            label: "Night mode",
+            id: "nightmode",
+            label: "Night Mode",
             accelerator: "CommandOrControl+N",
             checked: false,
             click: function () {
