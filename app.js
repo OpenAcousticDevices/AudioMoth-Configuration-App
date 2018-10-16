@@ -135,7 +135,11 @@ function getAudioMothPacket() {
 
             }
 
-            ui.enableDisplayAndShowTime(date);
+            ui.updateDate(date);
+
+            ui.showTime();
+
+            ui.enableDisplay();
 
             ui.updateIdDisplay(id);
 

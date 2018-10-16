@@ -177,6 +177,30 @@ function updateCanvasTimer() {
 
 exports.updateCanvasTimer = updateCanvasTimer;
 
+/* Function to generate the time string */
+
+function showTime() {
+
+    var currentDate, timeZoneOffset, strftimeUTC;
+
+    timeZoneOffset = 0;
+
+    if (isLocalTime()) {
+
+        currentDate = new Date();
+
+        timeZoneOffset = currentDate.getTimezoneOffset();
+
+    }
+
+    strftimeUTC = strftime.timezone(-1 * timeZoneOffset);
+
+    timeDisplay.textContent = strftimeUTC("%H:%M:%S %d/%m/%Y", deviceDate);
+
+}
+
+exports.showTime = showTime;
+
 /* Run all UI update functions */
 
 function updateUI() {
@@ -184,6 +208,7 @@ function updateUI() {
     timeHandler.updateTimeList();
     updateCanvas();
     lifeDisplay.updateLifeDisplay();
+    showTime();
 
     /* If no time period is selected, disable the removal button */
     removeTimeButton.disabled = (timeList.value === null || timeList.value === "");
@@ -232,9 +257,9 @@ exports.getSelectedRadioValue = getSelectedRadioValue;
 
 function initialiseDisplay() {
 
-    idDisplay.value = "0000000000000000";
+    idDisplay.textContent = "0000000000000000";
 
-    timeDisplay.textContent = "00:00:00 01/01/1970";
+    showTime();
 
     batteryDisplay.textContent = "0.0V";
 
