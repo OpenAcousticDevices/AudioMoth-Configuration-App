@@ -86,14 +86,12 @@ app.on('ready', function () {
         }, {
             type: "checkbox",
             id: "localTime",
-            label: "Use Local Time",
+            label: "Local Time",
             accelerator: "CommandOrControl+T",
             checked: false,
             click: function () {
                 mainWindow.webContents.send("localTime");
             }
-        }, {
-            type: 'separator'
         }, {
             type: "checkbox",
             id: "nightmode",
@@ -103,6 +101,8 @@ app.on('ready', function () {
             click: function () {
                 mainWindow.webContents.send("nightmode");
             }
+        }, {
+            type: 'separator'
         }, {
             label: "Quit",
             accelerator: "CommandOrControl+Q",
