@@ -6,7 +6,7 @@
 
 'use strict';
 
-/*global window, document*/
+/*global window, document, dialog*/
 
 var timeHandler = require('./timePeriods.js');
 var lifeDisplay = require('./lifeDisplay.js');
@@ -432,11 +432,19 @@ function checkInputs(callback) {
 
     } else if (!sleepDurationCorrect) {
 
-        dialog.showMessageBox({type: "warning", title: "Sleep length out of range.", message: "Please enter a sleep length in the range (" + minSleepDuration + " - " + maxSleepDuration + ")."});
+        dialog.showMessageBox({
+            type: "warning",
+            title: "Sleep length out of range.",
+            message: "Please enter a sleep length in the range (" + minSleepDuration + " - " + maxSleepDuration + ")."
+        });
 
     } else if (!recordingDurationCorrect) {
 
-        dialog.showMessageBox({type: "warning", title: "Recording length out of range.", message: "Please enter a recording length in the range (" + minRecordingDuration + " - " + maxRecordingDuration + ")."});
+        dialog.showMessageBox({
+            type: "warning",
+            title: "Recording length out of range.",
+            message: "Please enter a recording length in the range (" + minRecordingDuration + " - " + maxRecordingDuration + ")."
+        });
 
     }
 
@@ -541,25 +549,7 @@ exports.setTimeInputStyleDefault = setTimeInputStyleDefault;
 
 exports.checkTimeInputs = function (callback) {
 
-    var complete, startTimeSplit, endTimeSplit, startTimestamp, endTimestamp;
-
-    complete = timeInputIsCorrect(startTimeInput);
-    complete = timeInputIsCorrect(endTimeInput) && complete;
-
-    startTimeSplit = startTimeInput.value.split(":");
-    endTimeSplit = endTimeInput.value.split(":");
-    startTimestamp = (parseInt(startTimeSplit[0], 10) * 60) + parseInt(startTimeSplit[1], 10);
-    endTimestamp = (parseInt(endTimeSplit[0], 10) * 60) + parseInt(endTimeSplit[1], 10);
-
-    if (endTimestamp === startTimestamp) {
-
-        complete = false;
-        setTimeInputStyleError();
-        setTimeout(setTimeInputStyleDefault, 2500);
-
-    }
-
-    if (complete) {
+    if (timeInputIsCorrect(startTimeInput) && timeInputIsCorrect(endTimeInput)) {
         callback();
     }
 
