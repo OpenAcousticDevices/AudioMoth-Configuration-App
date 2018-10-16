@@ -51,7 +51,7 @@ function minsToTimeString(mins) {
 
 function convertTimePeriodToUTC(timePeriod) {
 
-    var startMins, endMins, currentDate, timezoneOffset;
+    var startMins, endMins, currentDate, timeZoneOffset;
 
     startMins = timePeriod.startMins;
     endMins = timePeriod.endMins;
@@ -60,12 +60,12 @@ function convertTimePeriodToUTC(timePeriod) {
 
     /* Offset is given as UTC - local time in minutes */
 
-    timezoneOffset = -1 * currentDate.getTimezoneOffset();
+    timeZoneOffset = -1 * currentDate.getTimezoneOffset();
 
-    startMins = (startMins - timezoneOffset) % 1440;
-    endMins = (endMins - timezoneOffset) % 1440;
+    startMins = (startMins - timeZoneOffset) % 1440;
+    endMins = (endMins - timeZoneOffset) % 1440;
 
-    /* If timezone offset move time over midnight */
+    /* If time zone offset move time over midnight */
 
     if (startMins < 0) {
 
@@ -88,7 +88,7 @@ exports.convertTimePeriodToUTC = convertTimePeriodToUTC;
 
 function convertTimePeriodToLocal(timePeriod) {
 
-    var startMins, endMins, currentDate, timezoneOffset;
+    var startMins, endMins, currentDate, timeZoneOffset;
 
     startMins = timePeriod.startMins;
     endMins = timePeriod.endMins;
@@ -97,12 +97,12 @@ function convertTimePeriodToLocal(timePeriod) {
 
     /* Offset is given as UTC - local time in minutes */
 
-    timezoneOffset = -1 * currentDate.getTimezoneOffset();
+    timeZoneOffset = -1 * currentDate.getTimezoneOffset();
 
-    startMins = (startMins + timezoneOffset) % 1440;
-    endMins = (endMins + timezoneOffset) % 1440;
+    startMins = (startMins + timeZoneOffset) % 1440;
+    endMins = (endMins + timeZoneOffset) % 1440;
 
-    /* If timezone offset move time over midnight */
+    /* If time zone offset move time over midnight */
 
     if (startMins < 0) {
 
@@ -247,7 +247,7 @@ function convertLocalTimePeriodsToUTC(localTimePeriods) {
 
 function updateTimeList() {
 
-    var tp, currentDate, i, startMins, endMins, timezoneText, timezoneOffset, option;
+    var tp, currentDate, i, startMins, endMins, timeZoneText, timeZoneOffset, option;
 
     if (ui.isLocalTime()) {
 
@@ -274,21 +274,21 @@ function updateTimeList() {
         startMins = tp[i].startMins;
         endMins = tp[i].endMins;
 
-        timezoneText = "(UTC";
+        timeZoneText = "(UTC";
         if (ui.isLocalTime()) {
 
-            timezoneOffset = -1 * currentDate.getTimezoneOffset();
+            timeZoneOffset = -1 * currentDate.getTimezoneOffset();
 
-            if (timezoneOffset >= 0) {
-                timezoneText += "+";
+            if (timeZoneOffset >= 0) {
+                timeZoneText += "+";
             }
 
-            timezoneText += (timezoneOffset / 60);
+            timeZoneText += (timeZoneOffset / 60);
         }
-        timezoneText += ")";
+        timeZoneText += ")";
 
         option = document.createElement("option");
-        option.text = minsToTimeString(startMins) + " - " + minsToTimeString(endMins) + " " + timezoneText;
+        option.text = minsToTimeString(startMins) + " - " + minsToTimeString(endMins) + " " + timeZoneText;
         option.value = [startMins, endMins];
         timeList.add(option);
 

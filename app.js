@@ -169,7 +169,7 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 function configureDevice() {
 
-    var packet, index, date, configuration, i, utcTimePeriod, timePeriods, timezoneTimePeriods, startMins, endMins, currentDate, timezoneOffset;
+    var packet, index, date, configuration, i, utcTimePeriod, timePeriods, timeZoneTimePeriods, startMins, endMins, currentDate, timeZoneOffset;
 
     /* Build configuration packet */
 
@@ -213,11 +213,11 @@ function configureDevice() {
     index += 1;
 
     timePeriods = timeHandler.getTimePeriods();
-    timezoneTimePeriods = timePeriods;
+    timeZoneTimePeriods = timePeriods;
 
     if (ui.isLocalTime()) {
 
-        timezoneTimePeriods = [];
+        timeZoneTimePeriods = [];
 
         for (i = 0; i < timePeriods.length; i += 1) {
 
@@ -233,19 +233,19 @@ function configureDevice() {
 
                     /* Split time period into two periods either side of midnight */
 
-                    timezoneTimePeriods.push({
+                    timeZoneTimePeriods.push({
                         startMins: startMins,
                         endMins: 1440
                     });
 
-                    timezoneTimePeriods.push({
+                    timeZoneTimePeriods.push({
                         startMins: 0,
                         endMins: endMins - 1440
                     });
 
                 } else {
 
-                    timezoneTimePeriods.push({
+                    timeZoneTimePeriods.push({
                         startMins: startMins,
                         endMins: endMins
                     });
@@ -254,7 +254,7 @@ function configureDevice() {
 
             } else {
 
-                timezoneTimePeriods.push({
+                timeZoneTimePeriods.push({
                     startMins: startMins,
                     endMins: endMins
                 });
@@ -265,21 +265,21 @@ function configureDevice() {
 
     }
 
-    /* Apply timezone changes to time period list */
+    /* Apply timeZone changes to time period list */
 
-    packet[index] = timezoneTimePeriods.length;
+    packet[index] = timeZoneTimePeriods.length;
     index += 1;
 
-    for (i = 0; i < timezoneTimePeriods.length; i += 1) {
+    for (i = 0; i < timeZoneTimePeriods.length; i += 1) {
 
-        writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].startMins);
+        writeLittleEndianBytes(packet, index, 2, timeZoneTimePeriods[i].startMins);
         index += 2;
-        writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].endMins);
+        writeLittleEndianBytes(packet, index, 2, timeZoneTimePeriods[i].endMins);
         index += 2;
 
     }
 
-    for (i = 0; i < (timeHandler.MAX_PERIODS + 1) - timezoneTimePeriods.length; i += 1) {
+    for (i = 0; i < (timeHandler.MAX_PERIODS + 1) - timeZoneTimePeriods.length; i += 1) {
 
         writeLittleEndianBytes(packet, index, 2, 0);
         index += 2;
@@ -291,15 +291,15 @@ function configureDevice() {
     if (ui.isLocalTime()) {
 
         currentDate = new Date();
-        timezoneOffset = -1 * currentDate.getTimezoneOffset() / 60;
+        timeZoneOffset = -1 * currentDate.getTimeZoneOffset() / 60;
 
     } else {
 
-        timezoneOffset = 0;
+        timeZoneOffset = 0;
 
     }
 
-    packet[index] = timezoneOffset;
+    packet[index] = timeZoneOffset;
     index += 1;
 
     /* Send packet to device */
