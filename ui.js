@@ -415,7 +415,7 @@ function inputIsCorrect(input, min, max) {
 
 }
 
-/* Apply range checks to sleep and recording duration textboxes */
+/* Apply range checks to sleep and recording duration text boxes */
 
 function checkInputs(callback) {
 
@@ -591,7 +591,7 @@ recordingDurationInput.addEventListener('change', function () {
     checkInputs(lifeDisplay.updateLifeDisplay);
 });
 
-/* If the local time checkbox changes, update the canvas */
+/* Switch between time zone modes (UTC and local) */
 
 function setTimeZoneStatus(local) {
 
