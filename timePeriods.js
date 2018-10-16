@@ -47,7 +47,7 @@ function minsToTimeString(mins) {
 
 }
 
-/* Check if the given times need to be altered to match the app's current timezone setting */
+/* Check if the given times need to be altered to match the app's current time zone setting */
 
 function convertTimePeriodToUTC(timePeriod) {
 

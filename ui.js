@@ -21,7 +21,7 @@ var clipboard = electron.remote.clipboard;
 
 var applicationMenu = menu.getApplicationMenu();
 
-var timezoneLabel = document.getElementById('timezone-label');
+var timeZoneLabel = document.getElementById('time-zone-label');
 
 var idDisplay = document.getElementById('id-display');
 var idLabel = document.getElementById('id-label');
@@ -276,7 +276,7 @@ exports.disableDisplay = function () {
 
     timeDisplay.style.color = "lightgrey";
 
-    timezoneLabel.style.color = "lightgrey";
+    timeZoneLabel.style.color = "lightgrey";
 
     idLabel.style.color = "lightgrey";
 
@@ -326,7 +326,7 @@ exports.enableDisplayAndShowTime = function (date) {
 
     timeDisplay.style.color = textColor;
 
-    timezoneLabel.style.color = textColor;
+    timeZoneLabel.style.color = textColor;
 
     idLabel.style.color = textColor;
 
@@ -609,21 +609,21 @@ function updateTimezoneLabel() {
 
         /* Offset is given as UTC - local time in minutes */
 
-        timezoneOffset = -1 * currentDate.getTimezoneOffset();
+        timeZoneOffset = -1 * currentDate.getTimezoneOffset();
 
-        if (timezoneOffset != 0) {
+        if (timeZoneOffset !== 0) {
 
-            if (timezoneOffset > 0) {
-                timezoneText += "+";
+            if (timeZoneOffset > 0) {
+                timeZoneText += "+";
             }
 
-            timezoneText += (timezoneOffset / 60);
+            timeZoneText += (timeZoneOffset / 60);
 
         }
 
     }
 
-    timezoneLabel.innerText = timezoneText;
+    timeZoneLabel.innerText = timeZoneText;
 
     updateUI();
 
