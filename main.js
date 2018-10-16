@@ -74,6 +74,16 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
+            id: "copyid",
+            label: "Copy Device ID",
+            accelerator: "CommandOrControl+I",
+            click: function () {
+                mainWindow.webContents.send("copyID");
+            },
+            enabled: false
+        }, {
+            type: 'separator'
+        }, {
             type: "checkbox",
             id: "localTime",
             label: "Use Local Time",
@@ -99,6 +109,25 @@ app.on('ready', function () {
             click: function () {
                 app.quit();
             }
+        }]
+    }, {
+        label: 'Edit',
+        submenu: [{
+            label: 'Cut',
+            accelerator: 'CommandOrControl+X',
+            selector: 'cut:'
+        }, {
+            label: 'Copy',
+            accelerator: 'CommandOrControl+C',
+            selector: 'copy:'
+        }, {
+            label: 'Paste',
+            accelerator: 'CommandOrControl+V',
+            selector: 'paste:'
+        }, {
+            label: 'Select All',
+            accelerator: 'CommandOrControl+A',
+            selector: 'selectAll:'
         }]
     }, {
         label: "Help",

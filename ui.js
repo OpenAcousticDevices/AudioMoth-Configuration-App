@@ -15,6 +15,7 @@ var strftime = require('strftime').utc();
 
 var electron = require('electron');
 var menu = electron.remote.Menu;
+var clipboard = electron.remote.clipboard;
 
 /* UI components */
 
@@ -341,15 +342,17 @@ exports.enableDisplayAndShowTime = function (date) {
 
     configureButton.disabled = false;
 
+    applicationMenu.getMenuItemById("copyid").enabled = true;
+
 };
 
 /* Insert retrieved values into device information display */
 
 exports.updateIdDisplay = function (id) {
 
-    if (id !== idDisplay.value) {
+    if (id !== idDisplay.textContent) {
 
-        idDisplay.value = id;
+        idDisplay.textContent = id;
 
     }
 
@@ -685,4 +688,15 @@ function checkUtcToggleability() {
 
 }
 
-exports.checkUtcToggleability = checkUtcToggleability;
+exports.checkUtcToggleability = checkUtcToggleability;electron.ipcRenderer.on('copyID', function () {
+
+    clipboard.writeText(idDisplay.textContent);
+    idDisplay.style.color = "green";
+
+    setTimeout(function () {
+        idDisplay.style.color = "";
+    }, 5000);
+
+});
+
+startTimeInput.focus();
