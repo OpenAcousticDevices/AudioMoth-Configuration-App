@@ -79,8 +79,18 @@ function convertTimePeriodToUTC(timePeriod) {
 
     }
 
+    /* If the start and end times are the same, the time period covers the entire day */
 
-    return {startMins: startMins, endMins: endMins};
+    if (startMins === endMins) {
+
+        return timePeriod;
+
+    }
+
+    return {
+        startMins: startMins,
+        endMins: endMins
+    };
 
 }
 
@@ -116,7 +126,18 @@ function convertTimePeriodToLocal(timePeriod) {
 
     }
 
-    return {startMins: startMins, endMins: endMins};
+    /* If the start and end times are the same, the time period covers the entire day */
+
+    if (startMins === endMins) {
+
+        return timePeriod;
+
+    }
+
+    return {
+        startMins: startMins,
+        endMins: endMins
+    };
 
 }
 
@@ -305,19 +326,21 @@ exports.updateTimeList = updateTimeList;
 
 /* Remove a time from the recording period data structure and update UI to reflect change */
 
-function removeTime(startMins) {
+function removeTime(timePeriod, tps) {
 
-    var i;
+    var i, startMins = timePeriod.startMins;
 
-    for (i = 0; i < timePeriods.length; i += 1) {
+    for (i = 0; i < tps.length; i += 1) {
 
-        if (timePeriods[i].startMins === startMins) {
+        if (tps[i].startMins === startMins) {
 
-            timePeriods.splice(i, 1);
+            tps.splice(i, 1);
 
         }
 
     }
+
+    return tps;
 
 }
 
@@ -357,7 +380,7 @@ function addTime(startMins, endMins) {
                 newStart = Math.min(startMins, timePeriods[i].startMins);
                 newEnd = Math.max(endMins, timePeriods[i].endMins);
 
-                removeTime(timePeriods[i].startMins);
+                timePeriods = removeTime(timePeriods[i], timePeriods);
                 return addTime(newStart, newEnd);
 
             }
@@ -399,46 +422,43 @@ function addTimeOnClick() {
 
     } else {
 
-        utcPeriod = timePeriod;
+        utcPeriod = {
+            startMins: (timePeriod.startMins % 1440),
+            endMins: (timePeriod.endMins % 1440)
+        };
 
     }
 
     startTimestamp = utcPeriod.startMins;
     endTimestamp = utcPeriod.endMins;
 
-    /* If a start time entered exceeds the end of the day, subtract 24 hours */
+    /* If end time precedes start time, assume period should wrap around midnight */
 
-    if (startTimestamp > 1440) {
+    if (endTimestamp < startTimestamp) {
 
-        added = addTime(startTimestamp - 1440, endTimestamp);
+        endTimestamp += 1440;
+
+    }
+
+    if (endTimestamp === startTimestamp) {
+
+        added = addTime(0, 1440);
+
+    } else if (endTimestamp > 1440) {
+
+        /* Split time period into two periods either side of midnight */
+
+        added = addTime(startTimestamp, 1440);
+
+        if (timePeriods.length < MAX_PERIODS) {
+
+            added = addTime(0, endTimestamp - 1440) && added;
+
+        }
 
     } else {
 
-        /* If end time precedes start time, assume period should wrap around midnight */
-
-        if (endTimestamp < startTimestamp) {
-
-            endTimestamp += 1440;
-
-        }
-
-        if (endTimestamp > 1440) {
-
-            /* Split time period into two periods either side of midnight */
-
-            added = addTime(startTimestamp, 1440);
-
-            if (timePeriods.length < MAX_PERIODS) {
-
-                added = addTime(0, endTimestamp - 1440) && added;
-
-            }
-
-        } else {
-
-            added = addTime(startTimestamp, endTimestamp);
-
-        }
+        added = addTime(startTimestamp, endTimestamp);
 
     }
 
@@ -490,14 +510,31 @@ addTimeButton.addEventListener('click', function () {
 
 removeTimeButton.addEventListener('click', function () {
 
-    var values, startMins;
+    var values, timePeriod, ltps;
 
     values = timeList.value.split(",");
-    startMins = convertTimePeriodToUTC(parseInt(values[0], 10), parseInt(values[1], 10));
-    removeTime(startMins);
+
+    timePeriod = {
+        startMins: parseInt(values[0], 10),
+        endMins: parseInt(values[1], 10)
+    };
+
+    if (ui.isLocalTime()) {
+
+        ltps = convertTimePeriodsToLocal(timePeriods);
+        ltps = removeTime(timePeriod, ltps);
+
+        timePeriods = convertLocalTimePeriodsToUTC(ltps);
+
+    } else {
+
+        timePeriods = removeTime(timePeriod, timePeriods);
+
+    }
 
     ui.updateUI();
     removeTimeButton.disabled = true;
+
 });
 
 clearTimeButton.addEventListener('click', clearTimes);

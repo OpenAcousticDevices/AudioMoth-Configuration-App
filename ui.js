@@ -53,6 +53,8 @@ var configureButton = document.getElementById('configure-button');
 var nightMode = false;
 var localTime = false;
 
+var deviceDate = new Date(0);
+
 /* Function to rescale */
 
 function rescale(canvas) {
@@ -278,6 +280,8 @@ exports.disableDisplay = function () {
 
     timeZoneLabel.style.color = "lightgrey";
 
+    deviceDate = new Date(0);
+
     idLabel.style.color = "lightgrey";
 
     idDisplay.style.color = "lightgrey";
@@ -294,25 +298,19 @@ exports.disableDisplay = function () {
 
     initialiseDisplay();
 
+    applicationMenu.getMenuItemById("copyid").enabled = false;
+
 };
 
-exports.enableDisplayAndShowTime = function (date) {
+exports.updateDate = function (date) {
 
-    var currentDate, timezoneOffset, strftimeUTC, textColor;
+    deviceDate = date;
 
-    timezoneOffset = 0;
+};
 
-    if (isLocalTime()) {
+exports.enableDisplay = function () {
 
-        currentDate = new Date();
-
-        timezoneOffset = currentDate.getTimezoneOffset();
-
-    }
-
-    strftimeUTC = strftime.timezone(-1 * timezoneOffset);
-
-    timeDisplay.textContent = strftimeUTC("%H:%M:%S %d/%m/%Y", date);
+    var textColor;
 
     if (nightMode) {
 
@@ -595,13 +593,13 @@ recordingDurationInput.addEventListener('change', function () {
 
 /* If the local time checkbox changes, update the canvas */
 
-function updateTimezoneLabel() {
+function setTimeZoneStatus(local) {
 
-    var timezoneText, currentDate, timezoneOffset;
+    var timeZoneText, currentDate, timeZoneOffset;
 
-    setLocalTime(!isLocalTime());
+    setLocalTime(local);
 
-    timezoneText = "UTC";
+    timeZoneText = "UTC";
 
     if (isLocalTime()) {
 
@@ -629,7 +627,15 @@ function updateTimezoneLabel() {
 
 }
 
-electron.ipcRenderer.on('localTime', updateTimezoneLabel);
+exports.setTimeZoneStatus = setTimeZoneStatus;
+
+function toggleTimeZoneStatus() {
+
+    setTimeZoneStatus(!isLocalTime());
+
+}
+
+electron.ipcRenderer.on('localTime', toggleTimeZoneStatus);
 
 function toggleNightMode() {
 
@@ -666,11 +672,13 @@ electron.ipcRenderer.on('nightmode', toggleNightMode);
 
 function checkUtcToggleability() {
 
-    var currentDate = new Date();
+    var currentDate, timeZoneOffset;
 
-    var timezoneOffset = -1 * currentDate.getTimezoneOffset();
+    currentDate = new Date();
 
-    if (timezoneOffset === 0) {
+    timeZoneOffset = -1 * currentDate.getTimezoneOffset();
+
+    if (timeZoneOffset === 0) {
 
         applicationMenu.getMenuItemById("localTime").enabled = false;
 
@@ -678,7 +686,9 @@ function checkUtcToggleability() {
 
 }
 
-exports.checkUtcToggleability = checkUtcToggleability;electron.ipcRenderer.on('copyID', function () {
+exports.checkUtcToggleability = checkUtcToggleability;
+
+electron.ipcRenderer.on('copyID', function () {
 
     clipboard.writeText(idDisplay.textContent);
     idDisplay.style.color = "green";

@@ -133,6 +133,9 @@ function useLoadedConfiguration(err, data) {
             recordingDurationInput.value = jsonObj.recDuration;
             sleepDurationInput.value = jsonObj.sleepDuration;
             ui.checkInputs(lifeDisplay.updateLifeDisplay);
+
+            ui.setTimeZoneStatus(false);
+
             console.log("Config loaded");
 
         } catch (usageErr) {
