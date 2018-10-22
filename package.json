@@ -1,8 +1,10 @@
 {
-  "name": "AudioMoth",
+  "name": "AudioMothConfigurationApp",
   "version": "1.2.0",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
+  "author": "openacousticdevices.info",
+  "license": "ISC",
   "scripts": {
     "postinstall": "install-app-deps",
     "start": "electron-builder install-app-deps && electron .",
@@ -14,7 +16,7 @@
     "asar": {
       "smartUnpack": true
     },
-    "appId": "info.openacousticdevices.audiomoth",
+    "appId": "info.openacousticdevices.audiomothconfigurationapp",
     "dmg": {
       "contents": [
         {
@@ -28,7 +30,7 @@
           "path": "/Applications"
         }
       ],
-      "artifactName": "AudioMothSetup${version}.dmg"
+      "artifactName": "AudioMothConfigurationAppSetup${version}.dmg"
     },
     "win": {
       "target": "nsis",
@@ -36,15 +38,13 @@
     },
     "nsis": {
       "createDesktopShortcut": true,
-      "artifactName": "AudioMothSetup${version}.exe"
+      "artifactName": "AudioMothConfigurationAppSetup${version}.exe"
     },
     "linux": {
       "icon": "build/",
       "category": "Utility"
     }
   },
-  "author": "openacousticdevices.info",
-  "license": "ISC",
   "devDependencies": {
     "electron": "3.0.0",
     "electron-builder": "20.28.4"
@@ -52,11 +52,11 @@
   "dependencies": {
     "audiomoth-hid": ">=1.0.19",
     "bootstrap": "4.1.3",
-    "jquery": "^3.3.1",
     "popper.js": "^1.12.3",
-    "jsonschema": "1.2.4",
+    "jquery": "^3.3.1",
     "strftime": "0.10.0",
-    "electron-debug": "2.0.0"
+    "electron-debug": "2.0.0",
+    "jsonschema": "1.2.4"
   },
   "engines": {
     "node": ">=8.10.0"
