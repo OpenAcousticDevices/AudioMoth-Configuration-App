@@ -22,6 +22,7 @@ var dialog = electron.remote.dialog;
 /* UI components */
 
 var ledCheckbox = document.getElementById('led-checkbox');
+var batteryCheckbox = document.getElementById('battery-checkbox');
 
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
@@ -304,6 +305,17 @@ function configureDevice() {
     }
 
     packet[index] = timeZoneOffset;
+    index += 1;
+
+    if (batteryCheckbox.checked) {
+
+        packet[index] = 0x01;
+
+    } else {
+
+        packet[index] = 0x00;
+
+    }
     index += 1;
 
     /* Send packet to device */
