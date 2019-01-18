@@ -108,15 +108,32 @@ function setLocalTime(lTime) {
 
 exports.setLocalTime = setLocalTime;
 
+function calculateTimezoneOffsetMins() {
+
+    var currentDate = new Date();
+    return (-1 * currentDate.getTimezoneOffset());
+
+}
+
+exports.calculateTimezoneOffsetMins = calculateTimezoneOffsetMins;
+
+function calculateTimezoneOffsetHours() {
+
+    return (calculateTimezoneOffsetMins() / 60);
+
+}
+
+exports.calculateTimezoneOffsetHours = calculateTimezoneOffsetHours;
+
 /* Update time period canvas */
 
 function updateCanvas() {
 
-    var timePeriods, i, startMins, endMins, recX, recLen, currentDate, currentMins, currentX;
+    var timePeriods, i, startMins, endMins, recX, recLen, currentTimeDate, currentMins, currentX;
 
     timePeriods = timeHandler.getTimePeriods();
 
-    currentDate = new Date();
+    currentTimeDate = new Date();
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);
 
@@ -152,11 +169,11 @@ function updateCanvas() {
 
     if (isLocalTime()) {
 
-        currentMins = (currentDate.getHours() * 60) + currentDate.getMinutes();
+        currentMins = (currentTimeDate.getHours() * 60) + currentTimeDate.getMinutes();
 
     } else {
 
-        currentMins = (currentDate.getUTCHours() * 60) + currentDate.getUTCMinutes();
+        currentMins = (currentTimeDate.getUTCHours() * 60) + currentTimeDate.getUTCMinutes();
 
     }
 
@@ -184,19 +201,17 @@ exports.updateCanvasTimer = updateCanvasTimer;
 
 function showTime() {
 
-    var currentDate, timeZoneOffset, strftimeUTC;
+    var timezoneOffset, strftimeUTC;
 
-    timeZoneOffset = 0;
+    timezoneOffset = 0;
 
     if (isLocalTime()) {
 
-        currentDate = new Date();
-
-        timeZoneOffset = currentDate.getTimezoneOffset();
+        timezoneOffset = calculateTimezoneOffsetMins();
 
     }
 
-    strftimeUTC = strftime.timezone(-1 * timeZoneOffset);
+    strftimeUTC = strftime.timezone(timezoneOffset);
 
     timeDisplay.textContent = strftimeUTC("%H:%M:%S %d/%m/%Y", deviceDate);
 
@@ -595,7 +610,7 @@ recordingDurationInput.addEventListener('change', function () {
 
 function setTimeZoneStatus(local) {
 
-    var timeZoneText, currentDate, timeZoneOffset;
+    var timeZoneText, timezoneOffset;
 
     setLocalTime(local);
 
@@ -603,19 +618,17 @@ function setTimeZoneStatus(local) {
 
     if (isLocalTime()) {
 
-        currentDate = new Date();
+        /* Offset is given as UTC - local time */
 
-        /* Offset is given as UTC - local time in minutes */
+        timezoneOffset = calculateTimezoneOffsetHours();
 
-        timeZoneOffset = -1 * currentDate.getTimezoneOffset();
+        if (timezoneOffset !== 0) {
 
-        if (timeZoneOffset !== 0) {
-
-            if (timeZoneOffset > 0) {
+            if (timezoneOffset > 0) {
                 timeZoneText += "+";
             }
 
-            timeZoneText += (timeZoneOffset / 60);
+            timeZoneText += timezoneOffset;
 
         }
 
@@ -672,13 +685,11 @@ electron.ipcRenderer.on('nightmode', toggleNightMode);
 
 function checkUtcToggleability() {
 
-    var currentDate, timeZoneOffset;
+    var timezoneOffset;
 
-    currentDate = new Date();
+    timezoneOffset = calculateTimezoneOffsetMins();
 
-    timeZoneOffset = -1 * currentDate.getTimezoneOffset();
-
-    if (timeZoneOffset === 0) {
+    if (timezoneOffset === 0) {
 
         applicationMenu.getMenuItemById("localTime").enabled = false;
 

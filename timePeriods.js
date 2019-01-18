@@ -51,19 +51,17 @@ function minsToTimeString(mins) {
 
 function convertTimePeriodToUTC(timePeriod) {
 
-    var startMins, endMins, currentDate, timeZoneOffset;
+    var startMins, endMins, timezoneOffset;
 
     startMins = timePeriod.startMins;
     endMins = timePeriod.endMins;
 
-    currentDate = new Date();
-
     /* Offset is given as UTC - local time in minutes */
 
-    timeZoneOffset = -1 * currentDate.getTimezoneOffset();
+    timezoneOffset = ui.calculateTimezoneOffsetMins();
 
-    startMins = (startMins - timeZoneOffset) % 1440;
-    endMins = (endMins - timeZoneOffset) % 1440;
+    startMins = (startMins - timezoneOffset) % 1440;
+    endMins = (endMins - timezoneOffset) % 1440;
 
     /* If time zone offset move time over midnight */
 
@@ -98,19 +96,17 @@ exports.convertTimePeriodToUTC = convertTimePeriodToUTC;
 
 function convertTimePeriodToLocal(timePeriod) {
 
-    var startMins, endMins, currentDate, timeZoneOffset;
+    var startMins, endMins, timezoneOffset;
 
     startMins = timePeriod.startMins;
     endMins = timePeriod.endMins;
 
-    currentDate = new Date();
-
     /* Offset is given as UTC - local time in minutes */
 
-    timeZoneOffset = -1 * currentDate.getTimezoneOffset();
+    timezoneOffset = ui.calculateTimezoneOffsetMins();
 
-    startMins = (startMins + timeZoneOffset) % 1440;
-    endMins = (endMins + timeZoneOffset) % 1440;
+    startMins = (startMins + timezoneOffset) % 1440;
+    endMins = (endMins + timezoneOffset) % 1440;
 
     /* If time zone offset move time over midnight */
 
@@ -268,7 +264,7 @@ function convertLocalTimePeriodsToUTC(localTimePeriods) {
 
 function updateTimeList() {
 
-    var tp, currentDate, i, startMins, endMins, timeZoneText, timeZoneOffset, option;
+    var tp, i, startMins, endMins, timeZoneText, timezoneOffset, option;
 
     if (ui.isLocalTime()) {
 
@@ -279,8 +275,6 @@ function updateTimeList() {
         tp = timePeriods;
 
     }
-
-    currentDate = new Date();
 
     timeList.options.length = 0;
 
@@ -298,13 +292,13 @@ function updateTimeList() {
         timeZoneText = "(UTC";
         if (ui.isLocalTime()) {
 
-            timeZoneOffset = -1 * currentDate.getTimezoneOffset();
+            timezoneOffset = ui.calculateTimezoneOffsetHours();
 
-            if (timeZoneOffset >= 0) {
+            if (timezoneOffset >= 0) {
                 timeZoneText += "+";
             }
 
-            timeZoneText += (timeZoneOffset / 60);
+            timeZoneText += timezoneOffset;
         }
         timeZoneText += ")";
 
