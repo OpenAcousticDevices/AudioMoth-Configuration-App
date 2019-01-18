@@ -91,6 +91,16 @@ var configurations = [{
     current: 39.0
 }];
 
+/* Packet lengths for each version */
+
+var packetLengthVersions = [{
+    firmwareVersion: "< 1.2.0",
+    packetLength: 39
+}, {
+    firmwareVersion: "1.2.0",
+    packetLength: 40
+}];
+
 function errorOccurred(err) {
 
     console.error(err);
@@ -99,11 +109,15 @@ function errorOccurred(err) {
 
 }
 
+/* Store version number for packet size checks */
+
+var firmwareVersion = "< 1.2.0";
+
 /* Request, receive and handle AudioMoth information packet */
 
 function getAudioMothPacket() {
 
-    var id, date, batteryState, firmwareVersionArr, firmwareVersion;
+    var id, date, batteryState, firmwareVersionArr;
 
     audiomoth.getPacket(function (err, packet) {
 
@@ -309,7 +323,7 @@ function configureDevice() {
 
     audiomoth.setPacket(packet, function (err, data) {
 
-        var j, matches, showError;
+        var k, j, matches, packetLength, showError;
 
         showError = function () {
             dialog.showErrorBox("Configuration failed.", "Configuration was not applied to AudioMoth\nPlease reconnect device and try again.");
@@ -323,11 +337,28 @@ function configureDevice() {
 
             matches = true;
 
-            for (j = 0; j < Math.min(packet.length, data.length - 1); j += 1) {
+            /* Check if the firmware version of the device being configured has a known packet length */
+            /* If not, the length of the packet sent/received is used */
+
+            packetLength = Math.min(packet.length, data.length - 1);
+
+            for (k = 0; k < packetLengthVersions.length; k += 1) {
+
+                if (packetLengthVersions[k].firmwareVersion === firmwareVersion) {
+
+                    packetLength = packetLengthVersions[k].packetLength;
+
+                }
+
+            }
+
+            /* Verify the packet sent was read correctly by the device by comparing it to the returned packet */
+
+            for (j = 0; j < packetLength; j += 1) {
 
                 if (packet[j] !== data[j + 1]) {
 
-                    console.log(packet[j] + ' - ' + data[j + 1]);
+                    console.log("(" + j + ")  " + packet[j] + ' - ' + data[j + 1]);
                     matches = false;
 
                     break;
