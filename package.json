@@ -1,6 +1,6 @@
 {
   "name": "AudioMoth-Config",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "author": "openacousticdevices.info",
