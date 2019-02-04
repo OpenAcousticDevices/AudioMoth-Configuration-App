@@ -42,11 +42,11 @@ app.on('ready', function () {
     var menu, mainWindow, menuTemplate, windowHeight;
 
     if (process.platform === 'darwin') {
-        windowHeight = 701;
+        windowHeight = 736;
     } else if (process.platform === 'linux') {
-        windowHeight = 703;
+        windowHeight = 738;
     } else {
-        windowHeight = 725;
+        windowHeight = 760;
     }
 
     mainWindow = new BrowserWindow({
