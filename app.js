@@ -100,6 +100,9 @@ var packetLengthVersions = [{
 }, {
     firmwareVersion: "1.2.0",
     packetLength: 40
+}, {
+    firmwareVersion: "1.2.1",
+    packetLength: 41
 }];
 
 function errorOccurred(err) {
