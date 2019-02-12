@@ -191,7 +191,7 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 function configureDevice() {
 
-    var packet, index, date, configuration, i, utcTimePeriod, timePeriods, timeZoneTimePeriods, startMins, endMins, timezoneOffset;
+    var packet, index, date, configuration, i, utcTimePeriod, timePeriods, timezoneTimePeriods, startMins, endMins, timezoneOffset;
 
     /* Build configuration packet */
 
@@ -235,11 +235,11 @@ function configureDevice() {
     index += 1;
 
     timePeriods = timeHandler.getTimePeriods();
-    timeZoneTimePeriods = timePeriods;
+    timezoneTimePeriods = timePeriods;
 
     if (ui.isLocalTime()) {
 
-        timeZoneTimePeriods = [];
+        timezoneTimePeriods = [];
 
         for (i = 0; i < timePeriods.length; i += 1) {
 
@@ -255,19 +255,19 @@ function configureDevice() {
 
                     /* Split time period into two periods either side of midnight */
 
-                    timeZoneTimePeriods.push({
+                    timezoneTimePeriods.push({
                         startMins: startMins,
                         endMins: 1440
                     });
 
-                    timeZoneTimePeriods.push({
+                    timezoneTimePeriods.push({
                         startMins: 0,
                         endMins: endMins - 1440
                     });
 
                 } else {
 
-                    timeZoneTimePeriods.push({
+                    timezoneTimePeriods.push({
                         startMins: startMins,
                         endMins: endMins
                     });
@@ -276,7 +276,7 @@ function configureDevice() {
 
             } else {
 
-                timeZoneTimePeriods.push({
+                timezoneTimePeriods.push({
                     startMins: startMins,
                     endMins: endMins
                 });
@@ -287,21 +287,21 @@ function configureDevice() {
 
     }
 
-    /* Apply timeZone changes to time period list */
+    /* Apply timezone changes to time period list */
 
-    packet[index] = timeZoneTimePeriods.length;
+    packet[index] = timezoneTimePeriods.length;
     index += 1;
 
-    for (i = 0; i < timeZoneTimePeriods.length; i += 1) {
+    for (i = 0; i < timezoneTimePeriods.length; i += 1) {
 
-        writeLittleEndianBytes(packet, index, 2, timeZoneTimePeriods[i].startMins);
+        writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].startMins);
         index += 2;
-        writeLittleEndianBytes(packet, index, 2, timeZoneTimePeriods[i].endMins);
+        writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].endMins);
         index += 2;
 
     }
 
-    for (i = 0; i < (timeHandler.MAX_PERIODS + 1) - timeZoneTimePeriods.length; i += 1) {
+    for (i = 0; i < (timeHandler.MAX_PERIODS + 1) - timezoneTimePeriods.length; i += 1) {
 
         writeLittleEndianBytes(packet, index, 2, 0);
         index += 2;

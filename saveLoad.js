@@ -140,7 +140,7 @@ function useLoadedConfiguration(err, data) {
             sleepDurationInput.value = jsonObj.sleepDuration;
             ui.checkInputs(lifeDisplay.updateLifeDisplay);
 
-            ui.setTimeZoneStatus(false);
+            ui.setTimezoneStatus(false);
 
             console.log("Config loaded");
 

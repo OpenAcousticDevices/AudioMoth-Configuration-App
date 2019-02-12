@@ -21,7 +21,7 @@ var clipboard = electron.remote.clipboard;
 
 var applicationMenu = menu.getApplicationMenu();
 
-var timeZoneLabel = document.getElementById('time-zone-label');
+var timezoneLabel = document.getElementById('timezone-label');
 
 var idDisplay = document.getElementById('id-display');
 var idLabel = document.getElementById('id-label');
@@ -293,7 +293,7 @@ exports.disableDisplay = function () {
 
     timeDisplay.style.color = "lightgrey";
 
-    timeZoneLabel.style.color = "lightgrey";
+    timezoneLabel.style.color = "lightgrey";
 
     deviceDate = new Date(0);
 
@@ -339,7 +339,7 @@ exports.enableDisplay = function () {
 
     timeDisplay.style.color = textColor;
 
-    timeZoneLabel.style.color = textColor;
+    timezoneLabel.style.color = textColor;
 
     idLabel.style.color = textColor;
 
@@ -608,13 +608,13 @@ recordingDurationInput.addEventListener('change', function () {
 
 /* Switch between time zone modes (UTC and local) */
 
-function setTimeZoneStatus(local) {
+function setTimezoneStatus(local) {
 
-    var timeZoneText, timezoneOffset;
+    var timezoneText, timezoneOffset;
 
     setLocalTime(local);
 
-    timeZoneText = "UTC";
+    timezoneText = "UTC";
 
     if (isLocalTime()) {
 
@@ -625,30 +625,30 @@ function setTimeZoneStatus(local) {
         if (timezoneOffset !== 0) {
 
             if (timezoneOffset > 0) {
-                timeZoneText += "+";
+                timezoneText += "+";
             }
 
-            timeZoneText += timezoneOffset;
+            timezoneText += timezoneOffset;
 
         }
 
     }
 
-    timeZoneLabel.innerText = timeZoneText;
+    timezoneLabel.innerText = timezoneText;
 
     updateUI();
 
 }
 
-exports.setTimeZoneStatus = setTimeZoneStatus;
+exports.setTimezoneStatus = setTimezoneStatus;
 
-function toggleTimeZoneStatus() {
+function toggleTimezoneStatus() {
 
-    setTimeZoneStatus(!isLocalTime());
+    setTimezoneStatus(!isLocalTime());
 
 }
 
-electron.ipcRenderer.on('localTime', toggleTimeZoneStatus);
+electron.ipcRenderer.on('localTime', toggleTimezoneStatus);
 
 function toggleNightMode() {
 
