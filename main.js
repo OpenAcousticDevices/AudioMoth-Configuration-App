@@ -57,6 +57,14 @@ app.on('ready', function () {
         icon: path.join(__dirname, "/build/icon.ico")
     });
 
+    mainWindow.on('restore', function () {
+        /* When minimised and restored, Windows platforms alter the BrowserWindow such that the height no longer includes the menu bar */
+        /* This resize cannot be blocked so this fix resizes it, taking into account the menu change */
+        if (process.platform === 'win32') {
+            mainWindow.setSize(565, windowHeight + 20);
+        }
+    });
+
     menuTemplate = [{
         label: "File",
         submenu: [{
