@@ -8,6 +8,7 @@
 
 /*global document, Uint8Array*/
 /*jslint bitwise: true*/
+/*jslint plusplus: true*/
 
 var audiomoth = require('audiomoth-hid');
 
@@ -23,9 +24,10 @@ var dialog = electron.remote.dialog;
 
 var ledCheckbox = document.getElementById('led-checkbox');
 var batteryCheckbox = document.getElementById('battery-checkbox');
+var batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
 
-var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
+var recordingDurationInput = document.getElementById('recording-duration-input');
 
 var configureButton = document.getElementById('configure-button');
 
@@ -102,7 +104,7 @@ var packetLengthVersions = [{
     packetLength: 40
 }, {
     firmwareVersion: "1.2.1",
-    packetLength: 41
+    packetLength: 42
 }];
 
 function errorOccurred(err) {
@@ -191,50 +193,42 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 function configureDevice() {
 
-    var packet, index, date, configuration, i, utcTimePeriod, timePeriods, timezoneTimePeriods, startMins, endMins, timezoneOffset;
+    var i, index, packet, configuration, utcTimePeriod, timePeriods, timezoneTimePeriods, startMins, endMins;
 
     /* Build configuration packet */
 
-    packet = new Uint8Array(62);
     index = 0;
 
-    date = new Date();
-    writeLittleEndianBytes(packet, index, 4, date.valueOf() / 1000);
+    packet = new Uint8Array(62);
+
+    writeLittleEndianBytes(packet, index, 4, (new Date()).valueOf() / 1000);
     index += 4;
 
-    packet[index] = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
-    index += 1;
+    packet[index++] = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
 
     configuration = configurations[parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10)];
 
-    packet[index] = configuration.clockDivider;
-    index += 1;
-    packet[index] = configuration.acquisitionCycles;
-    index += 1;
-    packet[index] = configuration.oversampleRate;
-    index += 1;
+    packet[index++] = configuration.clockDivider;
+
+    packet[index++] = configuration.acquisitionCycles;
+
+    packet[index++] = configuration.oversampleRate;
+
     writeLittleEndianBytes(packet, index, 4, configuration.sampleRate);
     index += 4;
-    packet[index] = configuration.sampleRateDivider;
-    index += 1;
+
+    packet[index++] = configuration.sampleRateDivider;
 
     writeLittleEndianBytes(packet, index, 2, sleepDurationInput.value);
     index += 2;
+
     writeLittleEndianBytes(packet, index, 2, recordingDurationInput.value);
     index += 2;
 
-    if (ledCheckbox.checked) {
-
-        packet[index] = 0x01;
-
-    } else {
-
-        packet[index] = 0x00;
-
-    }
-    index += 1;
+    packet[index++] = ledCheckbox.checked ? 1 : 0;
 
     timePeriods = timeHandler.getTimePeriods();
+
     timezoneTimePeriods = timePeriods;
 
     if (ui.isLocalTime()) {
@@ -289,13 +283,13 @@ function configureDevice() {
 
     /* Apply timezone changes to time period list */
 
-    packet[index] = timezoneTimePeriods.length;
-    index += 1;
+    packet[index++] = timezoneTimePeriods.length;
 
     for (i = 0; i < timezoneTimePeriods.length; i += 1) {
 
         writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].startMins);
         index += 2;
+
         writeLittleEndianBytes(packet, index, 2, timezoneTimePeriods[i].endMins);
         index += 2;
 
@@ -305,34 +299,17 @@ function configureDevice() {
 
         writeLittleEndianBytes(packet, index, 2, 0);
         index += 2;
+
         writeLittleEndianBytes(packet, index, 2, 0);
         index += 2;
 
     }
 
-    if (ui.isLocalTime()) {
+    packet[index++] = ui.isLocalTime() ? ui.calculateTimezoneOffsetHours() : 0;
 
-        timezoneOffset = ui.calculateTimezoneOffsetHours();
+    packet[index++] = batteryCheckbox.checked ? 1 : 0;
 
-    } else {
-
-        timezoneOffset = 0;
-
-    }
-
-    packet[index] = timezoneOffset;
-    index += 1;
-
-    if (batteryCheckbox.checked) {
-
-        packet[index] = 0x01;
-
-    } else {
-
-        packet[index] = 0x00;
-
-    }
-    index += 1;
+    packet[index++] = batteryLevelCheckbox.checked ? 0 : 1;
 
     /* Send packet to device */
 
