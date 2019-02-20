@@ -9,14 +9,16 @@
 /*jslint nomen: true*/
 
 var electron = require('electron');
+
 var app = electron.app;
 
-var BrowserWindow = electron.BrowserWindow;
-
 var Menu = electron.Menu;
+
 var shell = electron.shell;
 
 var path = require('path');
+
+var BrowserWindow = electron.BrowserWindow;
 
 require('electron-debug')({
     showDevTools: "undocked"
@@ -165,3 +167,5 @@ app.on('ready', function () {
 app.on('window-all-closed', function () {
     app.quit();
 });
+
+app.disableHardwareAcceleration();
