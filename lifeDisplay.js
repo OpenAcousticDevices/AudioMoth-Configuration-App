@@ -145,17 +145,11 @@ function updateLifeDisplay() {
 
     text += totalRecCount + " file";
 
-    if (totalRecCount > 1) {
-
-        text += "s";
-
-    }
-
-    text += ", ";
+    text += totalRecCount > 1 ? "s " : " ";
 
     if (completeRecCount > 0) {
 
-        text += " each up to " + formatFileSize(recSize) + ", ";
+        text += " each up to " + formatFileSize(recSize) + " ";
 
     }
 
