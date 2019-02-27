@@ -20,6 +20,10 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 var lifeDisplayPanel = document.getElementById('life-display-panel');
 
+/* Energy consumed while device is awaiting an active period */
+
+var sleepEnergy = 0.1;
+
 /* Obtain sample rate configuration data */
 
 exports.setConfigurationData = function (configData) {
@@ -32,39 +36,44 @@ exports.setConfigurationData = function (configData) {
 
 function getDailyCounts(timePeriods, recSecs, sleepSecs) {
 
-    var i, periodSecs, totalRecCount, recCount, totalRecLength, timeRemaining, truncatedRecordingTime;
+    var i, periodSecs, totalCompleteRecCount, completeRecCount, totalRecLength, timeRemaining, truncatedRecCount, truncatedRecTime;
 
-    totalRecCount = 0;
-    truncatedRecordingTime = 0;
+    /* Total number of recordings of the intended length */
+    totalCompleteRecCount = 0;
+    /* Total number of recordings which could not be the intended length, so have been truncated */
+    truncatedRecCount = 0;
+    /* Total length of all truncated files in seconds */
+    truncatedRecTime = 0;
 
     for (i = 0; i < timePeriods.length; i += 1) {
 
         /* Calculate how many full recording periods fit in the allotted time */
 
         periodSecs = (timePeriods[i].endMins - timePeriods[i].startMins) * 60;
-        recCount = Math.floor(periodSecs / (recSecs + sleepSecs));
+        completeRecCount = Math.floor(periodSecs / (recSecs + sleepSecs));
 
         /* Check if a truncated recording will fit in the rest of the period */
-        totalRecLength = recCount * (recSecs + sleepSecs);
+        totalRecLength = completeRecCount * (recSecs + sleepSecs);
         timeRemaining = periodSecs - totalRecLength;
 
-        if (timeRemaining >= 0) {
+        if (timeRemaining > 0) {
 
-            truncatedRecordingTime += timeRemaining;
+            truncatedRecTime += timeRemaining;
+            truncatedRecCount += 1;
 
         }
-        totalRecCount += recCount;
+
+        totalCompleteRecCount += completeRecCount;
 
     }
 
     return {
-        totalRecCount: totalRecCount,
-        truncatedRecordingTime: truncatedRecordingTime
+        completeRecCount: totalCompleteRecCount,
+        truncatedRecCount: truncatedRecCount,
+        truncatedRecTime: truncatedRecTime
     };
 
 }
-
-var sleepEnergy = 0.1;
 
 /* Add units to file size string */
 
@@ -96,7 +105,7 @@ function formatFileSize(fileSize) {
 
 function updateLifeDisplay() {
 
-    var text, configuration, recLength, sleepLength, countResponse, recCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecordingTime;
+    var text, configuration, recLength, sleepLength, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime;
 
     /* If no recording periods exist, do not perform energy calculations */
 
@@ -116,43 +125,41 @@ function updateLifeDisplay() {
     /* Calculate the amount of time spent recording each day */
 
     countResponse = getDailyCounts(timeHandler.getTimePeriods(), recLength, sleepLength);
-    recCount = countResponse.totalRecCount;
-    truncatedRecordingTime = countResponse.truncatedRecordingTime;
+    completeRecCount = countResponse.completeRecCount;
+    truncatedRecCount = countResponse.truncatedRecCount;
+    truncatedRecTime = countResponse.truncatedRecTime;
 
-    totalRecLength = (recCount * recLength) + truncatedRecordingTime;
+    totalRecCount = completeRecCount + truncatedRecCount;
+    totalRecLength = (completeRecCount * recLength) + truncatedRecTime;
 
     /* Calculate the size of a days worth of recordings */
 
     recSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * recLength;
-    truncatedRecordingSize = (truncatedRecordingTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
+    truncatedRecordingSize = (truncatedRecTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
 
-    totalSize = (recSize * recCount) + truncatedRecordingSize;
+    totalSize = (recSize * completeRecCount) + truncatedRecordingSize;
+
+    /* Generate life display message */
 
     text = "Each day this will produce ";
 
-    if (truncatedRecordingTime > 0 && recCount === 0) {
+    text += totalRecCount + " file";
 
-        text += "1 file, " + formatFileSize(truncatedRecordingSize) + " in size.<br/>";
+    if (totalRecCount > 1) {
 
-    } else {
-
-        if (truncatedRecordingTime > 0) {
-
-            recCount += 1;
-
-        }
-
-        text = "Each day this will produce " + recCount + " file";
-
-        if (recCount > 1) {
-
-            text += "s";
-
-        }
-
-        text += ", up to " + formatFileSize(recSize) + " in size, totalling " + formatFileSize(totalSize) + ".<br/>";
+        text += "s";
 
     }
+
+    text += ", ";
+
+    if (completeRecCount > 0) {
+
+        text += " each up to " + formatFileSize(recSize) + ", ";
+
+    }
+
+    text += "totalling " + formatFileSize(totalSize) + ".<br/>";
 
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
