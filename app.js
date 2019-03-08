@@ -281,6 +281,10 @@ function configureDevice() {
 
     }
 
+    timezoneTimePeriods = timezoneTimePeriods.sort(function (a, b) {
+        return a.startMins - b.startMins;
+    });
+
     /* Apply timezone changes to time period list */
 
     packet[index++] = timezoneTimePeriods.length;
