@@ -26,12 +26,20 @@ require('electron-debug')({
 
 function openAboutWindow() {
 
+	var aboutWindow, iconLocation;
+
+	iconLocation = "/build/icon.ico";
+
+	if (process.platform === 'linux') {
+		iconLocation = "/build/icon.png";
+	}
+
     var aboutWindow = new BrowserWindow({
         width: 400,
         height: 325,
         resizable: false,
         fullscreenable: false,
-        icon: path.join(__dirname, "/build/icon.ico")
+        icon: path.join(__dirname, iconLocation)
     });
 
     aboutWindow.setMenu(null);
@@ -41,12 +49,15 @@ function openAboutWindow() {
 
 app.on('ready', function () {
 
-    var menu, mainWindow, menuTemplate, windowHeight;
+    var menu, mainWindow, menuTemplate, windowHeight, iconLocation;
+
+    iconLocation = "/build/icon.ico";
 
     if (process.platform === 'darwin') {
         windowHeight = 756;
     } else if (process.platform === 'linux') {
         windowHeight = 758;
+        iconLocation = "/build/icon.png";
     } else {
         windowHeight = 780;
     }
@@ -56,7 +67,7 @@ app.on('ready', function () {
         height: windowHeight,
         resizable: false,
         fullscreenable: false,
-        icon: path.join(__dirname, "/build/icon.ico")
+        icon: path.join(__dirname, iconLocation)
     });
 
     mainWindow.on('restore', function () {
