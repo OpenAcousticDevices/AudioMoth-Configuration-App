@@ -470,24 +470,6 @@ function addTimeOnClick() {
 /* Recording period data structure getter and setter */
 
 exports.getTimePeriods = function () {
-
-    var tp;
-
-    if (ui.isLocalTime()) {
-
-        tp = convertTimePeriodsToLocal(timePeriods);
-
-    } else {
-
-        tp = timePeriods;
-
-    }
-
-    return tp;
-
-};
-
-exports.getUtcTimePeriods = function () {
     return timePeriods;
 };
 

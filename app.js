@@ -231,56 +231,6 @@ function configureDevice() {
 
     timezoneTimePeriods = timePeriods;
 
-    if (ui.isLocalTime()) {
-
-        timezoneTimePeriods = [];
-
-        for (i = 0; i < timePeriods.length; i += 1) {
-
-            utcTimePeriod = timeHandler.convertTimePeriodToUTC(timePeriods[i]);
-            startMins = utcTimePeriod.startMins;
-            endMins = utcTimePeriod.endMins;
-
-            if (endMins < startMins) {
-
-                endMins += 1440;
-
-                if (endMins > 1440) {
-
-                    /* Split time period into two periods either side of midnight */
-
-                    timezoneTimePeriods.push({
-                        startMins: startMins,
-                        endMins: 1440
-                    });
-
-                    timezoneTimePeriods.push({
-                        startMins: 0,
-                        endMins: endMins - 1440
-                    });
-
-                } else {
-
-                    timezoneTimePeriods.push({
-                        startMins: startMins,
-                        endMins: endMins
-                    });
-
-                }
-
-            } else {
-
-                timezoneTimePeriods.push({
-                    startMins: startMins,
-                    endMins: endMins
-                });
-
-            }
-
-        }
-
-    }
-
     timezoneTimePeriods = timezoneTimePeriods.sort(function (a, b) {
         return a.startMins - b.startMins;
     });
