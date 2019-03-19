@@ -26,15 +26,15 @@ require('electron-debug')({
 
 function openAboutWindow() {
 
-	var aboutWindow, iconLocation;
+    var aboutWindow, iconLocation;
 
-	iconLocation = "/build/icon.ico";
+    iconLocation = "/build/icon.ico";
 
-	if (process.platform === 'linux') {
-		iconLocation = "/build/icon.png";
-	}
+    if (process.platform === 'linux') {
+        iconLocation = "/build/icon.png";
+    }
 
-    var aboutWindow = new BrowserWindow({
+    aboutWindow = new BrowserWindow({
         width: 400,
         height: 325,
         resizable: false,
