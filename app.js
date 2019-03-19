@@ -193,7 +193,7 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 function configureDevice() {
 
-    var i, index, packet, configuration, utcTimePeriod, timePeriods, timezoneTimePeriods, startMins, endMins;
+    var i, index, packet, configuration, timePeriods, timezoneTimePeriods;
 
     /* Build configuration packet */
 
