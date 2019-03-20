@@ -21,17 +21,19 @@ var Validator = require('jsonschema').Validator;
 
 var ledCheckbox = document.getElementById('led-checkbox');
 var batteryCheckbox = document.getElementById('battery-checkbox');
+var batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
 
 var recordingDurationInput = document.getElementById('recording-duration-input');
 var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 /* Save configuration settings in UI to .config file */
 
-function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, callback) {
+function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, batteryLevelCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, callback) {
 
     var configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',';
     configuration += '"ledEnabled": ' + ledEnabled + ', ';
     configuration += '"batteryCheckEnabled": ' + batteryCheckEnabled + ', ';
+    configuration += '"batteryLevelCheckEnabled": ' + batteryLevelCheckEnabled + ', ';
     configuration += '"sampleRateIndex": ' + sampleRateIndex + ', ';
     configuration += '"gainIndex": ' + gainIndex + ', ';
     configuration += '"recDuration": ' + recDuration + ', ';
@@ -99,6 +101,9 @@ function useLoadedConfiguration(err, data) {
                     "batteryCheckEnabled": {
                         "type": "boolean"
                     },
+                    "batteryLevelCheckEnabled": {
+                        "type": "boolean"
+                    },
                     "sampleRateIndex": {
                         "type": "integer"
                     },
@@ -129,6 +134,7 @@ function useLoadedConfiguration(err, data) {
 
             ledCheckbox.checked = jsonObj.ledEnabled;
             batteryCheckbox.checked = jsonObj.batteryCheckEnabled;
+            batteryLevelCheckbox.checked = jsonObj.batteryLevelCheckEnabled;
 
             sampleRateRadios = document.getElementsByName("sample-rate-radio");
             sampleRateRadios[jsonObj.sampleRateIndex].checked = true;
@@ -166,7 +172,8 @@ function saveConfigurationOnClick() {
     sampleRateIndex = parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10);
     gainIndex = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
 
-    saveConfiguration(timePeriods, ledCheckbox.checked, batteryCheckbox.checked, sampleRateIndex, gainIndex, parseInt(recordingDurationInput.value, 10), parseInt(sleepDurationInput.value, 10), function (err) {
+    saveConfiguration(timePeriods, ledCheckbox.checked, batteryCheckbox.checked, batteryLevelCheckbox.checked, sampleRateIndex, gainIndex, parseInt(recordingDurationInput.value, 10), parseInt(sleepDurationInput.value, 10), function (err) {
+
         if (err) {
 
             console.error(err);
@@ -176,6 +183,7 @@ function saveConfigurationOnClick() {
             console.log("Config saved");
 
         }
+
     });
 
 }
