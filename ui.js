@@ -133,6 +133,12 @@ function updateCanvas() {
 
     timePeriods = timeHandler.getTimePeriods();
 
+    if(localTime) {
+
+        timePeriods = timeHandler.convertTimePeriodsToLocal(timePeriods);
+
+    }
+
     currentTimeDate = new Date();
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);

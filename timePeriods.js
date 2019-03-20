@@ -227,6 +227,8 @@ function convertTimePeriodsToLocal(tps) {
 
 }
 
+exports.convertTimePeriodsToLocal = convertTimePeriodsToLocal;
+
 /* Convert a list of local time periods to UTC */
 
 function convertLocalTimePeriodsToUTC(localTimePeriods) {
