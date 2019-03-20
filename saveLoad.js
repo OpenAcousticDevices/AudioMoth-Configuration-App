@@ -167,7 +167,7 @@ function saveConfigurationOnClick() {
 
     var sampleRateIndex, gainIndex, timePeriods;
 
-    timePeriods = timeHandler.getUtcTimePeriods();
+    timePeriods = timeHandler.getTimePeriods();
 
     sampleRateIndex = parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10);
     gainIndex = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
