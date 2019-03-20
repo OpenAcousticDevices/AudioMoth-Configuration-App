@@ -333,7 +333,7 @@ function configureDevice() {
 
 }
 
-/* Initiliase lifeDisplay configuration data */
+/* Initialise lifeDisplay configuration data */
 
 lifeDisplay.setConfigurationData(configurations);
 
