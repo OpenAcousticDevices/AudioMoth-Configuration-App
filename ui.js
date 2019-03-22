@@ -705,15 +705,25 @@ function checkUtcToggleability() {
 
 exports.checkUtcToggleability = checkUtcToggleability;
 
-electron.ipcRenderer.on('copyID', function () {
+function copyDeviceID() {
 
-    clipboard.writeText(idDisplay.textContent);
-    idDisplay.style.color = "green";
+    var id = idDisplay.textContent;
 
-    setTimeout(function () {
-        idDisplay.style.color = "";
-    }, 5000);
+    if (id !== "0000000000000000") {
 
-});
+        clipboard.writeText(id);
+        idDisplay.style.color = "green";
+
+        setTimeout(function () {
+            idDisplay.style.color = "";
+        }, 5000);
+
+    }
+
+}
+
+electron.ipcRenderer.on('copyID', copyDeviceID);
+
+idDisplay.addEventListener('click', copyDeviceID);
 
 startTimeInput.focus();
