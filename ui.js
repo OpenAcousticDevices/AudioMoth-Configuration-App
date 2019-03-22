@@ -133,7 +133,7 @@ function updateCanvas() {
 
     timePeriods = timeHandler.getTimePeriods();
 
-    if(localTime) {
+    if (localTime) {
 
         timePeriods = timeHandler.convertTimePeriodsToLocal(timePeriods);
 
