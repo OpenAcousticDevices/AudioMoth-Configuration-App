@@ -7,6 +7,7 @@ input[type=number]::-webkit-outer-spin-button {
 .table>tbody>tr>td,
 .table>tbody>tr>th {
   border-top: none;
+  color: #FFFFFF;
 }
 
 body {
