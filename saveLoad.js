@@ -28,7 +28,7 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 /* Save configuration settings in UI to .config file */
 
-function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, batteryLevelCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, callback) {
+function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, batteryLevelCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, localTime, callback) {
 
     var configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',';
     configuration += '"ledEnabled": ' + ledEnabled + ', ';
@@ -37,7 +37,8 @@ function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, battery
     configuration += '"sampleRateIndex": ' + sampleRateIndex + ', ';
     configuration += '"gainIndex": ' + gainIndex + ', ';
     configuration += '"recDuration": ' + recDuration + ', ';
-    configuration += '"sleepDuration": ' + sleepDuration;
+    configuration += '"sleepDuration": ' + sleepDuration + ', ';
+    configuration += '"localTime": ' + localTime; 
     configuration += '}';
 
     dialog.showSaveDialog({
@@ -62,7 +63,7 @@ exports.saveConfiguration = saveConfiguration;
 
 function useLoadedConfiguration(err, data) {
 
-    var jsonObj, validator, schema, sampleRateRadios, gainRadios;
+    var jsonObj, validator, schema, sampleRateRadios, gainRadios, localTime;
 
     if (err) {
 
@@ -115,6 +116,9 @@ function useLoadedConfiguration(err, data) {
                     },
                     "sleepDuration": {
                         "type": "integer"
+                    },
+                    "localTime": {
+                        "type": "boolean"
                     }
                 },
                 "required": ["timePeriods", "ledEnabled", "batteryCheckEnabled", "sampleRateIndex", "gainIndex", "recDuration", "sleepDuration"]
@@ -146,6 +150,9 @@ function useLoadedConfiguration(err, data) {
             sleepDurationInput.value = jsonObj.sleepDuration;
             ui.checkInputs(lifeDisplay.updateLifeDisplay);
 
+            localTime = (typeof jsonObj.localTime === 'undefined') ? false : jsonObj.localTime;
+            ui.setTimezoneStatus(localTime);
+
             console.log("Config loaded");
 
         } catch (usageErr) {
@@ -170,7 +177,7 @@ function saveConfigurationOnClick() {
     sampleRateIndex = parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10);
     gainIndex = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
 
-    saveConfiguration(timePeriods, ledCheckbox.checked, batteryCheckbox.checked, batteryLevelCheckbox.checked, sampleRateIndex, gainIndex, parseInt(recordingDurationInput.value, 10), parseInt(sleepDurationInput.value, 10), function (err) {
+    saveConfiguration(timePeriods, ledCheckbox.checked, batteryCheckbox.checked, batteryLevelCheckbox.checked, sampleRateIndex, gainIndex, parseInt(recordingDurationInput.value, 10), parseInt(sleepDurationInput.value, 10), ui.isLocalTime(), function (err) {
 
         if (err) {
 

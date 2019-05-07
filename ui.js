@@ -106,8 +106,6 @@ function setLocalTime(lTime) {
 
 }
 
-exports.setLocalTime = setLocalTime;
-
 function calculateTimezoneOffsetMins() {
 
     var currentDate = new Date();
