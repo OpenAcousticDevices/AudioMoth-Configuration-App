@@ -243,9 +243,11 @@ exports.updateUI = updateUI;
 
 function drawTimeLabels() {
 
+    var fontSize = 7;
+
     labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
 
-    labelContext.font = Math.floor(0.3 * timeCanvas.height) + "pt Helvetica";
+    labelContext.font = fontSize + "pt Helvetica";
 
     if (nightMode) {
 
@@ -257,11 +259,11 @@ function drawTimeLabels() {
 
     }
 
-    labelContext.fillText("00:00", 0, 0.3 * timeCanvas.height);
-    labelContext.fillText("06:00", 0.225 * timeCanvas.width, 0.3 * timeCanvas.height);
-    labelContext.fillText("12:00", 0.475 * timeCanvas.width, 0.3 * timeCanvas.height);
-    labelContext.fillText("18:00", 0.725 * timeCanvas.width, 0.3 * timeCanvas.height);
-    labelContext.fillText("24:00", 0.94 * timeCanvas.width, 0.3 * timeCanvas.height);
+    labelContext.fillText("00:00", 0, fontSize);
+    labelContext.fillText("06:00", 0.225 * timeCanvas.width, fontSize);
+    labelContext.fillText("12:00", 0.475 * timeCanvas.width, fontSize);
+    labelContext.fillText("18:00", 0.725 * timeCanvas.width, fontSize);
+    labelContext.fillText("24:00", 0.95 * timeCanvas.width, fontSize);
 
 }
 

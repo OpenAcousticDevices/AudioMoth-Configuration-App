@@ -14,7 +14,7 @@
                 <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%; margin-top: 1%;">
                     <div class="row">
                         <div class="col-12" style="text-align: center; padding-top: 1%">
-                            <span style="font-size: 30px; font-family: &apos;Lucida Console&apos;, Monaco, monospace">
+                            <span style="font-size: 25px; font-family: &apos;Lucida Console&apos;, Monaco, monospace">
                                 <div id="time-display" style="display: inline-block;"></div>
                                 <div id="timezone-label" style="display: inline-block;">UTC</div>
                             </span>
@@ -56,11 +56,11 @@
             <!-- Schedule -->
             <div class="row" style="margin-top: 1%;">
                 <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
-                        <div class="row" style="text-align: center; margin-bottom: 2%;">
+                    <div class="row" style="margin-top: 0.5%; margin-bottom: 1%;">
+                        <div class="row" style="text-align: center; margin-bottom: 1%;">
                             <div class="col-lg-12">
-                                <canvas id="label-canvas" width="502px" height="10px"></canvas>
-                                <canvas id="time-canvas" width="502px" height="30px" style="border:1px solid;"></canvas>
+                                <canvas id="label-canvas" width="502px" height="7px"></canvas>
+                                <canvas id="time-canvas" width="502px" height="25px" style="border:1px solid;"></canvas>
                             </div>
                         </div>
                         <div class="col-6">
@@ -97,17 +97,17 @@
                     <div class="row" style="margin-top: 1%;">
                         <div class="col-12">
                             <div style="margin-left: 2%; margin-right: 1%">
-                                <table class="table">
+                                <table class="table" style="margin-bottom: 1%;">
                                     <tr style="font-size: 12px;">
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;"></td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">8</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">16</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">32</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">48</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">96</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">192</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">256</td>
-                                        <td align="center" style="padding: 0.5%; padding-left: 0%;">384</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;"></td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">8</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">16</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">32</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">48</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">96</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">192</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">256</td>
+                                        <td align="center" style="padding: 0%; padding-left: 0%;">384</td>
                                     </tr>
                                     <tr>
                                         <td align="left" style="padding-top: 0%; padding-bottom: 0%;">Sample rate (kHz):</td>
@@ -138,15 +138,15 @@
                                         </td>
                                     </tr>
                                     <tr style="font-size: 12px;">
-                                        <td align="center" style="padding: 0.5%"></td>
-                                        <td align="center" style="padding: 0.5%"></td>
-                                        <td align="center" style="padding: 0.5%"></td>
-                                        <td align="center" style="padding: 0.5%"></td>
-                                        <td align="center" style="padding: 0.5%">Low</td>
-                                        <td align="center" style="padding: 0.5%"></td>
-                                        <td align="center" style="padding: 0.5%">Med</td>
-                                        <td align="center" style="padding: 0.5%"></td>
-                                        <td align="center" style="padding: 0.5%">High</td>
+                                        <td align="center" style="padding: 0%"></td>
+                                        <td align="center" style="padding: 0%"></td>
+                                        <td align="center" style="padding: 0%"></td>
+                                        <td align="center" style="padding: 0%"></td>
+                                        <td align="center" style="padding: 0%">Low</td>
+                                        <td align="center" style="padding: 0%"></td>
+                                        <td align="center" style="padding: 0%">Med</td>
+                                        <td align="center" style="padding: 0%"></td>
+                                        <td align="center" style="padding: 0%">High</td>
                                     </tr>
                                     <tr>
                                         <td align="left" style="padding-top: 0%; padding-bottom: 0%;">Gain:</td>
@@ -183,7 +183,7 @@
                                     <input id="sleep-duration-input" type="number" style="width: 40%; margin-right: 7%; text-align: right;" value="5">
                                 </div>
                             </div>
-                            <div class="row" style="margin-top: 2%; margin-bottom: 2%;">
+                            <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
                                 <div class="col-6" style="text-align: left;">
                                     <span id="recording-duration-label" style="margin-left: 9%;">Recording duration (s):</span>
                                 </div>

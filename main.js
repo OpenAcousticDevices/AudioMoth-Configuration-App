@@ -54,12 +54,12 @@ app.on('ready', function () {
     iconLocation = "/build/icon.ico";
 
     if (process.platform === 'darwin') {
-        windowHeight = 756;
+        windowHeight = 702;
     } else if (process.platform === 'linux') {
-        windowHeight = 758;
+        windowHeight = 688;
         iconLocation = "/build/icon.png";
     } else {
-        windowHeight = 780;
+        windowHeight = 728;
     }
 
     mainWindow = new BrowserWindow({
