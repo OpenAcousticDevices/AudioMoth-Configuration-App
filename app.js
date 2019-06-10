@@ -105,6 +105,9 @@ var packetLengthVersions = [{
 }, {
     firmwareVersion: "1.2.1",
     packetLength: 42
+}, {
+    firmwareVersion: "1.2.2",
+    packetLength: 43
 }];
 
 function errorOccurred(err) {
@@ -264,6 +267,10 @@ function configureDevice() {
     packet[index++] = batteryCheckbox.checked ? 1 : 0;
 
     packet[index++] = batteryLevelCheckbox.checked ? 0 : 1;
+
+    /* For non-integer timezones */
+
+    packet[index++] = ui.isLocalTime() ? (ui.calculateTimezoneOffsetMins() % 60) : 0;
 
     /* Send packet to device */
 
