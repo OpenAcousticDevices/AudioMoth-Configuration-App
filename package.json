@@ -7,10 +7,8 @@
   "license": "ISC",
   "scripts": {
     "postinstall": "install-app-deps",
-    "start": "electron-builder install-app-deps && electron .",
-    "pack": "build --dir",
-    "dist": "build && electron-builder install-app-deps",
-    "dist32": "build --ia32 && electron-builder install-app-deps"
+    "start": "electron .",
+    "dist": "node builder.js"
   },
   "build": {
     "asar": {
