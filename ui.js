@@ -243,7 +243,7 @@ exports.updateUI = updateUI;
 
 function drawTimeLabels() {
 
-    var fontSize = 7;
+    var fontSize = 0.28 * timeCanvas.height;
 
     labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
 
