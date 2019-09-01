@@ -268,11 +268,11 @@ function configureDevice() {
 
     packet[index++] = batteryLevelCheckbox.checked ? 0 : 1;
 
-    /* For non-integer timezones */
-
-    packet[index++] = ui.isLocalTime() ? (ui.calculateTimezoneOffsetMins() % 60) : 0;
+    packet[index++] = ui.isLocalTime() ? ui.calculateTimezoneOffsetMins() % 60 : 0;
 
     /* Send packet to device */
+
+    console.log("Sent: " + packet);
 
     audiomoth.setPacket(packet, function (err, data) {
 
@@ -311,7 +311,8 @@ function configureDevice() {
 
                 if (packet[j] !== data[j + 1]) {
 
-                    console.log("(" + j + ")  " + packet[j] + ' - ' + data[j + 1]);
+                    console.log("(" + j + ")  Expected: " + packet[j] + ' Received: ' + data[j + 1]);
+
                     matches = false;
 
                     break;
@@ -329,6 +330,8 @@ function configureDevice() {
                 }, 1000);
 
             } else {
+
+                console.log("Received: " + data);
 
                 showError();
 
