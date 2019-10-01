@@ -641,8 +641,16 @@ function setTimezoneStatus(local) {
             offsetMins = timezoneOffset - (offsetHours * 60);
 
             timezoneText += offsetHours;
-            timezoneText += ":";
-            timezoneText += offsetMins;
+            if (offsetMins > 0) {
+
+                timezoneText += ":";
+                timezoneText += offsetMins;
+
+            } else {
+
+                timezoneText += ":00";
+
+            }
 
         }
 
