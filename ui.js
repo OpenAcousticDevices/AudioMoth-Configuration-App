@@ -650,10 +650,6 @@ function setTimezoneStatus(local) {
                 timezoneText += ":";
                 timezoneText += offsetMins;
 
-            } else {
-
-                timezoneText += ":00";
-
             }
 
         }
