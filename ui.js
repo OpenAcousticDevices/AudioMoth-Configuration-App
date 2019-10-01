@@ -616,7 +616,7 @@ recordingDurationInput.addEventListener('change', function () {
 
 function setTimezoneStatus(local) {
 
-    var timezoneText, timezoneOffset;
+    var timezoneText, timezoneOffset, offsetHours, offsetMins;
 
     setLocalTime(local);
 
@@ -632,9 +632,17 @@ function setTimezoneStatus(local) {
 
             if (timezoneOffset > 0) {
                 timezoneText += "+";
+            } else {
+                timezoneText += "-";
             }
 
-            timezoneText += timezoneOffset;
+            timezoneOffset = Math.abs(timezoneOffset * 60);
+            offsetHours = Math.floor(timezoneOffset / 60);
+            offsetMins = timezoneOffset - (offsetHours * 60);
+
+            timezoneText += offsetHours;
+            timezoneText += ":";
+            timezoneText += offsetMins;
 
         }
 
