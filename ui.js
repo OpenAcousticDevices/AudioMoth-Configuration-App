@@ -631,9 +631,13 @@ function setTimezoneStatus(local) {
         if (timezoneOffset !== 0) {
 
             if (timezoneOffset > 0) {
+
                 timezoneText += "+";
+
             } else {
+
                 timezoneText += "-";
+
             }
 
             timezoneOffset = Math.abs(timezoneOffset * 60);
