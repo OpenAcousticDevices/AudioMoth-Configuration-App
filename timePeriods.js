@@ -266,7 +266,7 @@ function convertLocalTimePeriodsToUTC(localTimePeriods) {
 
 function updateTimeList() {
 
-    var tp, i, startMins, endMins, timezoneText, timezoneOffset, offsetHours, offsetMins, option;
+    var tp, i, startMins, endMins, timezoneText, option;
 
     if (ui.isLocalTime()) {
 
@@ -294,29 +294,7 @@ function updateTimeList() {
         timezoneText = "(UTC";
         if (ui.isLocalTime()) {
 
-            timezoneOffset = ui.calculateTimezoneOffsetHours();
-
-            if (timezoneOffset > 0) {
-
-                timezoneText += "+";
-
-            } else {
-
-                timezoneText += "-";
-
-            }
-
-            timezoneOffset = Math.abs(timezoneOffset * 60);
-            offsetHours = Math.floor(timezoneOffset / 60);
-            offsetMins = timezoneOffset - (offsetHours * 60);
-
-            timezoneText += offsetHours;
-            if (offsetMins > 0) {
-
-                timezoneText += ":";
-                timezoneText += offsetMins;
-
-            }
+            timezoneText += ui.formatTimezone(ui.calculateTimezoneOffsetHours());
 
         }
         timezoneText += ")";

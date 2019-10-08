@@ -612,47 +612,58 @@ recordingDurationInput.addEventListener('change', function () {
     checkInputs(lifeDisplay.updateLifeDisplay);
 });
 
+/* Create timezone offset string */
+
+function formatTimezone(timezoneOffset) {
+
+    var timezoneText, offsetHours, offsetMins;
+
+    timezoneText = "";
+
+    if (timezoneOffset !== 0) {
+
+        if (timezoneOffset > 0) {
+
+            timezoneText += "+";
+
+        } else if (timezoneOffset < 0) {
+
+            timezoneText += "-";
+
+        }
+
+        timezoneOffset = Math.abs(timezoneOffset * 60);
+        offsetHours = Math.floor(timezoneOffset / 60);
+        offsetMins = timezoneOffset - (offsetHours * 60);
+
+        timezoneText += offsetHours;
+        if (offsetMins > 0) {
+
+            timezoneText += ":";
+            timezoneText += offsetMins;
+
+        }
+
+    }
+
+    return timezoneText;
+
+}
+
+exports.formatTimezone = formatTimezone;
+
 /* Switch between time zone modes (UTC and local) */
 
 function setTimezoneStatus(local) {
 
-    var timezoneText, timezoneOffset, offsetHours, offsetMins;
+    var timezoneText = "UTC";
 
     setLocalTime(local);
-
-    timezoneText = "UTC";
 
     if (isLocalTime()) {
 
         /* Offset is given as UTC - local time */
-
-        timezoneOffset = calculateTimezoneOffsetHours();
-
-        if (timezoneOffset !== 0) {
-
-            if (timezoneOffset > 0) {
-
-                timezoneText += "+";
-
-            } else {
-
-                timezoneText += "-";
-
-            }
-
-            timezoneOffset = Math.abs(timezoneOffset * 60);
-            offsetHours = Math.floor(timezoneOffset / 60);
-            offsetMins = timezoneOffset - (offsetHours * 60);
-
-            timezoneText += offsetHours;
-            if (offsetMins > 0) {
-
-                timezoneText += ":";
-                timezoneText += offsetMins;
-
-            }
-
-        }
+        timezoneText += formatTimezone(calculateTimezoneOffsetHours());
 
     }
 
