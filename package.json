@@ -1,6 +1,7 @@
 {
   "name": "AudioMoth-Config",
-  "version": "1.2.3",
+  "productName": "AudioMoth Configuration App",
+  "version": "1.2.4",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "author": "openacousticdevices.info",
@@ -36,7 +37,9 @@
     },
     "nsis": {
       "createDesktopShortcut": true,
-      "artifactName": "AudioMothConfigurationAppSetup${version}.exe"
+      "artifactName": "AudioMothConfigurationAppSetup${version}.exe",
+      "shortcutName": "AudioMoth Configuration App",
+      "uninstallDisplayName": "AudioMoth Configuration App ${version}"
     },
     "linux": {
       "icon": "build/",
