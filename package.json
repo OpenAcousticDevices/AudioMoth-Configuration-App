@@ -15,6 +15,11 @@
       "smartUnpack": true
     },
     "appId": "info.openacousticdevices.audiomothconfigurationapp",
+    "mac": {
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.inherit.plist",
+      "target": "dmg"
+    },
     "dmg": {
       "contents": [
         {
