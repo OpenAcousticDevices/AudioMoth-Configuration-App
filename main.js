@@ -57,17 +57,18 @@ app.on('ready', function () {
     iconLocation = "/build/icon.ico";
 
     if (process.platform === 'darwin') {
-        windowHeight = 702;
+        windowHeight = 680;
     } else if (process.platform === 'linux') {
-        windowHeight = 688;
+        windowHeight = 683;
         iconLocation = "/build/icon.png";
     } else {
-        windowHeight = 728;
+        windowHeight = 702;
     }
 
     mainWindow = new BrowserWindow({
         width: 565,
         height: windowHeight,
+        useContentSize: true,
         resizable: false,
         fullscreenable: false,
         icon: path.join(__dirname, iconLocation),
