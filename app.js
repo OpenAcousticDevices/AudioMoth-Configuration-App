@@ -14,7 +14,6 @@ var audiomoth = require('audiomoth-hid');
 
 var ui = require('./ui.js');
 var timeHandler = require('./timePeriods.js');
-var saveLoad = require('./saveLoad.js');
 var lifeDisplay = require('./lifeDisplay.js');
 
 var electron = require('electron');
@@ -30,9 +29,6 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 var recordingDurationInput = document.getElementById('recording-duration-input');
 
 var configureButton = document.getElementById('configure-button');
-
-var startTimeInput = document.getElementById('start-time-input');
-var endTimeInput = document.getElementById('end-time-input');
 
 /* Setting parameters */
 
