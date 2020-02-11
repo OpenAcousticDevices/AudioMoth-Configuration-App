@@ -301,8 +301,6 @@ exports.disableDisplay = function () {
 
     timezoneLabel.style.color = "lightgrey";
 
-    deviceDate = new Date(0);
-
     idLabel.style.color = "lightgrey";
 
     idDisplay.style.color = "lightgrey";
@@ -316,8 +314,6 @@ exports.disableDisplay = function () {
     batteryDisplay.style.color = "lightgrey";
 
     configureButton.disabled = true;
-
-    initialiseDisplay();
 
     applicationMenu.getMenuItemById("copyid").enabled = false;
 
