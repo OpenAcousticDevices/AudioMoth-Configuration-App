@@ -47,7 +47,8 @@
     },
     "linux": {
       "icon": "build/",
-      "category": "Utility"
+      "category": "Utility",
+      "artifactName": "AudioMothConfigurationAppSetup${version}.AppImage"
     }
   },
   "devDependencies": {
