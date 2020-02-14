@@ -15,6 +15,7 @@ var audiomoth = require('audiomoth-hid');
 var ui = require('./ui.js');
 var timeHandler = require('./timePeriods.js');
 var lifeDisplay = require('./lifeDisplay.js');
+var saveLoad = require('./saveLoad.js');
 
 var electron = require('electron');
 var dialog = electron.remote.dialog;
