@@ -6,7 +6,7 @@
 
 'use strict';
 
-/*global document*/
+/* global document */
 
 var ui = require('./ui.js');
 var timeHandler = require('./timePeriods.js');
@@ -28,7 +28,7 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 /* Save configuration settings in UI to .config file */
 
-function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, batteryLevelCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, localTime, callback) {
+function saveConfiguration (timePeriods, ledEnabled, batteryCheckEnabled, batteryLevelCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, localTime, callback) {
 
     var configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',';
     configuration += '"ledEnabled": ' + ledEnabled + ', ';
@@ -38,21 +38,25 @@ function saveConfiguration(timePeriods, ledEnabled, batteryCheckEnabled, battery
     configuration += '"gainIndex": ' + gainIndex + ', ';
     configuration += '"recDuration": ' + recDuration + ', ';
     configuration += '"sleepDuration": ' + sleepDuration + ', ';
-    configuration += '"localTime": ' + localTime; 
+    configuration += '"localTime": ' + localTime;
     configuration += '}';
 
     dialog.showSaveDialog({
-        title: "Save configuration",
-        nameFieldLabel: "Configuration name",
-        defaultPath: "AudioMoth.config",
+        title: 'Save configuration',
+        nameFieldLabel: 'Configuration name',
+        defaultPath: 'AudioMoth.config',
         filters: [{
-            name: "config",
-            extensions: ["config"]
+            name: 'config',
+            extensions: ['config']
         }]
     }, function (filename) {
+
         if (filename) {
+
             fs.writeFile(filename, configuration, callback);
+
         }
+
     });
 
 }
@@ -61,13 +65,13 @@ exports.saveConfiguration = saveConfiguration;
 
 /* Take data obtained from a loaded .config file and duplicate settings in the UI */
 
-function useLoadedConfiguration(err, data) {
+function useLoadedConfiguration (err, data) {
 
     var jsonObj, validator, schema, sampleRateRadios, gainRadios, localTime;
 
     if (err) {
 
-        dialog.showErrorBox("Load failed", "Configuration file could not be loaded.");
+        dialog.showErrorBox('Load failed', 'Configuration file could not be loaded.');
         console.error(err);
 
     } else {
@@ -79,54 +83,54 @@ function useLoadedConfiguration(err, data) {
             jsonObj = JSON.parse(data);
             validator = new Validator();
             schema = {
-                "id": "/configuration",
-                "type": "object",
-                "properties": {
-                    "timePeriods": {
-                        "type": "array",
-                        "items": {
-                            "properties": {
-                                "startMins": {
-                                    "type": "integer"
+                id: '/configuration',
+                type: 'object',
+                properties: {
+                    timePeriods: {
+                        type: 'array',
+                        items: {
+                            properties: {
+                                startMins: {
+                                    type: 'integer'
                                 },
-                                "endMins": {
-                                    "type": "integer"
+                                endMins: {
+                                    type: 'integer'
                                 }
                             },
-                            "required": ["startMins", "endMins"],
+                            required: ['startMins', 'endMins']
                         }
                     },
-                    "ledEnabled": {
-                        "type": "boolean"
+                    ledEnabled: {
+                        type: 'boolean'
                     },
-                    "batteryCheckEnabled": {
-                        "type": "boolean"
+                    batteryCheckEnabled: {
+                        type: 'boolean'
                     },
-                    "batteryLevelCheckEnabled": {
-                        "type": "boolean"
+                    batteryLevelCheckEnabled: {
+                        type: 'boolean'
                     },
-                    "sampleRateIndex": {
-                        "type": "integer"
+                    sampleRateIndex: {
+                        type: 'integer'
                     },
-                    "gainIndex": {
-                        "type": "integer"
+                    gainIndex: {
+                        type: 'integer'
                     },
-                    "recDuration": {
-                        "type": "integer"
+                    recDuration: {
+                        type: 'integer'
                     },
-                    "sleepDuration": {
-                        "type": "integer"
+                    sleepDuration: {
+                        type: 'integer'
                     },
-                    "localTime": {
-                        "type": "boolean"
+                    localTime: {
+                        type: 'boolean'
                     }
                 },
-                "required": ["timePeriods", "ledEnabled", "batteryCheckEnabled", "sampleRateIndex", "gainIndex", "recDuration", "sleepDuration"]
+                required: ['timePeriods', 'ledEnabled', 'batteryCheckEnabled', 'sampleRateIndex', 'gainIndex', 'recDuration', 'sleepDuration']
             };
 
             if (!validator.validate(jsonObj, schema).valid) {
 
-                throw new Error("JSON validation failed.");
+                throw new Error('JSON validation failed.');
 
             }
 
@@ -140,10 +144,10 @@ function useLoadedConfiguration(err, data) {
             batteryCheckbox.checked = jsonObj.batteryCheckEnabled;
             batteryLevelCheckbox.checked = jsonObj.batteryLevelCheckEnabled;
 
-            sampleRateRadios = document.getElementsByName("sample-rate-radio");
+            sampleRateRadios = document.getElementsByName('sample-rate-radio');
             sampleRateRadios[jsonObj.sampleRateIndex].checked = true;
 
-            gainRadios = document.getElementsByName("gain-radio");
+            gainRadios = document.getElementsByName('gain-radio');
             gainRadios[jsonObj.gainIndex].checked = true;
 
             recordingDurationInput.value = jsonObj.recDuration;
@@ -153,11 +157,11 @@ function useLoadedConfiguration(err, data) {
             localTime = (typeof jsonObj.localTime === 'undefined') ? false : jsonObj.localTime;
             ui.setTimezoneStatus(localTime);
 
-            console.log("Config loaded");
+            console.log('Config loaded');
 
         } catch (usageErr) {
 
-            dialog.showErrorBox("Incorrect format", "Configuration file was not readable.");
+            dialog.showErrorBox('Incorrect format', 'Configuration file was not readable.');
             console.error(usageErr);
 
         }
@@ -168,14 +172,14 @@ function useLoadedConfiguration(err, data) {
 
 /* Obtain configuration from UI and pass to relevant function in response to button press */
 
-function saveConfigurationOnClick() {
+function saveConfigurationOnClick () {
 
     var sampleRateIndex, gainIndex, timePeriods;
 
     timePeriods = timeHandler.getTimePeriods();
 
-    sampleRateIndex = parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10);
-    gainIndex = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
+    sampleRateIndex = parseInt(ui.getSelectedRadioValue('sample-rate-radio'), 10);
+    gainIndex = parseInt(ui.getSelectedRadioValue('gain-radio'), 10);
 
     saveConfiguration(timePeriods, ledCheckbox.checked, batteryCheckbox.checked, batteryLevelCheckbox.checked, sampleRateIndex, gainIndex, parseInt(recordingDurationInput.value, 10), parseInt(sleepDurationInput.value, 10), ui.isLocalTime(), function (err) {
 
@@ -185,7 +189,7 @@ function saveConfigurationOnClick() {
 
         } else {
 
-            console.log("Config saved");
+            console.log('Config saved');
 
         }
 
@@ -195,29 +199,39 @@ function saveConfigurationOnClick() {
 
 /* Display open dialog to allow users to load a .config file */
 
-function loadConfiguration() {
+function loadConfiguration () {
 
     dialog.showOpenDialog({
-        title: "Open configuration",
-        nameFieldLabel: "Configuration name",
-        defaultPath: "AudioMoth.config",
+        title: 'Open configuration',
+        nameFieldLabel: 'Configuration name',
+        defaultPath: 'AudioMoth.config',
         multiSelections: false,
         filters: [{
-            name: "config",
-            extensions: ["config"]
+            name: 'config',
+            extensions: ['config']
         }]
     }, function (filename) {
+
         if (filename) {
+
             fs.readFile(filename[0], useLoadedConfiguration);
+
         }
+
     });
 
 }
 
 /* Add listeners to menu options */
 
-electron.ipcRenderer.on('save', function () {
-    ui.checkInputs(saveConfigurationOnClick);
-});
+exports.addListeners = function () {
 
-electron.ipcRenderer.on('load', loadConfiguration);
+    electron.ipcRenderer.on('save', function () {
+
+        ui.checkInputs(saveConfigurationOnClick);
+
+    });
+
+    electron.ipcRenderer.on('load', loadConfiguration);
+
+};

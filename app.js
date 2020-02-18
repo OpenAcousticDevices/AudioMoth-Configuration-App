@@ -6,9 +6,7 @@
 
 'use strict';
 
-/*global document, Uint8Array*/
-/*jslint bitwise: true*/
-/*jslint plusplus: true*/
+/* global document, Uint8Array */
 
 var audiomoth = require('audiomoth-hid');
 
@@ -94,20 +92,20 @@ var configurations = [{
 /* Packet lengths for each version */
 
 var packetLengthVersions = [{
-    firmwareVersion: "< 1.2.0",
+    firmwareVersion: '< 1.2.0',
     packetLength: 39
 }, {
-    firmwareVersion: "1.2.0",
+    firmwareVersion: '1.2.0',
     packetLength: 40
 }, {
-    firmwareVersion: "1.2.1",
+    firmwareVersion: '1.2.1',
     packetLength: 42
 }, {
-    firmwareVersion: "1.2.2",
+    firmwareVersion: '1.2.2',
     packetLength: 43
 }];
 
-function errorOccurred(err) {
+function errorOccurred (err) {
 
     console.error(err);
 
@@ -117,11 +115,11 @@ function errorOccurred(err) {
 
 /* Store version number for packet size checks */
 
-var firmwareVersion = "< 1.2.0";
+var firmwareVersion = '< 1.2.0';
 
 /* Request, receive and handle AudioMoth information packet */
 
-function getAudioMothPacket() {
+function getAudioMothPacket () {
 
     var id, date, batteryState, firmwareVersionArr;
 
@@ -147,11 +145,11 @@ function getAudioMothPacket() {
 
             if (firmwareVersionArr[0] === 0) {
 
-                firmwareVersion = "< 1.2.0";
+                firmwareVersion = '< 1.2.0';
 
             } else {
 
-                firmwareVersion = firmwareVersionArr[0] + "." + firmwareVersionArr[1] + "." + firmwareVersionArr[2];
+                firmwareVersion = firmwareVersionArr[0] + '.' + firmwareVersionArr[1] + '.' + firmwareVersionArr[2];
 
             }
 
@@ -177,7 +175,7 @@ function getAudioMothPacket() {
 
 /* Write bytes into a buffer for transmission */
 
-function writeLittleEndianBytes(buffer, start, byteCount, value) {
+function writeLittleEndianBytes (buffer, start, byteCount, value) {
 
     var i;
 
@@ -191,7 +189,7 @@ function writeLittleEndianBytes(buffer, start, byteCount, value) {
 
 /* Submit configuration packet and configure device */
 
-function configureDevice() {
+function configureDevice () {
 
     var i, index, packet, configuration, timePeriods, timezoneTimePeriods;
 
@@ -204,9 +202,9 @@ function configureDevice() {
     writeLittleEndianBytes(packet, index, 4, (new Date()).valueOf() / 1000);
     index += 4;
 
-    packet[index++] = parseInt(ui.getSelectedRadioValue("gain-radio"), 10);
+    packet[index++] = parseInt(ui.getSelectedRadioValue('gain-radio'), 10);
 
-    configuration = configurations[parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10)];
+    configuration = configurations[parseInt(ui.getSelectedRadioValue('sample-rate-radio'), 10)];
 
     packet[index++] = configuration.clockDivider;
 
@@ -232,7 +230,9 @@ function configureDevice() {
     timezoneTimePeriods = timePeriods;
 
     timezoneTimePeriods = timezoneTimePeriods.sort(function (a, b) {
+
         return a.startMins - b.startMins;
+
     });
 
     /* Apply timezone changes to time period list */
@@ -269,14 +269,16 @@ function configureDevice() {
 
     /* Send packet to device */
 
-    console.log("Sent: " + packet);
+    console.log('Sent: ' + packet);
 
     audiomoth.setPacket(packet, function (err, data) {
 
         var k, j, matches, packetLength, showError;
 
         showError = function () {
-            dialog.showErrorBox("Configuration failed.", "Configuration was not applied to AudioMoth\nPlease reconnect device and try again.");
+
+            dialog.showErrorBox('Configuration failed.', 'Configuration was not applied to AudioMoth\nPlease reconnect device and try again.');
+
         };
 
         if (err || data === null || data.length === 0) {
@@ -308,7 +310,7 @@ function configureDevice() {
 
                 if (packet[j] !== data[j + 1]) {
 
-                    console.log("(" + j + ")  Expected: " + packet[j] + ' Received: ' + data[j + 1]);
+                    console.log('(' + j + ')  Expected: ' + packet[j] + ' Received: ' + data[j + 1]);
 
                     matches = false;
 
@@ -320,15 +322,17 @@ function configureDevice() {
 
             if (matches) {
 
-                configureButton.style.color = "green";
+                configureButton.style.color = 'green';
 
                 setTimeout(function () {
-                    configureButton.style.color = "";
+
+                    configureButton.style.color = '';
+
                 }, 1000);
 
             } else {
 
-                console.log("Received: " + data);
+                console.log('Received: ' + data);
 
                 showError();
 
@@ -345,6 +349,8 @@ function configureDevice() {
 lifeDisplay.setConfigurationData(configurations);
 
 /* Initialise UI elements */
+
+saveLoad.addListeners();
 
 ui.drawTimeLabels();
 
@@ -363,5 +369,7 @@ ui.checkUtcToggleability();
 setTimeout(getAudioMothPacket, 1000);
 
 configureButton.addEventListener('click', function () {
+
     ui.checkInputs(configureDevice);
+
 });

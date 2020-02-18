@@ -6,8 +6,6 @@
 
 'use strict';
 
-/*jslint nomen: true*/
-
 var electron = require('electron');
 
 var app = electron.app;
@@ -21,17 +19,19 @@ var path = require('path');
 var BrowserWindow = electron.BrowserWindow;
 
 require('electron-debug')({
-    showDevTools: "undocked"
+    showDevTools: 'undocked'
 });
 
-function openAboutWindow() {
+function openAboutWindow () {
 
     var aboutWindow, iconLocation;
 
-    iconLocation = "/build/icon.ico";
+    iconLocation = '/build/icon.ico';
 
     if (process.platform === 'linux') {
-        iconLocation = "/build/icon.png";
+
+        iconLocation = '/build/icon.png';
+
     }
 
     aboutWindow = new BrowserWindow({
@@ -46,7 +46,7 @@ function openAboutWindow() {
     });
 
     aboutWindow.setMenu(null);
-    aboutWindow.loadURL("file://" + __dirname + "/about.html");
+    aboutWindow.loadURL(path.join('file://', __dirname, '/about.html'));
 
 }
 
@@ -54,15 +54,21 @@ app.on('ready', function () {
 
     var menu, mainWindow, menuTemplate, windowHeight, iconLocation;
 
-    iconLocation = "/build/icon.ico";
+    iconLocation = '/build/icon.ico';
 
     if (process.platform === 'darwin') {
+
         windowHeight = 680;
+
     } else if (process.platform === 'linux') {
+
         windowHeight = 683;
-        iconLocation = "/build/icon.png";
+        iconLocation = '/build/icon.png';
+
     } else {
+
         windowHeight = 702;
+
     }
 
     mainWindow = new BrowserWindow({
@@ -78,64 +84,80 @@ app.on('ready', function () {
     });
 
     mainWindow.on('restore', function () {
+
         /* When minimised and restored, Windows platforms alter the BrowserWindow such that the height no longer includes the menu bar */
         /* This resize cannot be blocked so this fix resizes it, taking into account the menu change */
         if (process.platform === 'win32') {
+
             mainWindow.setSize(565, windowHeight + 20);
+
         }
+
     });
 
     menuTemplate = [{
-        label: "File",
+        label: 'File',
         submenu: [{
-            label: "Open Configuration",
-            accelerator: "CommandOrControl+O",
+            label: 'Open Configuration',
+            accelerator: 'CommandOrControl+O',
             click: function () {
-                mainWindow.webContents.send("load");
+
+                mainWindow.webContents.send('load');
+
             }
         }, {
-            label: "Save Configuration",
-            accelerator: "CommandOrControl+S",
+            label: 'Save Configuration',
+            accelerator: 'CommandOrControl+S',
             click: function () {
-                mainWindow.webContents.send("save");
+
+                mainWindow.webContents.send('save');
+
             }
         }, {
             type: 'separator'
         }, {
-            id: "copyid",
-            label: "Copy Device ID",
-            accelerator: "CommandOrControl+I",
+            id: 'copyid',
+            label: 'Copy Device ID',
+            accelerator: 'CommandOrControl+I',
             click: function () {
-                mainWindow.webContents.send("copyID");
+
+                mainWindow.webContents.send('copyID');
+
             },
             enabled: false
         }, {
             type: 'separator'
         }, {
-            type: "checkbox",
-            id: "localTime",
-            label: "Local Time",
-            accelerator: "CommandOrControl+T",
+            type: 'checkbox',
+            id: 'localTime',
+            label: 'Local Time',
+            accelerator: 'CommandOrControl+T',
             checked: false,
             click: function () {
-                mainWindow.webContents.send("localTime");
+
+                mainWindow.webContents.send('localTime');
+
             }
         }, {
-            type: "checkbox",
-            id: "nightmode",
-            label: "Night Mode",
-            accelerator: "CommandOrControl+N",
+            type: 'checkbox',
+            id: 'nightmode',
+            label: 'Night Mode',
+            accelerator: 'CommandOrControl+N',
             checked: false,
             click: function () {
-                mainWindow.webContents.send("nightmode");
+
+                mainWindow.webContents.send('nightmode');
+
             }
         }, {
             type: 'separator'
         }, {
-            label: "Quit",
-            accelerator: "CommandOrControl+Q",
+            label: 'Quit',
+            accelerator: 'CommandOrControl+Q',
             click: function () {
+
                 app.quit();
+
             }
         }]
     }, {
@@ -158,18 +180,22 @@ app.on('ready', function () {
             selector: 'selectAll:'
         }]
     }, {
-        label: "Help",
+        label: 'Help',
         submenu: [{
-            label: "About",
+            label: 'About',
             click: function () {
+
                 openAboutWindow();
+
             }
         }, {
             type: 'separator'
         }, {
-            label: "Open Acoustic Devices Website",
+            label: 'Open Acoustic Devices Website',
             click: function () {
-                shell.openExternal("https://openacousticdevices.info");
+
+                shell.openExternal('https://openacousticdevices.info');
+
             }
         }]
     }];
@@ -178,12 +204,14 @@ app.on('ready', function () {
 
     Menu.setApplicationMenu(menu);
 
-    mainWindow.loadURL("file://" + __dirname + "/index.html");
+    mainWindow.loadURL(path.join('file://', __dirname, '/index.html'));
 
 });
 
 app.on('window-all-closed', function () {
+
     app.quit();
+
 });
 
 app.disableHardwareAcceleration();

@@ -6,7 +6,7 @@
 
 'use strict';
 
-/*global document*/
+/* global document */
 
 var timeHandler = require('./timePeriods.js');
 var ui = require('./ui.js');
@@ -34,7 +34,7 @@ exports.setConfigurationData = function (configData) {
 
 /* Obtain number of recording periods in a day and the total extra time in the form of truncated recording periods */
 
-function getDailyCounts(timePeriods, recSecs, sleepSecs) {
+function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
     var i, periodSecs, totalCompleteRecCount, completeRecCount, totalRecLength, timeRemaining, truncatedRecCount, truncatedRecTime;
 
@@ -77,13 +77,13 @@ function getDailyCounts(timePeriods, recSecs, sleepSecs) {
 
 /* Add units to file size string */
 
-function formatFileSize(fileSize) {
+function formatFileSize (fileSize) {
 
     fileSize = Math.round(fileSize / 1024);
 
     if (fileSize < 10000) {
 
-        return fileSize + " KB";
+        return fileSize + ' KB';
 
     }
 
@@ -91,19 +91,19 @@ function formatFileSize(fileSize) {
 
     if (fileSize < 10000) {
 
-        return fileSize + " MB";
+        return fileSize + ' MB';
 
     }
 
     fileSize = Math.round(fileSize / 1024);
 
-    return fileSize + " GB";
+    return fileSize + ' GB';
 
 }
 
 /* Update storage and energy usage values in life display box */
 
-function updateLifeDisplay() {
+function updateLifeDisplay () {
 
     var text, configuration, recLength, sleepLength, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime;
 
@@ -111,13 +111,13 @@ function updateLifeDisplay() {
 
     if (timeHandler.getTimePeriods().length === 0) {
 
-        lifeDisplayPanel.textContent = "";
+        lifeDisplayPanel.textContent = '';
 
         return;
 
     }
 
-    configuration = configurations[parseInt(ui.getSelectedRadioValue("sample-rate-radio"), 10)];
+    configuration = configurations[parseInt(ui.getSelectedRadioValue('sample-rate-radio'), 10)];
 
     recLength = parseInt(recordingDurationInput.value, 10);
     sleepLength = parseInt(sleepDurationInput.value, 10);
@@ -141,19 +141,19 @@ function updateLifeDisplay() {
 
     /* Generate life display message */
 
-    text = "Each day this will produce ";
+    text = 'Each day this will produce ';
 
-    text += totalRecCount + " file";
+    text += totalRecCount + ' file';
 
-    text += totalRecCount > 1 ? "s " : " ";
+    text += totalRecCount > 1 ? 's ' : ' ';
 
     if (completeRecCount > 0) {
 
-        text += " each up to " + formatFileSize(recSize) + " ";
+        text += ' each up to ' + formatFileSize(recSize) + ' ';
 
     }
 
-    text += "totalling " + formatFileSize(totalSize) + ".<br/>";
+    text += 'totalling ' + formatFileSize(totalSize) + '.<br/>';
 
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
@@ -161,7 +161,7 @@ function updateLifeDisplay() {
 
     energyUsed += (86400 - totalRecLength) * sleepEnergy / 3600;
 
-    text += "Daily energy consumption will be approximately " + Math.round(energyUsed) + " mAh.";
+    text += 'Daily energy consumption will be approximately ' + Math.round(energyUsed) + ' mAh.';
 
     lifeDisplayPanel.innerHTML = text;
 

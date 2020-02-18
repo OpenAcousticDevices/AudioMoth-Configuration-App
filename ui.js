@@ -6,7 +6,7 @@
 
 'use strict';
 
-/*global window, document, dialog*/
+/* global window, document, dialog */
 
 var timeHandler = require('./timePeriods.js');
 var lifeDisplay = require('./lifeDisplay.js');
@@ -57,14 +57,18 @@ var deviceDate = new Date(0);
 
 /* Function to rescale */
 
-function rescale(canvas) {
+function rescale (canvas) {
 
     var scaleFactor = 1;
 
-    if (window.hasOwnProperty('devicePixelRatio')) {
+    if (Object.prototype.hasOwnProperty.call(window, 'devicePixelRatio')) {
+
         if (window.devicePixelRatio > 1) {
+
             scaleFactor = window.devicePixelRatio;
+
         }
+
     }
 
     if (scaleFactor > 1) {
@@ -81,17 +85,17 @@ function rescale(canvas) {
 
 /* Rescale for resolution of screen */
 
-var timeCanvas = document.getElementById("time-canvas");
-var timeContext = timeCanvas.getContext("2d");
+var timeCanvas = document.getElementById('time-canvas');
+var timeContext = timeCanvas.getContext('2d');
 
 rescale(timeCanvas);
 
-var labelCanvas = document.getElementById("label-canvas");
-var labelContext = labelCanvas.getContext("2d");
+var labelCanvas = document.getElementById('label-canvas');
+var labelContext = labelCanvas.getContext('2d');
 
 rescale(labelCanvas);
 
-function isLocalTime() {
+function isLocalTime () {
 
     return localTime;
 
@@ -99,14 +103,14 @@ function isLocalTime() {
 
 exports.isLocalTime = isLocalTime;
 
-function setLocalTime(lTime) {
+function setLocalTime (lTime) {
 
     localTime = lTime;
-    applicationMenu.getMenuItemById("localTime").checked = localTime;
+    applicationMenu.getMenuItemById('localTime').checked = localTime;
 
 }
 
-function calculateTimezoneOffsetMins() {
+function calculateTimezoneOffsetMins () {
 
     var currentDate = new Date();
     return (-1 * currentDate.getTimezoneOffset());
@@ -115,7 +119,7 @@ function calculateTimezoneOffsetMins() {
 
 exports.calculateTimezoneOffsetMins = calculateTimezoneOffsetMins;
 
-function calculateTimezoneOffsetHours() {
+function calculateTimezoneOffsetHours () {
 
     return (calculateTimezoneOffsetMins() / 60);
 
@@ -125,7 +129,7 @@ exports.calculateTimezoneOffsetHours = calculateTimezoneOffsetHours;
 
 /* Update time period canvas */
 
-function updateCanvas() {
+function updateCanvas () {
 
     var timePeriods, i, startMins, endMins, recX, recLen, currentTimeDate, currentMins, currentX;
 
@@ -150,7 +154,7 @@ function updateCanvas() {
         recX = startMins * timeCanvas.width / 1440;
         recLen = (endMins - startMins) * timeCanvas.width / 1440;
 
-        timeContext.fillStyle = "#FF0000";
+        timeContext.fillStyle = '#FF0000';
         timeContext.fillRect(recX, 0, recLen, timeCanvas.height);
 
     }
@@ -159,11 +163,11 @@ function updateCanvas() {
 
     if (nightMode) {
 
-        timeContext.fillStyle = "#FFFFFF";
+        timeContext.fillStyle = '#FFFFFF';
 
     } else {
 
-        timeContext.fillStyle = "#000000";
+        timeContext.fillStyle = '#000000';
 
     }
 
@@ -183,7 +187,7 @@ function updateCanvas() {
 
     currentX = currentMins * timeCanvas.width / 1440;
 
-    timeContext.fillStyle = "#00AF00";
+    timeContext.fillStyle = '#00AF00';
     timeContext.fillRect((currentX - 1), 0, 0.004 * timeCanvas.width, timeCanvas.height);
 
 }
@@ -192,7 +196,7 @@ exports.updateCanvas = updateCanvas;
 
 /* Regularly update time period canvas so green line reflects current time */
 
-function updateCanvasTimer() {
+function updateCanvasTimer () {
 
     updateCanvas();
     setTimeout(updateCanvasTimer, 60000);
@@ -203,7 +207,7 @@ exports.updateCanvasTimer = updateCanvasTimer;
 
 /* Function to generate the time string */
 
-function showTime() {
+function showTime () {
 
     var timezoneOffset, strftimeUTC;
 
@@ -217,7 +221,7 @@ function showTime() {
 
     strftimeUTC = strftime.timezone(timezoneOffset);
 
-    timeDisplay.textContent = strftimeUTC("%H:%M:%S %d/%m/%Y", deviceDate);
+    timeDisplay.textContent = strftimeUTC('%H:%M:%S %d/%m/%Y', deviceDate);
 
 }
 
@@ -225,7 +229,7 @@ exports.showTime = showTime;
 
 /* Run all UI update functions */
 
-function updateUI() {
+function updateUI () {
 
     timeHandler.updateTimeList();
     updateCanvas();
@@ -233,7 +237,7 @@ function updateUI() {
     showTime();
 
     /* If no time period is selected, disable the removal button */
-    removeTimeButton.disabled = (timeList.value === null || timeList.value === "");
+    removeTimeButton.disabled = (timeList.value === null || timeList.value === '');
 
 }
 
@@ -241,29 +245,29 @@ exports.updateUI = updateUI;
 
 /* Draw labels below time period canvas */
 
-function drawTimeLabels() {
+function drawTimeLabels () {
 
     var fontSize = 0.28 * timeCanvas.height;
 
     labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
 
-    labelContext.font = fontSize + "pt Helvetica";
+    labelContext.font = fontSize + 'pt Helvetica';
 
     if (nightMode) {
 
-        labelContext.fillStyle = "#FFFFFF";
+        labelContext.fillStyle = '#FFFFFF';
 
     } else {
 
-        labelContext.fillStyle = "#000000";
+        labelContext.fillStyle = '#000000';
 
     }
 
-    labelContext.fillText("00:00", 0, fontSize);
-    labelContext.fillText("06:00", 0.225 * timeCanvas.width, fontSize);
-    labelContext.fillText("12:00", 0.475 * timeCanvas.width, fontSize);
-    labelContext.fillText("18:00", 0.725 * timeCanvas.width, fontSize);
-    labelContext.fillText("24:00", 0.95 * timeCanvas.width, fontSize);
+    labelContext.fillText('00:00', 0, fontSize);
+    labelContext.fillText('06:00', 0.225 * timeCanvas.width, fontSize);
+    labelContext.fillText('12:00', 0.475 * timeCanvas.width, fontSize);
+    labelContext.fillText('18:00', 0.725 * timeCanvas.width, fontSize);
+    labelContext.fillText('24:00', 0.95 * timeCanvas.width, fontSize);
 
 }
 
@@ -271,23 +275,25 @@ exports.drawTimeLabels = drawTimeLabels;
 
 /* Retrieve the radio button selected from a group of named buttons */
 
-function getSelectedRadioValue(radioName) {
+function getSelectedRadioValue (radioName) {
+
     return document.querySelector('input[name="' + radioName + '"]:checked').value;
+
 }
 
 exports.getSelectedRadioValue = getSelectedRadioValue;
 
 /* Initialise device information displays */
 
-function initialiseDisplay() {
+function initialiseDisplay () {
 
-    idDisplay.textContent = "0000000000000000";
+    idDisplay.textContent = '0000000000000000';
 
     showTime();
 
-    batteryDisplay.textContent = "0.0V";
+    batteryDisplay.textContent = '0.0V';
 
-    firmwareDisplay.textContent = "0.0.0";
+    firmwareDisplay.textContent = '0.0.0';
 
 }
 
@@ -297,25 +303,25 @@ exports.initialiseDisplay = initialiseDisplay;
 
 exports.disableDisplay = function () {
 
-    timeDisplay.style.color = "lightgrey";
+    timeDisplay.style.color = 'lightgrey';
 
-    timezoneLabel.style.color = "lightgrey";
+    timezoneLabel.style.color = 'lightgrey';
 
-    idLabel.style.color = "lightgrey";
+    idLabel.style.color = 'lightgrey';
 
-    idDisplay.style.color = "lightgrey";
+    idDisplay.style.color = 'lightgrey';
 
-    firmwareLabel.style.color = "lightgrey";
+    firmwareLabel.style.color = 'lightgrey';
 
-    firmwareDisplay.style.color = "lightgrey";
+    firmwareDisplay.style.color = 'lightgrey';
 
-    batteryLabel.style.color = "lightgrey";
+    batteryLabel.style.color = 'lightgrey';
 
-    batteryDisplay.style.color = "lightgrey";
+    batteryDisplay.style.color = 'lightgrey';
 
     configureButton.disabled = true;
 
-    applicationMenu.getMenuItemById("copyid").enabled = false;
+    applicationMenu.getMenuItemById('copyid').enabled = false;
 
 };
 
@@ -331,11 +337,11 @@ exports.enableDisplay = function () {
 
     if (nightMode) {
 
-        textColor = "white";
+        textColor = 'white';
 
     } else {
 
-        textColor = "black";
+        textColor = 'black';
 
     }
 
@@ -357,7 +363,7 @@ exports.enableDisplay = function () {
 
     configureButton.disabled = false;
 
-    applicationMenu.getMenuItemById("copyid").enabled = true;
+    applicationMenu.getMenuItemById('copyid').enabled = true;
 
 };
 
@@ -391,11 +397,11 @@ exports.updateBatteryDisplay = function (batteryState) {
 
 /* Verify that an input value is between a max and min, notifying the user if this is not the case */
 
-function inputIsCorrect(input, min, max) {
+function inputIsCorrect (input, min, max) {
 
     var correct = true;
 
-    if (input.value === "") {
+    if (input.value === '') {
 
         input.value = min;
         correct = false;
@@ -414,15 +420,15 @@ function inputIsCorrect(input, min, max) {
 
     if (!correct) {
 
-        input.style.border = "1px solid #ff0000";
-        input.style.padding = "2px 1px";
-        input.style.color = "red";
+        input.style.border = '1px solid #ff0000';
+        input.style.padding = '2px 1px';
+        input.style.color = 'red';
 
         setTimeout(function () {
 
-            input.style.border = "";
-            input.style.padding = "";
-            input.style.color = "";
+            input.style.border = '';
+            input.style.padding = '';
+            input.style.color = '';
 
         }, 2500);
 
@@ -434,7 +440,7 @@ function inputIsCorrect(input, min, max) {
 
 /* Apply range checks to sleep and recording duration text boxes */
 
-function checkInputs(callback) {
+function checkInputs (callback) {
 
     var sleepDurationCorrect, recordingDurationCorrect;
 
@@ -448,17 +454,17 @@ function checkInputs(callback) {
     } else if (!sleepDurationCorrect) {
 
         dialog.showMessageBox({
-            type: "warning",
-            title: "Sleep length out of range.",
-            message: "Please enter a sleep length in the range (" + minSleepDuration + " - " + maxSleepDuration + ")."
+            type: 'warning',
+            title: 'Sleep length out of range.',
+            message: 'Please enter a sleep length in the range (' + minSleepDuration + ' - ' + maxSleepDuration + ').'
         });
 
     } else if (!recordingDurationCorrect) {
 
         dialog.showMessageBox({
-            type: "warning",
-            title: "Recording length out of range.",
-            message: "Please enter a recording length in the range (" + minRecordingDuration + " - " + maxRecordingDuration + ")."
+            type: 'warning',
+            title: 'Recording length out of range.',
+            message: 'Please enter a recording length in the range (' + minRecordingDuration + ' - ' + maxRecordingDuration + ').'
         });
 
     }
@@ -469,10 +475,10 @@ exports.checkInputs = checkInputs;
 
 /* Verify that time inputs are in the correct format */
 
-function timeInputIsCorrect(input) {
+function timeInputIsCorrect (input) {
 
-    var time, hours, mins, correct = true,
-        patt = new RegExp("^[0-9]?[0-9]:[0-9]{2}$");
+    var time; var hours; var mins; var correct = true;
+    var patt = new RegExp('^[0-9]?[0-9]:[0-9]{2}$');
 
     /* Check input is in the format "00:00" */
 
@@ -482,7 +488,7 @@ function timeInputIsCorrect(input) {
 
     } else {
 
-        time = input.value.split(":");
+        time = input.value.split(':');
         if (time.length !== 2) {
 
             correct = false;
@@ -512,48 +518,49 @@ function timeInputIsCorrect(input) {
 
     if (!correct) {
 
-        input.style.border = "1px solid #ff0000";
-        input.style.padding = "2px 1px";
-        input.style.color = "red";
+        input.style.border = '1px solid #ff0000';
+        input.style.padding = '2px 1px';
+        input.style.color = 'red';
 
         setTimeout(function () {
 
-            input.style.border = "";
-            input.style.padding = "";
-            input.style.color = "";
+            input.style.border = '';
+            input.style.padding = '';
+            input.style.color = '';
 
         }, 2500);
 
     }
 
     return correct;
+
 }
 
 /* Apply error/default styles to time textboxes */
 
-function setTimeInputStyleError() {
+function setTimeInputStyleError () {
 
-    startTimeInput.value = "0:00";
-    startTimeInput.style.border = "1px solid #ff0000";
-    startTimeInput.style.padding = "2px 1px";
-    startTimeInput.style.color = "red";
+    startTimeInput.value = '0:00';
+    startTimeInput.style.border = '1px solid #ff0000';
+    startTimeInput.style.padding = '2px 1px';
+    startTimeInput.style.color = 'red';
 
-    endTimeInput.value = "24:00";
-    endTimeInput.style.border = "1px solid #ff0000";
-    endTimeInput.style.padding = "2px 1px";
-    endTimeInput.style.color = "red";
+    endTimeInput.value = '24:00';
+    endTimeInput.style.border = '1px solid #ff0000';
+    endTimeInput.style.padding = '2px 1px';
+    endTimeInput.style.color = 'red';
 
 }
 
-function setTimeInputStyleDefault() {
+function setTimeInputStyleDefault () {
 
-    startTimeInput.style.border = "";
-    startTimeInput.style.padding = "";
-    startTimeInput.style.color = "";
+    startTimeInput.style.border = '';
+    startTimeInput.style.padding = '';
+    startTimeInput.style.color = '';
 
-    endTimeInput.style.border = "";
-    endTimeInput.style.padding = "";
-    endTimeInput.style.color = "";
+    endTimeInput.style.border = '';
+    endTimeInput.style.padding = '';
+    endTimeInput.style.color = '';
 
 }
 
@@ -565,18 +572,24 @@ exports.setTimeInputStyleDefault = setTimeInputStyleDefault;
 exports.checkTimeInputs = function (callback) {
 
     if (timeInputIsCorrect(startTimeInput) && timeInputIsCorrect(endTimeInput)) {
+
         callback();
+
     }
 
 };
 
 /* Only allow the input of '0-9' and ':' in time textboxes */
 
-function checkTimeKeypress(event) {
-    var patt = new RegExp("^[0-9]|:$");
+function checkTimeKeypress (event) {
+
+    var patt = new RegExp('^[0-9]|:$');
     if (!patt.test(event.key)) {
+
         event.preventDefault();
+
     }
+
 }
 
 /* Add listeners to all radio buttons which update the life display */
@@ -585,7 +598,7 @@ exports.addRadioButtonListeners = function () {
 
     var radioButtons, i;
 
-    radioButtons = document.getElementsByName("sample-rate-radio");
+    radioButtons = document.getElementsByName('sample-rate-radio');
 
     for (i = 0; i < radioButtons.length; i += 1) {
 
@@ -601,30 +614,34 @@ startTimeInput.addEventListener('keypress', checkTimeKeypress);
 endTimeInput.addEventListener('keypress', checkTimeKeypress);
 
 sleepDurationInput.addEventListener('change', function () {
+
     checkInputs(lifeDisplay.updateLifeDisplay);
+
 });
 
 recordingDurationInput.addEventListener('change', function () {
+
     checkInputs(lifeDisplay.updateLifeDisplay);
+
 });
 
 /* Create timezone offset string */
 
-function formatTimezone(timezoneOffset) {
+function formatTimezone (timezoneOffset) {
 
     var timezoneText, offsetHours, offsetMins;
 
-    timezoneText = "";
+    timezoneText = '';
 
     if (timezoneOffset !== 0) {
 
         if (timezoneOffset > 0) {
 
-            timezoneText += "+";
+            timezoneText += '+';
 
         } else if (timezoneOffset < 0) {
 
-            timezoneText += "-";
+            timezoneText += '-';
 
         }
 
@@ -635,7 +652,7 @@ function formatTimezone(timezoneOffset) {
         timezoneText += offsetHours;
         if (offsetMins > 0) {
 
-            timezoneText += ":";
+            timezoneText += ':';
             timezoneText += offsetMins;
 
         }
@@ -650,9 +667,9 @@ exports.formatTimezone = formatTimezone;
 
 /* Switch between time zone modes (UTC and local) */
 
-function setTimezoneStatus(local) {
+function setTimezoneStatus (local) {
 
-    var timezoneText = "UTC";
+    var timezoneText = 'UTC';
 
     setLocalTime(local);
 
@@ -671,7 +688,7 @@ function setTimezoneStatus(local) {
 
 exports.setTimezoneStatus = setTimezoneStatus;
 
-function toggleTimezoneStatus() {
+function toggleTimezoneStatus () {
 
     setTimezoneStatus(!isLocalTime());
 
@@ -679,31 +696,31 @@ function toggleTimezoneStatus() {
 
 electron.ipcRenderer.on('localTime', toggleTimezoneStatus);
 
-function toggleNightMode() {
+function toggleNightMode () {
 
     var oldLink, newLink;
 
     nightMode = !nightMode;
 
-    oldLink = document.getElementById("uiCSS");
+    oldLink = document.getElementById('uiCSS');
 
-    newLink = document.createElement("link");
+    newLink = document.createElement('link');
 
-    newLink.setAttribute("id", "uiCSS");
-    newLink.setAttribute("rel", "stylesheet");
-    newLink.setAttribute("type", "text/css");
+    newLink.setAttribute('id', 'uiCSS');
+    newLink.setAttribute('rel', 'stylesheet');
+    newLink.setAttribute('type', 'text/css');
 
     if (nightMode) {
 
-        newLink.setAttribute("href", "uiNight.css");
+        newLink.setAttribute('href', 'uiNight.css');
 
     } else {
 
-        newLink.setAttribute("href", "ui.css");
+        newLink.setAttribute('href', 'ui.css');
 
     }
 
-    document.getElementsByTagName("head").item(0).replaceChild(newLink, oldLink);
+    document.getElementsByTagName('head').item(0).replaceChild(newLink, oldLink);
 
     updateCanvas();
     drawTimeLabels();
@@ -712,7 +729,7 @@ function toggleNightMode() {
 
 electron.ipcRenderer.on('nightmode', toggleNightMode);
 
-function checkUtcToggleability() {
+function checkUtcToggleability () {
 
     var timezoneOffset;
 
@@ -720,7 +737,7 @@ function checkUtcToggleability() {
 
     if (timezoneOffset === 0) {
 
-        applicationMenu.getMenuItemById("localTime").enabled = false;
+        applicationMenu.getMenuItemById('localTime').enabled = false;
 
     }
 
@@ -728,17 +745,19 @@ function checkUtcToggleability() {
 
 exports.checkUtcToggleability = checkUtcToggleability;
 
-function copyDeviceID() {
+function copyDeviceID () {
 
     var id = idDisplay.textContent;
 
-    if (id !== "0000000000000000") {
+    if (id !== '0000000000000000') {
 
         clipboard.writeText(id);
-        idDisplay.style.color = "green";
+        idDisplay.style.color = 'green';
 
         setTimeout(function () {
-            idDisplay.style.color = "";
+
+            idDisplay.style.color = '';
+
         }, 5000);
 
     }

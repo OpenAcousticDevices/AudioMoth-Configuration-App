@@ -6,13 +6,9 @@
 
 'use strict';
 
-/*global document*/
+/* global document */
 
 var ui = require('./ui.js');
-var lifeDisplay = require('./lifeDisplay.js');
-
-var electron = require('electron');
-var menu = electron.remote.Menu;
 
 var timePeriods = [];
 
@@ -31,25 +27,25 @@ var endTimeInput = document.getElementById('end-time-input');
 
 /* Pad the left of each time with zeroes */
 
-function pad(n) {
+function pad (n) {
 
-    return (n < 10) ? ("0" + n) : n;
+    return (n < 10) ? ('0' + n) : n;
 
 }
 
 /* Convert the number of minutes through a day to a HH:MM formatted string */
 
-function minsToTimeString(mins) {
+function minsToTimeString (mins) {
 
     var timeHours = Math.floor(mins / 60);
 
-    return pad(timeHours) + ":" + pad((mins - (timeHours * 60)));
+    return pad(timeHours) + ':' + pad((mins - (timeHours * 60)));
 
 }
 
 /* Check if the given times need to be altered to match the app's current time zone setting */
 
-function convertTimePeriodToUTC(timePeriod) {
+function convertTimePeriodToUTC (timePeriod) {
 
     var startMins, endMins, timezoneOffset;
 
@@ -94,7 +90,7 @@ function convertTimePeriodToUTC(timePeriod) {
 
 exports.convertTimePeriodToUTC = convertTimePeriodToUTC;
 
-function convertTimePeriodToLocal(timePeriod) {
+function convertTimePeriodToLocal (timePeriod) {
 
     var startMins, endMins, timezoneOffset;
 
@@ -139,7 +135,7 @@ function convertTimePeriodToLocal(timePeriod) {
 
 /* See if any periods are over midnight and have to be split */
 
-function checkTimePeriodsForSplits(localTimePeriods) {
+function checkTimePeriodsForSplits (localTimePeriods) {
 
     var i, localTimePeriod;
 
@@ -170,7 +166,7 @@ function checkTimePeriodsForSplits(localTimePeriods) {
 
 /* See if any newly created time periods overlap and can be merged */
 
-function checkTimePeriodsForOverlaps(localTimePeriods) {
+function checkTimePeriodsForOverlaps (localTimePeriods) {
 
     var i, j;
 
@@ -197,7 +193,7 @@ function checkTimePeriodsForOverlaps(localTimePeriods) {
 
 /* Convert a list of time periods from UTC to local */
 
-function convertTimePeriodsToLocal(tps) {
+function convertTimePeriodsToLocal (tps) {
 
     var localTimePeriods, i, timePeriod, localTimePeriod;
 
@@ -218,7 +214,9 @@ function convertTimePeriodsToLocal(tps) {
     localTimePeriods = checkTimePeriodsForSplits(localTimePeriods);
 
     localTimePeriods = localTimePeriods.sort(function (a, b) {
+
         return a.startMins - b.startMins;
+
     });
 
     localTimePeriods = checkTimePeriodsForOverlaps(localTimePeriods);
@@ -231,7 +229,7 @@ exports.convertTimePeriodsToLocal = convertTimePeriodsToLocal;
 
 /* Convert a list of local time periods to UTC */
 
-function convertLocalTimePeriodsToUTC(localTimePeriods) {
+function convertLocalTimePeriodsToUTC (localTimePeriods) {
 
     var utcTimePeriods, i, localTimePeriod, utcTimePeriod;
 
@@ -253,7 +251,9 @@ function convertLocalTimePeriodsToUTC(localTimePeriods) {
     utcTimePeriods = checkTimePeriodsForSplits(utcTimePeriods);
 
     utcTimePeriods = utcTimePeriods.sort(function (a, b) {
+
         return a.startMins - b.startMins;
+
     });
 
     utcTimePeriods = checkTimePeriodsForOverlaps(utcTimePeriods);
@@ -264,7 +264,7 @@ function convertLocalTimePeriodsToUTC(localTimePeriods) {
 
 /* Fill UI list with time periods from data structure */
 
-function updateTimeList() {
+function updateTimeList () {
 
     var tp, i, startMins, endMins, timezoneText, option;
 
@@ -283,7 +283,9 @@ function updateTimeList() {
     /* Sort recording periods in order of occurrence */
 
     tp = tp.sort(function (a, b) {
+
         return a.startMins - b.startMins;
+
     });
 
     for (i = 0; i < tp.length; i += 1) {
@@ -291,16 +293,16 @@ function updateTimeList() {
         startMins = tp[i].startMins;
         endMins = tp[i].endMins;
 
-        timezoneText = "(UTC";
+        timezoneText = '(UTC';
         if (ui.isLocalTime()) {
 
             timezoneText += ui.formatTimezone(ui.calculateTimezoneOffsetHours());
 
         }
-        timezoneText += ")";
+        timezoneText += ')';
 
-        option = document.createElement("option");
-        option.text = minsToTimeString(startMins) + " - " + minsToTimeString(endMins) + " " + timezoneText;
+        option = document.createElement('option');
+        option.text = minsToTimeString(startMins) + ' - ' + minsToTimeString(endMins) + ' ' + timezoneText;
         option.value = [startMins, endMins];
         timeList.add(option);
 
@@ -317,9 +319,9 @@ exports.updateTimeList = updateTimeList;
 
 /* Remove a time from the recording period data structure and update UI to reflect change */
 
-function removeTime(timePeriod, tps) {
+function removeTime (timePeriod, tps) {
 
-    var i, startMins = timePeriod.startMins;
+    var i; var startMins = timePeriod.startMins;
 
     for (i = 0; i < tps.length; i += 1) {
 
@@ -337,7 +339,7 @@ function removeTime(timePeriod, tps) {
 
 /* Remove all recordings periods and update UI */
 
-function clearTimes() {
+function clearTimes () {
 
     timePeriods = [];
     ui.updateUI();
@@ -348,7 +350,7 @@ exports.clearTimes = clearTimes;
 
 /* Check to see if two periods of time overlap */
 
-function overlaps(startTime1, endTime1, startTime2, endTime2) {
+function overlaps (startTime1, endTime1, startTime2, endTime2) {
 
     return (startTime1 <= endTime2 && endTime1 >= startTime2);
 
@@ -356,7 +358,7 @@ function overlaps(startTime1, endTime1, startTime2, endTime2) {
 
 /* Add a new recording period to the data structure and update UI */
 
-function addTime(startMins, endMins) {
+function addTime (startMins, endMins) {
 
     var i, newStart, newEnd;
 
@@ -393,12 +395,12 @@ function addTime(startMins, endMins) {
 
 /* Obtain time periods from UI and add to data structure in response to button press */
 
-function addTimeOnClick() {
+function addTimeOnClick () {
 
     var startTimeSplit, endTimeSplit, startTimestamp, endTimestamp, timePeriod, utcPeriod, added;
 
-    startTimeSplit = startTimeInput.value.split(":");
-    endTimeSplit = endTimeInput.value.split(":");
+    startTimeSplit = startTimeInput.value.split(':');
+    endTimeSplit = endTimeInput.value.split(':');
     startTimestamp = (parseInt(startTimeSplit[0], 10) * 60) + parseInt(startTimeSplit[1], 10);
     endTimestamp = (parseInt(endTimeSplit[0], 10) * 60) + parseInt(endTimeSplit[1], 10);
 
@@ -467,25 +469,31 @@ function addTimeOnClick() {
 /* Recording period data structure getter and setter */
 
 exports.getTimePeriods = function () {
+
     return timePeriods;
+
 };
 
 exports.setTimePeriods = function (tp) {
+
     timePeriods = tp;
+
 };
 
 /* Add button listeners */
 
 addTimeButton.addEventListener('click', function () {
+
     ui.checkTimeInputs(addTimeOnClick);
     ui.updateUI();
+
 });
 
 removeTimeButton.addEventListener('click', function () {
 
     var values, timePeriod, ltps;
 
-    values = timeList.value.split(",");
+    values = timeList.value.split(',');
 
     timePeriod = {
         startMins: parseInt(values[0], 10),
@@ -515,5 +523,7 @@ clearTimeButton.addEventListener('click', clearTimes);
 /* If the time list is empty, disable the user's ability to remove more recording periods */
 
 timeList.addEventListener('change', function () {
-    removeTimeButton.disabled = (timeList.value === null || timeList.value === "");
+
+    removeTimeButton.disabled = (timeList.value === null || timeList.value === '');
+
 });
