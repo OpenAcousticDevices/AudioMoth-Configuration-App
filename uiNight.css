@@ -16,11 +16,13 @@ body {
 }
 
 input {
-  color: #000000;
+  background: #000000;
+  color: #FFFFFF;
 }
 
 select {
-  color: #000000;
+  background: #000000;
+  color: #FFFFFF;
 }
 
 .info-display-input {
@@ -29,4 +31,8 @@ select {
 
 #time-canvas {
   border: #FFFFFF;
+}
+
+#filter-slider .slider-selection {
+  background: rgb(64, 100, 216);
 }

@@ -1,16 +1,12 @@
-/****************************************************************************
- * builder.js
- * openacousticdevices.info
- * January 2020
- *****************************************************************************/
 
 'use strict';
 
 const builder = require('electron-builder');
 const Platform = builder.Platform;
 
-var config, target;
-var argTarget = process.argv[2];
+var config, target, argTarget;
+
+argTarget = process.argv[2];
 
 switch (argTarget) {
 

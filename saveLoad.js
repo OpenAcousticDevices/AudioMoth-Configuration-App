@@ -6,42 +6,74 @@
 
 'use strict';
 
-/* global document */
+const electron = require('electron');
+const dialog = electron.remote.dialog;
 
-var ui = require('./ui.js');
-var timeHandler = require('./timePeriods.js');
-var lifeDisplay = require('./lifeDisplay.js');
+const fs = require('fs');
+const Validator = require('jsonschema').Validator;
 
-var electron = require('electron');
-var dialog = require('electron').remote.dialog;
-var fs = require('fs');
-var Validator = require('jsonschema').Validator;
+const constants = require('./constants.js');
 
-/* UI components */
-
-var ledCheckbox = document.getElementById('led-checkbox');
-var batteryCheckbox = document.getElementById('battery-checkbox');
-var batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
-
-var recordingDurationInput = document.getElementById('recording-duration-input');
-var sleepDurationInput = document.getElementById('sleep-duration-input');
+const defaultSettings = {
+    sampleRate: 48000,
+    gain: 2,
+    dutyEnabled: true,
+    recordDuration: 55,
+    sleepDuration: 5,
+    passFiltersEnabled: false,
+    filterType: 1,
+    lowerFilter: 0,
+    higherFilter: 24000,
+    amplitudeThresholdingEnabled: false,
+    amplitudeThreshold: 0
+};
+exports.defaultSettings = defaultSettings;
 
 /* Save configuration settings in UI to .config file */
 
-function saveConfiguration (timePeriods, ledEnabled, batteryCheckEnabled, batteryLevelCheckEnabled, sampleRateIndex, gainIndex, recDuration, sleepDuration, localTime, callback) {
+function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, callback) {
 
-    var configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',';
-    configuration += '"ledEnabled": ' + ledEnabled + ', ';
-    configuration += '"batteryCheckEnabled": ' + batteryCheckEnabled + ', ';
-    configuration += '"batteryLevelCheckEnabled": ' + batteryLevelCheckEnabled + ', ';
-    configuration += '"sampleRateIndex": ' + sampleRateIndex + ', ';
-    configuration += '"gainIndex": ' + gainIndex + ', ';
-    configuration += '"recDuration": ' + recDuration + ', ';
-    configuration += '"sleepDuration": ' + sleepDuration + ', ';
-    configuration += '"localTime": ' + localTime;
+    var configuration, fileName, sampleRate, filterType;
+
+    sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+
+    switch (filterTypeIndex) {
+
+    case 0:
+        filterType = 'low';
+        break;
+    case 1:
+        filterType = 'band';
+        break;
+    case 2:
+        filterType = 'high';
+        break;
+
+    }
+
+    configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',\n';
+    configuration += '"ledEnabled": ' + ledEnabled + ',\n';
+    configuration += '"lowVoltageCutoffEnabled": ' + lowVoltageCutoffEnabled + ',\n';
+    configuration += '"batteryLevelCheckEnabled": ' + batteryLevelCheckEnabled + ',\n';
+    configuration += '"sampleRate": ' + sampleRate + ',\n';
+    configuration += '"gain": ' + gain + ',\n';
+    configuration += '"recordDuration": ' + recordDuration + ',\n';
+    configuration += '"sleepDuration": ' + sleepDuration + ',\n';
+    configuration += '"localTime": ' + localTime + ',\n';
+
+    configuration += (firstRecordingDate !== '') ? '"firstRecordingDate": \"' + firstRecordingDate + '\",\n' : '';
+    configuration += (lastRecordingDate !== '') ? '"lastRecordingDate": \"' + lastRecordingDate + '\",\n' : '';
+
+    configuration += '"dutyEnabled": ' + dutyEnabled + ',\n';
+    configuration += '"passFiltersEnabled": ' + passFiltersEnabled + ',\n';
+    configuration += '"filterType": \"' + filterType + '\",\n';
+    configuration += '"lowerFilter": ' + lowerFilter + ',\n';
+    configuration += '"higherFilter": ' + higherFilter + ',\n';
+    configuration += '"amplitudeThresholdingEnabled": ' + amplitudeThresholdingEnabled + ',\n';
+    configuration += '"amplitudeThreshold": ' + amplitudeThreshold + '\n';
     configuration += '}';
 
-    dialog.showSaveDialog({
+    fileName = dialog.showSaveDialogSync({
         title: 'Save configuration',
         nameFieldLabel: 'Configuration name',
         defaultPath: 'AudioMoth.config',
@@ -49,25 +81,53 @@ function saveConfiguration (timePeriods, ledEnabled, batteryCheckEnabled, batter
             name: 'config',
             extensions: ['config']
         }]
-    }, function (filename) {
-
-        if (filename) {
-
-            fs.writeFile(filename, configuration, callback);
-
-        }
-
     });
+
+    if (fileName) {
+
+        fs.writeFile(fileName, configuration, callback);
+
+    }
 
 }
 
 exports.saveConfiguration = saveConfiguration;
 
+/* Newer save files save the sample rate itself rather than the index, handle that by detecting empty JSON objects */
+
+function getSampleRateIndex (jsonSampleRateIndex, jsonSampleRate) {
+
+    var i;
+
+    if (typeof jsonSampleRateIndex === 'undefined') {
+
+        jsonSampleRate /= 1000;
+
+        for (i = 0; i < constants.configurations.length; i++) {
+
+            if (constants.configurations[i].trueSampleRate === jsonSampleRate) {
+
+                return i;
+
+            }
+
+        }
+
+    } else {
+
+        return jsonSampleRateIndex;
+
+    }
+
+    return 0;
+
+}
+
 /* Take data obtained from a loaded .config file and duplicate settings in the UI */
 
-function useLoadedConfiguration (err, data) {
+function useLoadedConfiguration (err, data, callback) {
 
-    var jsonObj, validator, schema, sampleRateRadios, gainRadios, localTime;
+    var jsonObj, validator, schema, timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold;
 
     if (err) {
 
@@ -106,16 +166,28 @@ function useLoadedConfiguration (err, data) {
                     batteryCheckEnabled: {
                         type: 'boolean'
                     },
+                    lowVoltageCutoffEnabled: {
+                        type: 'boolean'
+                    },
                     batteryLevelCheckEnabled: {
                         type: 'boolean'
                     },
                     sampleRateIndex: {
                         type: 'integer'
                     },
+                    sampleRate: {
+                        type: 'integer'
+                    },
                     gainIndex: {
                         type: 'integer'
                     },
+                    gain: {
+                        type: 'integer'
+                    },
                     recDuration: {
+                        type: 'integer'
+                    },
+                    recordDuration: {
                         type: 'integer'
                     },
                     sleepDuration: {
@@ -123,39 +195,112 @@ function useLoadedConfiguration (err, data) {
                     },
                     localTime: {
                         type: 'boolean'
+                    },
+                    firstRecordingDate: {
+                        type: 'string'
+                    },
+                    lastRecordingDate: {
+                        type: 'string'
+                    },
+                    dutyEnabled: {
+                        type: 'boolean'
+                    },
+                    passFiltersEnabled: {
+                        type: 'boolean'
+                    },
+                    filterType: {
+                        type: 'string'
+                    },
+                    lowerFilter: {
+                        type: 'integer'
+                    },
+                    higherFilter: {
+                        type: 'integer'
+                    },
+                    amplitudeThresholdingEnabled: {
+                        type: 'boolean'
+                    },
+                    amplitudeThreshold: {
+                        type: 'integer'
                     }
                 },
-                required: ['timePeriods', 'ledEnabled', 'batteryCheckEnabled', 'sampleRateIndex', 'gainIndex', 'recDuration', 'sleepDuration']
+                required: ['timePeriods', 'ledEnabled', 'sleepDuration']
             };
 
-            if (!validator.validate(jsonObj, schema).valid) {
+            try {
 
+                validator.validate(jsonObj, schema, {throwError: true});
+
+            } catch (err) {
+
+                console.error(err);
                 throw new Error('JSON validation failed.');
 
             }
 
-            /* Apply settings to UI */
+            console.log(jsonObj);
 
-            timeHandler.setTimePeriods(jsonObj.timePeriods);
-            timeHandler.updateTimeList();
-            ui.updateCanvas();
+            timePeriods = [];
 
-            ledCheckbox.checked = jsonObj.ledEnabled;
-            batteryCheckbox.checked = jsonObj.batteryCheckEnabled;
-            batteryLevelCheckbox.checked = jsonObj.batteryLevelCheckEnabled;
+            timePeriods = jsonObj.timePeriods;
 
-            sampleRateRadios = document.getElementsByName('sample-rate-radio');
-            sampleRateRadios[jsonObj.sampleRateIndex].checked = true;
+            ledEnabled = jsonObj.ledEnabled;
+            lowVoltageCutoffEnabled = (typeof jsonObj.lowVoltageCutoffEnabled === 'undefined') ? jsonObj.batteryCheckEnabled : jsonObj.lowVoltageCutoffEnabled;
+            batteryLevelCheckEnabled = jsonObj.batteryLevelCheckEnabled;
 
-            gainRadios = document.getElementsByName('gain-radio');
-            gainRadios[jsonObj.gainIndex].checked = true;
+            sampleRateIndex = getSampleRateIndex(jsonObj.sampleRateIndex, jsonObj.sampleRate);
 
-            recordingDurationInput.value = jsonObj.recDuration;
-            sleepDurationInput.value = jsonObj.sleepDuration;
-            ui.checkInputs(lifeDisplay.updateLifeDisplay);
+            gain = (typeof jsonObj.gain === 'undefined') ? jsonObj.gainIndex : jsonObj.gain;
 
-            localTime = (typeof jsonObj.localTime === 'undefined') ? false : jsonObj.localTime;
-            ui.setTimezoneStatus(localTime);
+            dutyEnabled = (typeof jsonObj.dutyEnabled === 'undefined') ? true : jsonObj.dutyEnabled;
+
+            if (dutyEnabled) {
+
+                sleepDuration = jsonObj.sleepDuration;
+                recordDuration = (typeof jsonObj.recordDuration === 'undefined') ? jsonObj.recDuration : jsonObj.recordDuration;
+
+            } else {
+
+                sleepDuration = 0;
+                recordDuration = 1;
+
+            }
+
+            localTime = jsonObj.localTime;
+            firstRecordingDate = (typeof jsonObj.firstRecordingDate === 'undefined') ? '' : jsonObj.firstRecordingDate;
+            lastRecordingDate = (typeof jsonObj.lastRecordingDate === 'undefined') ? '' : jsonObj.lastRecordingDate;
+
+            passFiltersEnabled = (typeof jsonObj.passFiltersEnabled === 'undefined') ? false : jsonObj.passFiltersEnabled;
+
+            if (passFiltersEnabled) {
+
+                switch (jsonObj.filterType) {
+
+                case 'low':
+                    filterType = 0;
+                    break;
+                case 'band':
+                    filterType = 1;
+                    break;
+                case 'high':
+                    filterType = 2;
+                    break;
+
+                }
+
+            } else {
+
+                filterType = 0;
+
+            }
+
+            lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? -1 : jsonObj.lowerFilter;
+            higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? -1 : jsonObj.higherFilter;
+
+            amplitudeThresholdingEnabled = (typeof jsonObj.amplitudeThresholdingEnabled === 'undefined') ? false : jsonObj.amplitudeThresholdingEnabled;
+            amplitudeThreshold = amplitudeThresholdingEnabled ? jsonObj.amplitudeThreshold : 0;
+
+            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold);
 
             console.log('Config loaded');
 
@@ -170,38 +315,11 @@ function useLoadedConfiguration (err, data) {
 
 }
 
-/* Obtain configuration from UI and pass to relevant function in response to button press */
-
-function saveConfigurationOnClick () {
-
-    var sampleRateIndex, gainIndex, timePeriods;
-
-    timePeriods = timeHandler.getTimePeriods();
-
-    sampleRateIndex = parseInt(ui.getSelectedRadioValue('sample-rate-radio'), 10);
-    gainIndex = parseInt(ui.getSelectedRadioValue('gain-radio'), 10);
-
-    saveConfiguration(timePeriods, ledCheckbox.checked, batteryCheckbox.checked, batteryLevelCheckbox.checked, sampleRateIndex, gainIndex, parseInt(recordingDurationInput.value, 10), parseInt(sleepDurationInput.value, 10), ui.isLocalTime(), function (err) {
-
-        if (err) {
-
-            console.error(err);
-
-        } else {
-
-            console.log('Config saved');
-
-        }
-
-    });
-
-}
-
 /* Display open dialog to allow users to load a .config file */
 
-function loadConfiguration () {
+exports.loadConfiguration = function (callback) {
 
-    dialog.showOpenDialog({
+    var fileName = dialog.showOpenDialogSync({
         title: 'Open configuration',
         nameFieldLabel: 'Configuration name',
         defaultPath: 'AudioMoth.config',
@@ -210,28 +328,16 @@ function loadConfiguration () {
             name: 'config',
             extensions: ['config']
         }]
-    }, function (filename) {
-
-        if (filename) {
-
-            fs.readFile(filename[0], useLoadedConfiguration);
-
-        }
-
     });
 
-}
+    if (fileName) {
 
-/* Add listeners to menu options */
+        fs.readFile(fileName[0], function (err, data) {
 
-exports.addListeners = function () {
+            useLoadedConfiguration(err, data, callback);
 
-    electron.ipcRenderer.on('save', function () {
+        });
 
-        ui.checkInputs(saveConfigurationOnClick);
-
-    });
-
-    electron.ipcRenderer.on('load', loadConfiguration);
+    }
 
 };

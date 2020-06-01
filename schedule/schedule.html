@@ -1,0 +1,70 @@
+<div class="row" style="margin-top: 8px;">
+    <div class="col-12" style="text-align: center; margin-bottom: 0px; margin-top: 5px">
+        <div id="canvas-holder" style="margin-bottom: 5px;">
+                <canvas id="time-canvas" width="510px" height="25px" style="border:1px solid; vertical-align: bottom"></canvas>
+        </div>
+        <canvas id="label-canvas" width="510px" height="13px"></canvas>
+    </div>
+</div>
+
+<!-- Standard schedule UI -->
+
+<div style="border: #cdcdcd thin solid; width: 100%;">
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+
+        <div class="col-6">
+            <div class="row" style="margin-left: 4px">
+                <div class="col-6" id="start-time-label" style="text-align: left; margin-top: 1%;">Start recording:</div>
+                <div class="col-6">
+                    <div style="float: right;">
+                        <time-input id="start-time-input"></time-input>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 5px; margin-left: 4px;">
+                <div class="col-6" id="end-time-label" style="text-align: left; margin-top: 4px;">End recording:</div>
+                <div class="col-6">
+                    <div style="float: right;">
+                        <time-input id="end-time-input"></time-input>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 5px; margin-left: 4px;">
+                <div class="col-12">
+                    <button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt;">Add recording period</button>
+                    <button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt; margin-top: 5px;" disabled>Remove selected period</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-6" style="text-align: right;">
+            <select id="time-list" size="5" style="width: 225px; margin-right: 20px; text-align: center;"></select>
+            <button id="clear-time-button" class="btn btn-primary" style="width: 225px; font-size: 11pt; margin-top: 16px; margin-right: 20px;" disabled>Clear all periods</button>
+        </div>
+    </div>
+</div>
+
+<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
+    <div class="row" style="margin-top: 8px;">
+        <div class="col-1" style="text-align: left;" title="The first date on which recordings will be made.">
+            <input id="first-date-checkbox" type="checkbox" style="margin-left: 18px; margin-top: 4px;">
+        </div>
+        <div class="col-5" style="text-align: left;">
+            <span id="first-date-label" style="margin-left: 0px; vertical-align: middle;">First recording date (UTC):</span>
+        </div>
+        <div class="col-6" style="text-align: right;" title="The first date on which recordings will be made.">
+            <input id="first-date-input" class="custom-date-input" type="date" disabled style="width: 135px; margin-right: 20px; text-align: right;">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-1" style="text-align: left;" title="The last date on which recordings will be made.">
+            <input id="last-date-checkbox" type="checkbox" style="margin-left: 18px; margin-top: 4px;">
+        </div>
+        <div class="col-5" style="text-align: left;">
+            <span id="last-date-label" style="margin-left: 0px; vertical-align: middle;">Last recording date (UTC):</span>
+        </div>
+        <div class="col-6" style="text-align: right;" title="The last date on which recordings will be made.">
+            <input id="last-date-input" class="custom-date-input" type="date" disabled style="width: 135px; margin-right: 20px; text-align: right;">
+        </div>
+    </div>
+</div>

@@ -3,20 +3,21 @@
 
     <head>
         <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="node_modules/bootstrap-slider/dist/css/bootstrap-slider.css">
         <link id="uiCSS" rel="stylesheet" href="ui.css">
-        <title>AudioMoth Configuration App</title>
     </head>
 
     <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
-        <div class="container">
-        	<!-- Time -->
+        <div class="container" style="padding: 11px;">
+
+            <!-- Time -->
             <div class="row">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%; margin-top: 1%;">
-                    <div class="row">
-                        <div class="col-12" style="text-align: center; padding-top: 1%">
+                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+                    <div class="row" style="margin-left: 0px;">
+                        <div class="col-12" style="text-align: center; padding-top: 5px; padding-bottom: 5px">
                             <span style="font-size: 25px; font-family: &apos;Lucida Console&apos;, Monaco, monospace">
                                 <div id="time-display" style="display: inline-block;"></div>
-                                <div id="timezone-label" style="display: inline-block;">UTC</div>
+                                <div id="timezone-label" style="display: inline-block;"></div>
                             </span>
                         </div>
                     </div>
@@ -24,228 +25,101 @@
             </div>
 
             <!-- Device information -->
-            <div class="row" style="margin-top: 1%;">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 1%;">
+            <div class="row" style="margin-top: 8px;">
+                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+                    <div class="row" style="margin-top: 5px;">
                         <div class="col-6" style="text-align: left;">
-                            <span id="id-label" style="margin-left: 8%;">Device ID:</span>
+                            <span id="id-label" style="margin-left: 20px;">Device ID:</span>
                         </div>
                         <div class="col-6" style="text-align: right;">
-                            <span id="id-display" style="margin-right: 8%; border: none; text-align: right;">0000000000000000</span>
+                            <span id="id-display" style="margin-right: 20px; border: none; text-align: right;">0000000000000000</span>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 1%;">
+                    <div class="row" style="margin-top: 5px;">
                         <div class="col-6" style="text-align: left;">
-                            <span id="firmware-label" style="margin-left: 8%;">Firmware version:</span>
+                            <span id="firmware-label" style="margin-left: 20px;">Firmware version:</span>
                         </div>
                         <div class="col-6" style="text-align: right;">
-                            <span id="firmware-display" class="firmware-display" style="margin-right: 8%;">0.0.0</span>
+                            <span id="firmware-display" class="firmware-display" style="margin-right: 20px;">0.0.0</span>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
+                    <div class="row" style="margin-top: 5px; margin-bottom: 5px;">
                         <div class="col-6" style="text-align: left;">
-                            <span id="battery-label" style="margin-left: 8%;">Battery:</span>
+                            <span id="battery-label" style="margin-left: 20px;">Battery:</span>
                         </div>
                         <div class="col-6" style="text-align: right;">
-                            <span id="battery-display" style="margin-right: 8%;">0.0V</span>
+                            <span id="battery-display" style="margin-right: 20px;">0.0V</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Schedule -->
-            <div class="row" style="margin-top: 1%;">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 0.5%; margin-bottom: 1%;">
-                        <div class="row" style="text-align: center; margin-bottom: 1%; margin-top: 1%">
-                            <div class="col-lg-12">
-                                <canvas id="time-canvas" width="502px" height="25px" style="border:1px solid; vertical-align: bottom"></canvas>
-                                <canvas id="label-canvas" width="502px" height="7px"></canvas>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="row" style="margin-left: 1%">
-                                <div class="col-6" id="start-time-label" style="text-align: left; margin-top: 1%;">Start recording:</div>
-                                <div class="col-6">
-                                    <input id="start-time-input" type="text" style="width: 60%; float: right; text-align: right;" value="00:00">
-                                </div>
-                            </div>
-                            <div class="row" style="margin-top: 0.75%; margin-left: 1%;">
-                                <div class="col-6" id="end-time-label" style="text-align: left; margin-top: 1%;">End recording:</div>
-                                <div class="col-6">
-                                    <input id="end-time-input" type="text" style="width: 60%; float: right; text-align: right;" value="24:00">
-                                </div>
-                            </div>
-                            <div class="row" style="margin-top: 1.5%; margin-left: 1%;">
-                                <div class="col-12">
-                                    <button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt;">Add recording period</button>
-                                    <button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt; margin-top: 2%;" disabled>Remove selected period</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6" style="text-align: right;">
-                            <select id="time-list" size="5" style="width: 90%; margin-right: 8%; text-align: center;"></select>
-                            <button id="clear-time-button" class="btn btn-primary" style="width: 90%; font-size: 11pt; margin-top: 4%; margin-right: 8%;" disabled>Clear all periods</button>
+            <!-- Tabs -->
+            <div class="row" style="margin-top: 8px;">
+                <ul class="nav nav-tabs nav-justified" style="width: 100%; font-size: 10pt; font-family: Helvetica, Arial, sans-serif;">                    
+                    <li class="nav-item" style="margin-left: 10px; margin-right: 10px;">
+                        <a class="nav-link active" data-toggle="tab" href="#settings-tab" id="settings-tab-link">Recording Settings</a>
+                    </li>
+
+                    <li class="nav-item" style="margin-right: 10px;">
+                        <a class="nav-link" data-toggle="tab" href="#schedule-tab" id="schedule-tab-link">Schedule</a>
+                    </li>
+
+                    <li class="nav-item" style="margin-right: 10px;">
+                        <a class="nav-link" data-toggle="tab" href="#advanced-tab" id="device-tab-link">Advanced Settings</a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tab content -->
+            <div class="tab-content" style="margin-top: 8px;">
+            
+                <div role="tabpanel" class="tab-pane fade in active show" id="settings-tab" role="tabpanel">
+                    <div id="settings-content"></div> 
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade in" id="schedule-tab" role="tabpanel">
+                    <div id="schedule-content"></div> 
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade in" id="advanced-tab" role="tabpanel">
+                    <div id="advanced-content"></div> 
+                </div>
+            
+            </div>
+
+            <div class="fixed-bottom" style="padding: 11px; padding-top: 8px;">
+
+                <!-- Lifespan -->
+                <div style="border: #cdcdcd thin solid; width: 100%; margin-bottom: 8px;">
+                    <div class="row" style="margin-top: 5px; margin-bottom: 5px;">
+                        <div class="col-12" id="life-display-holder" style="height: 40px;">
+                            <label id="life-display-panel" style="width: 100%; resize:none; text-align: center; font-weight: normal;">Each day this will produce 0 files, totalling 0 MB.<br/>Daily energy consumption will be approximately 0 mAh.</label>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Recording settings -->
-            <div class="row" style="margin-top: 1%;">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 1%;">
-                        <div class="col-12">
-                            <div style="margin-left: 2%; margin-right: 1%">
-                                <table class="table" style="margin-bottom: 1%;">
-                                    <tr style="font-size: 12px;">
-                                        <td align="center" style="padding: 0%; padding-left: 0%;"></td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">8</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">16</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">32</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">48</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">96</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">192</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">256</td>
-                                        <td align="center" style="padding: 0%; padding-left: 0%;">384</td>
-                                    </tr>
-                                    <tr>
-                                        <td align="left" style="padding-top: 0%; padding-bottom: 0%;">Sample rate (kHz):</td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio0" value="0" name="sample-rate-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio1" value="1" name="sample-rate-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio2" value="2" name="sample-rate-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio3" value="3" name="sample-rate-radio"
-                                            checked>
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio4" value="4" name="sample-rate-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio5" value="5" name="sample-rate-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio6" value="6" name="sample-rate-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="sample-rate-radio6" value="7" name="sample-rate-radio">
-                                        </td>
-                                    </tr>
-                                    <tr style="font-size: 12px;">
-                                        <td align="center" style="padding: 0%"></td>
-                                        <td align="center" style="padding: 0%"></td>
-                                        <td align="center" style="padding: 0%"></td>
-                                        <td align="center" style="padding: 0%"></td>
-                                        <td align="center" style="padding: 0%">Low</td>
-                                        <td align="center" style="padding: 0%"></td>
-                                        <td align="center" style="padding: 0%">Med</td>
-                                        <td align="center" style="padding: 0%"></td>
-                                        <td align="center" style="padding: 0%">High</td>
-                                    </tr>
-                                    <tr>
-                                        <td align="left" style="padding-top: 0%; padding-bottom: 0%;">Gain:</td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%"></td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%"></td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%"></td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="gain-radio0" value="0" name="gain-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="gain-radio1" value="1" name="gain-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="gain-radio2" value="2" name="gain-radio" checked>
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="gain-radio3" value="3" name="gain-radio">
-                                        </td>
-                                        <td align="center" style="padding-top: 0%; padding-bottom: 0%">
-                                            <input type="radio" id="gain-radio4" value="4" name="gain-radio">
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Apply configuration -->
+                <div style="width: 100%;">
                     <div class="row">
                         <div class="col-12">
-                            <div class="row" style="margin-top: 0%; margin-bottom: 0%;">
-                                <div class="col-6" style="text-align: left;">
-                                    <span id="sleep-duration-label" style="margin-left: 9%;">Sleep duration (s):</span>
-                                </div>
-                                <div class="col-6" style="text-align: right;">
-                                    <input id="sleep-duration-input" type="number" style="width: 40%; margin-right: 7%; text-align: right;" value="5">
-                                </div>
-                            </div>
-                            <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
-                                <div class="col-6" style="text-align: left;">
-                                    <span id="recording-duration-label" style="margin-left: 9%;">Recording duration (s):</span>
-                                </div>
-                                <div class="col-6" style="text-align: right;">
-                                    <input id="recording-duration-input" type="number" style="width: 40%; margin-right: 7%; text-align: right;" value="10">
-                                </div>
-                            </div>
+                            <button id="configure-button" class="btn btn-success" style="width: 100%;" disabled>Configure AudioMoth</button>
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            <!-- Hardware settings -->
-            <div class="row" style="margin-top: 1%;">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 1%;">
-                        <div class="col-6" style="text-align: left;">
-                            <span style="margin-left: 9%;">Enable LED:</span>
-                        </div>
-                        <div class="col-6" style="text-align: right;">
-                            <input id="led-checkbox" type="checkbox" checked style="margin-right: 7%;">
-                        </div>
-                    </div>
-                    <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
-                        <div class="col-6" style="text-align: left;">
-                            <span style="margin-left: 9%;">Enable low-battery cutoff:</span>
-                        </div>
-                        <div class="col-6" style="text-align: right;" title="Tooltip on top">
-                            <input id="battery-checkbox" type="checkbox" checked style="margin-right: 7%;">
-                        </div>
-                    </div>
-                    <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
-                        <div class="col-6" style="text-align: left;">
-                            <span style="margin-left: 9%;">Enable battery level indication:</span>
-                        </div>
-                        <div class="col-6" style="text-align: right;" title="Tooltip on top">
-                            <input id="battery-level-checkbox" type="checkbox" checked style="margin-right: 7%;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Lifespan -->
-            <div class="row" style="margin-top: 1%;">
-                <div style="border: #cdcdcd thin solid; margin-left: 2%; width: 96%;">
-                    <div class="row" style="margin-top: 1%; margin-bottom: 1%;">
-                        <div class="col-12" style="height: 35px;">
-                            <label id="life-display-panel" style="width: 100%; resize:none; text-align: center; font-weight: normal;"></label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Apply configuration -->
-            <div class="row" style="margin-top: 1%;">
-                <div style="text-align: center; margin-left: 2%; width: 96%;">
-                    <button id="configure-button" class="btn btn-success" style="width: 100%;" disabled>Configure AudioMoth</button>
-                </div>
-            </div>
         </div>
     </body>
 
-    <script src="app.js" charset="utf-8"></script>
+    <script>
+        window.jQuery = window.$ = require('jquery');
+        $("#schedule-content").load('./schedule/schedule.html');
+        $("#settings-content").load('./settings/settings.html');
+        $("#advanced-content").load('./settings/advanced.html');
+    </script>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script src="uiIndex.js" charset="utf-8"></script>
 
 </html>

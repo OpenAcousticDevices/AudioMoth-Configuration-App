@@ -8,29 +8,13 @@
 
 /* global document */
 
-var timeHandler = require('./timePeriods.js');
-var ui = require('./ui.js');
-
-var configurations;
-
 /* UI components */
-
-var recordingDurationInput = document.getElementById('recording-duration-input');
-var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 var lifeDisplayPanel = document.getElementById('life-display-panel');
 
 /* Energy consumed while device is awaiting an active period */
 
 var sleepEnergy = 0.1;
-
-/* Obtain sample rate configuration data */
-
-exports.setConfigurationData = function (configData) {
-
-    configurations = configData;
-
-};
 
 /* Obtain number of recording periods in a day and the total extra time in the form of truncated recording periods */
 
@@ -103,41 +87,67 @@ function formatFileSize (fileSize) {
 
 /* Update storage and energy usage values in life display box */
 
-function updateLifeDisplay () {
+exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, dutyEnabled) {
 
-    var text, configuration, recLength, sleepLength, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime;
+    var text, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime, upto, i, period, maxLength, length, upToSize, maxFileSize;
+
+    upto = amplitudeThresholdingEnabled ? 'up to ' : '';
 
     /* If no recording periods exist, do not perform energy calculations */
 
-    if (timeHandler.getTimePeriods().length === 0) {
+    if (schedule.length === 0) {
 
-        lifeDisplayPanel.textContent = '';
+        lifeDisplayPanel.innerHTML = 'Each day this will produce 0 files, totalling 0 MB.<br/>Daily energy consumption will be approximately 0 mAh.';
 
         return;
 
     }
 
-    configuration = configurations[parseInt(ui.getSelectedRadioValue('sample-rate-radio'), 10)];
-
-    recLength = parseInt(recordingDurationInput.value, 10);
-    sleepLength = parseInt(sleepDurationInput.value, 10);
-
     /* Calculate the amount of time spent recording each day */
 
-    countResponse = getDailyCounts(timeHandler.getTimePeriods(), recLength, sleepLength);
-    completeRecCount = countResponse.completeRecCount;
-    truncatedRecCount = countResponse.truncatedRecCount;
-    truncatedRecTime = countResponse.truncatedRecTime;
+    if (dutyEnabled) {
+
+        countResponse = getDailyCounts(schedule, recLength, sleepLength);
+        completeRecCount = countResponse.completeRecCount;
+        truncatedRecCount = countResponse.truncatedRecCount;
+        truncatedRecTime = countResponse.truncatedRecTime;
+        totalRecLength = (completeRecCount * recLength) + truncatedRecTime;
+
+        /* Calculate the size of a days worth of recordings */
+
+        recSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * recLength;
+        truncatedRecordingSize = (truncatedRecTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
+
+        totalSize = (recSize * completeRecCount) + truncatedRecordingSize;
+
+    } else {
+
+        completeRecCount = schedule.length;
+        truncatedRecCount = 0;
+        truncatedRecTime = 0;
+
+        totalRecLength = 0;
+
+        maxLength = 0;
+
+        for (i = 0; i < schedule.length; i++) {
+
+            period = schedule[i];
+            length = period.endMins - period.startMins;
+
+            totalRecLength += length;
+
+            maxLength = (length > maxLength) ? length : maxLength;
+
+        }
+
+        totalRecLength *= 60;
+
+        totalSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * totalRecLength;
+
+    }
 
     totalRecCount = completeRecCount + truncatedRecCount;
-    totalRecLength = (completeRecCount * recLength) + truncatedRecTime;
-
-    /* Calculate the size of a days worth of recordings */
-
-    recSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * recLength;
-    truncatedRecordingSize = (truncatedRecTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
-
-    totalSize = (recSize * completeRecCount) + truncatedRecordingSize;
 
     /* Generate life display message */
 
@@ -147,13 +157,24 @@ function updateLifeDisplay () {
 
     text += totalRecCount > 1 ? 's ' : ' ';
 
-    if (completeRecCount > 0) {
+    if (completeRecCount > 1) {
 
-        text += ' each up to ' + formatFileSize(recSize) + ' ';
+        if (dutyEnabled) {
+
+            upToSize = formatFileSize(recSize);
+
+        } else {
+
+            maxFileSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * maxLength * 60;
+            upToSize = formatFileSize(maxFileSize);
+
+        }
+
+        text += 'each ' + upto + upToSize + ', ';
 
     }
 
-    text += 'totalling ' + formatFileSize(totalSize) + '.<br/>';
+    text += 'totalling ' + upto + formatFileSize(totalSize) + '.<br/>';
 
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
@@ -161,10 +182,10 @@ function updateLifeDisplay () {
 
     energyUsed += (86400 - totalRecLength) * sleepEnergy / 3600;
 
-    text += 'Daily energy consumption will be approximately ' + Math.round(energyUsed) + ' mAh.';
+    energyUsed = Math.round(energyUsed / 10) * 10;
+
+    text += 'Daily energy consumption will be approximately ' + energyUsed + ' mAh.';
 
     lifeDisplayPanel.innerHTML = text;
 
-}
-
-exports.updateLifeDisplay = updateLifeDisplay;
+};

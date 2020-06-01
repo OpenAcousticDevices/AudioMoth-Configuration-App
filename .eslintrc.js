@@ -5,6 +5,7 @@ module.exports = {
         "indent": ["error", 4],
         "padded-blocks": ["error", "always"],
         "no-useless-escape": 0,
-        "object-curly-spacing": ["error", "never"]
+        "object-curly-spacing": ["error", "never"],
+        "no-extend-native": ["error", { "exceptions": ["Array"] }]
     }
 };

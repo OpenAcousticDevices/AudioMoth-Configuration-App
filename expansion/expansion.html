@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link id="uiCSS" rel="stylesheet" href="../ui.css">
+        <title>Expand AudioMoth Recordings</title>
+    </head>
+
+    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
+
+        <div class="container" style="text-align: center; padding: 11px;">
+            <div class="row">
+                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+
+                    <div class="row" style="margin-top: 1%; margin-bottom: 8px;">
+                        <div class="col-12">
+                            <div style="margin-left: 8px; margin-right: 8px">
+                                <table class="table" style="margin-bottom: 8px;">
+                                    <tr class="settings-text" style="font-size: 12px;" title="Select multiple files or a folder of recordings.">
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px" name="selection-radio-label">File</td>
+                                        <td align="center" style="padding: 0px" name="selection-radio-label">Folder</td>
+                                    </tr>
+                                    <tr class="settings-text" title="Select multiple files or a folder of recordings.">
+                                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="selection-type-label">Selection type:</td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="0" name="selection-radio" checked>
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="1" name="selection-radio">
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 8px;">
+                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+
+                    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                        <div class="col-4">
+                            <button id="file-button" class="btn btn-primary" style="width: 100%; margin-left: 16px;">Select Files</button>
+                        </div>
+                        <div class="col-8">
+                            <div style="margin-top: 11px; text-align: left;">
+                                <span id="file-label" title="Amplitude thresholded recordings will have a file name ending in 'T.WAV'.">No T.WAV files selected.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="width: 100%; margin-top: 8px;">
+                <div class="row">
+                    <div class="col-12">
+                        <button id="expand-button" class="btn btn-success" disabled style="width: 100%;">Expand Recordings</button>
+                    </div>
+                </div>
+            </div>
+
+    </body>
+
+    <script src="uiExpansion.js" charset="utf-8"></script>
+
+</html>

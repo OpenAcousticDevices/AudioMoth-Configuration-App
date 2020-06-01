@@ -1,0 +1,146 @@
+<!-- Recording settings -->
+<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
+    <div class="row" style="margin-top: 8px;">
+        <div class="col-12">
+            <div style="margin-left: 5px; margin-right: 4px">
+                <table class="table" style="margin-bottom: 4px;">
+                    <tr class="settings-text" style="font-size: 12px;" title="Sample rate used when making recordings.">
+                        <td align="center" style="padding: 0px; padding-left: 0px;"></td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">8</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">16</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">32</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">48</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">96</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">192</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">256</td>
+                        <td align="center" style="padding: 0px; padding-left: 0px;">384</td>
+                    </tr>
+                    <tr class="settings-text" title="Sample rate used when making recordings.">
+                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Sample rate (kHz):</td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio0" value="0" name="sample-rate-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio1" value="1" name="sample-rate-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio2" value="2" name="sample-rate-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio3" value="3" name="sample-rate-radio"
+                            checked>
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio4" value="4" name="sample-rate-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio5" value="5" name="sample-rate-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio6" value="6" name="sample-rate-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="sample-rate-radio6" value="7" name="sample-rate-radio">
+                        </td>
+                    </tr>
+                    <tr style="height: 10px;"></tr>
+                    <tr class="settings-text" style="font-size: 12px;" title="Gain setting used when making recordings.">
+                        <td align="center" style="padding: 0px"></td>
+                        <td align="center" style="padding: 0px"></td>
+                        <td align="center" style="padding: 0px"></td>
+                        <td align="center" style="padding: 0px"></td>
+                        <td align="center" style="padding: 0px">Low</td>
+                        <td align="center" style="padding: 0px"></td>
+                        <td align="center" style="padding: 0px">Med</td>
+                        <td align="center" style="padding: 0px"></td>
+                        <td align="center" style="padding: 0px">High</td>
+                    </tr>
+                    <tr class="settings-text" title="Gain setting used when making recordings.">
+                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Gain:</td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="gain-radio0" value="0" name="gain-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="gain-radio1" value="1" name="gain-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="gain-radio2" value="2" name="gain-radio" checked>
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="gain-radio3" value="3" name="gain-radio">
+                        </td>
+                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                            <input class="settings-inputs" type="radio" id="gain-radio4" value="4" name="gain-radio">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+        <div class="col-8" style="text-align: left; height: 25px;">
+            <span class="settings-text" style="margin-left: 17px">Enable sleep/record cyclic recording:</span>
+        </div>
+        <div class="col-4" style="text-align: right;" title="Whether or not AudioMoth will follow a sleep/record cycle within a scheduled period.">
+            <input class="settings-inputs" id="duty-checkbox" type="checkbox" style="margin-right: 16px;" checked>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+        <div class="col-8" style="text-align: left;">
+            <span class="settings-text" id="sleep-duration-label" style="margin-left: 17px">Sleep duration (s):</span>
+        </div>
+        <div class="col-4" title="How long AudioMoth will sleep for, in each cycle within a scheduled recording period.">
+            <div style="float: right; margin-right: 17px;">
+                <duration-input id="sleep-duration-input"></duration-input>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-8" style="text-align: left;">
+            <span class="settings-text" id="recording-duration-label" style="margin-left: 17px">Recording duration (s):</span>
+        </div>
+        <div class="col-4" title="How long AudioMoth will record for, in each cycle within a scheduled recording period.">
+            <div style="float: right; margin-right: 17px;">
+                <duration-input id="recording-duration-input" minValue="1"></duration-input>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
+    <div class="row" style="margin-top: 8px;">
+        <div class="col-8" style="text-align: left;">
+            <span style="margin-left: 17px;">Enable LED:</span>
+        </div>
+        <div class="col-4" style="text-align: right;" title="Flash red and green LED during operation to show current status (recording or waiting to record).">
+            <input id="led-checkbox" type="checkbox" checked style="margin-right: 16px;">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+        <div class="col-8" style="text-align: left;">
+            <span style="margin-left: 17px;">Enable low-voltage cut-off:</span>
+        </div>
+        <div class="col-4" style="text-align: right;" title="Stop recording when the supply voltage is low to reduce risk of corrupted files.">
+            <input id="low-voltage-cutoff-checkbox" type="checkbox" checked style="margin-right: 16px;">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-8" style="text-align: left;">
+            <span style="margin-left: 17px;">Enable battery level indication:</span>
+        </div>
+        <div class="col-4" style="text-align: right;" title="Flash after exiting USB mode to show the current battery level.">
+            <input id="battery-level-checkbox" type="checkbox" checked style="margin-right: 16px;">
+        </div>
+    </div>
+</div>
+
+
+
