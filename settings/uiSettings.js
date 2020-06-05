@@ -139,7 +139,7 @@ exports.fillUI = function (settings) {
     uiFiltering.setFilters(settings.passFiltersEnabled, settings.lowerFilter, settings.higherFilter, settings.filterType);
     uiFiltering.updateFilterUI();
 
-    uiFiltering.setAmplitudeThreshold(settings.amplitudeThresholding, settings.amplitudeThreshold);
+    uiFiltering.setAmplitudeThreshold(settings.amplitudeThresholdingEnabled, settings.amplitudeThreshold);
     uiFiltering.updateAmplitudeThresholdingUI();
 
     durationInput.setValue(sleepDurationInput, settings.sleepDuration);

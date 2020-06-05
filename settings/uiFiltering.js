@@ -144,6 +144,22 @@ function updateFilterLabel () {
 
 }
 
+function calculateSliderPosition (thresholdValue) {
+
+    if (!compressionThresholdValues) calculateCompressionThresholdValues();
+
+    for (let i = 0; i < compressionThresholdValues.length; i++) {
+
+        if (compressionThresholdValues[i] === thresholdValue) {
+
+            return i * 32768 / (compressionThresholdValues.length - 1);
+
+        }
+
+    }
+
+}
+
 function calculateCompressionThresholdValues () {
 
     var i, j, step;
@@ -213,11 +229,11 @@ exports.setFilters = function (enabled, lowerSliderValue, higherSliderValue, fil
         switch (filterType) {
 
         case FILTER_LOW:
-            setLowPassSliderValue(lowerSliderValue);
+            setLowPassSliderValue(higherSliderValue);
             break;
 
         case FILTER_HIGH:
-            setHighPassSliderValue(higherSliderValue);
+            setHighPassSliderValue(lowerSliderValue);
             break;
 
         case FILTER_BAND:
@@ -226,13 +242,13 @@ exports.setFilters = function (enabled, lowerSliderValue, higherSliderValue, fil
 
         }
 
-        updateFilterLabel();
-
         for (i = 0; i < filterRadioButtons.length; i++) {
 
             filterRadioButtons[i].checked = (i === filterType);
 
         }
+
+        updateFilterLabel();
 
     }
 
@@ -241,7 +257,8 @@ exports.setFilters = function (enabled, lowerSliderValue, higherSliderValue, fil
 exports.setAmplitudeThreshold = function (enabled, amplitudeThreshold) {
 
     amplitudeThresholdingCheckbox.checked = enabled;
-    amplitudeThresholdingSlider.setValue(amplitudeThreshold);
+
+    amplitudeThresholdingSlider.setValue(calculateSliderPosition(amplitudeThreshold));
 
 };
 
@@ -381,8 +398,6 @@ function updateFilterUI () {
         highPassMaxLabel.style.color = '';
         highPassMinLabel.style.color = '';
 
-        updateFilterSliders();
-        updateFilterLabel();
         filterLabel.style.color = '';
 
     } else {
@@ -409,8 +424,6 @@ function updateFilterUI () {
 
         filterLabel.textContent = 'Recordings will not be filtered.';
         filterLabel.style.color = 'grey';
-
-        updateFilterSliders();
 
     }
 
@@ -486,7 +499,13 @@ function addRadioButtonListeners () {
 
     for (i = 0; i < filterRadioButtons.length; i++) {
 
-        filterRadioButtons[i].addEventListener('change', updateFilterUI);
+        filterRadioButtons[i].addEventListener('change', function () {
+
+            updateFilterUI();
+            updateFilterSliders();
+            updateFilterLabel();
+
+        });
 
     }
 
@@ -499,7 +518,12 @@ exports.prepareUI = function (changeFunction) {
     updateLifeDisplayOnChange = changeFunction;
 
     amplitudeThresholdingCheckbox.addEventListener('change', updateAmplitudeThresholdingUI);
-    filterCheckbox.addEventListener('change', updateFilterUI);
+    filterCheckbox.addEventListener('change', function () {
+
+        updateFilterUI();
+        updateFilterLabel();
+
+    });
 
     addRadioButtonListeners();
 
