@@ -6,10 +6,17 @@
 
 'use strict';
 
+/* global Event */
+
 const ui = require('../ui.js');
 const scheduleBar = require('../scheduleBar.js');
 const timeHandler = require('../timeHandler.js');
 const schedule = require('../schedule/schedule.js');
+
+var timeList = document.getElementById('time-list');
+
+exports.setSelectedPeriod = scheduleBar.setSelectedPeriod;
+exports.clearSelectedPeriod = scheduleBar.clearSelectedPeriod;
 
 /* Remove a time from the recording period data structure and update UI to reflect change */
 
@@ -176,4 +183,12 @@ exports.formatAndAddTime = formatAndAddTime;
 exports.getTimePeriods = schedule.getTimePeriods;
 exports.setTimePeriods = schedule.setTimePeriods;
 
-scheduleBar.prepareScheduleCanvas(false);
+scheduleBar.prepareScheduleCanvas(true, function (selectedIndex) {
+
+    var event = new Event('change');
+
+    timeList.options.selectedIndex = selectedIndex;
+    timeList.focus();
+    timeList.dispatchEvent(event);
+
+});

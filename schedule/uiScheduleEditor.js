@@ -174,6 +174,8 @@ function clearTimesOnClick () {
 
 exports.prepareUI = function (changeFunction) {
 
+    var valueSplit, selectedTimePeriod;
+
     updateLifeDisplayOnChange = changeFunction;
 
     addTimeButton.addEventListener('click', addTimeOnClick);
@@ -183,6 +185,18 @@ exports.prepareUI = function (changeFunction) {
     timeList.addEventListener('change', function () {
 
         removeTimeButton.disabled = (timeList.value === null || timeList.value === '');
+
+        if (timeList.value !== null && timeList.value !== '') {
+
+            valueSplit = timeList.value.split(',');
+            selectedTimePeriod = {startMins: parseInt(valueSplit[0]), endMins: parseInt(valueSplit[1])};
+            scheduleEditor.setSelectedPeriod(selectedTimePeriod);
+
+        } else {
+
+            scheduleEditor.clearSelectedPeriod();
+
+        }
 
     });
 

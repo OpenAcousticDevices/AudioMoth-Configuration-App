@@ -67,7 +67,7 @@ function openExpansionWindow () {
 
     expansionWindow = new BrowserWindow({
         width: 565,
-        height: shrinkWindowHeight(212),
+        height: shrinkWindowHeight(263),
         title: 'Expand AudioMoth Recordings',
         useContentSize: true,
         resizable: false,
@@ -82,7 +82,29 @@ function openExpansionWindow () {
     expansionWindow.setMenu(null);
     expansionWindow.loadURL(path.join('file://', __dirname, 'expansion/expansion.html'));
 
-    expansionWindow.on('close', function () {
+    expansionWindow.webContents.on('dom-ready', function () {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (expansionWindow) {
+
+            expansionWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+    expansionWindow.on('close', function (e) {
+
+        if (expandProgressBar) {
+
+            e.preventDefault();
+
+        }
 
         expansionWindow = null;
 
@@ -127,6 +149,18 @@ function openAboutWindow () {
         aboutWindow = null;
 
     });
+
+}
+
+function toggleNightMode () {
+
+    mainWindow.webContents.send('night-mode');
+
+    if (expansionWindow) {
+
+        expansionWindow.webContents.send('night-mode');
+
+    }
 
 }
 
@@ -218,11 +252,7 @@ app.on('ready', function () {
             label: 'Night Mode',
             accelerator: 'CommandOrControl+N',
             checked: false,
-            click: function () {
-
-                mainWindow.webContents.send('night-mode');
-
-            }
+            click: toggleNightMode
         }, {
             type: 'separator'
         }, {
@@ -326,19 +356,33 @@ ipcMain.on('start-bar', (event, fileCount) => {
             closable: true,
             modal: false
         },
-        maxValue: fileCount
+        maxValue: fileCount * 100
+    });
+
+    expandProgressBar.on('aborted', () => {
+
+        if (expandProgressBar) {
+
+            expandProgressBar.close();
+            expandProgressBar = null;
+
+        }
+
     });
 
 });
 
-ipcMain.on('set-bar-progress', (event, val, name) => {
+ipcMain.on('set-bar-progress', (event, fileNum, progress, name) => {
 
-    var index = val + 1;
+    var index, fileCount;
+
+    index = fileNum + 1;
+    fileCount = expandProgressBar.getOptions().maxValue / 100;
 
     if (expandProgressBar) {
 
-        expandProgressBar.value = val;
-        expandProgressBar.detail = 'Expanding ' + name + ' (' + index + ' of ' + expandProgressBar.getOptions().maxValue + ').';
+        expandProgressBar.value = (fileNum * 100) + progress;
+        expandProgressBar.detail = 'Expanding ' + name + ' (' + index + ' of ' + fileCount + ').';
 
     }
 
@@ -354,24 +398,13 @@ ipcMain.on('set-bar-error', (event, name) => {
 
 });
 
-ipcMain.on('set-bar-aborted', () => {
-
-    if (expandProgressBar) {
-
-        expandProgressBar.close();
-        expandProgressBar = null;
-
-    }
-
-});
-
 ipcMain.on('set-bar-completed', (event, successCount, errorCount) => {
 
     var messageText;
 
     if (expandProgressBar) {
 
-        expandProgressBar.value = expandProgressBar.getOptions().maxValue;
+        expandProgressBar.setCompleted();
 
         if (errorCount > 0) {
 
@@ -393,7 +426,12 @@ ipcMain.on('set-bar-completed', (event, successCount, errorCount) => {
 
             expandProgressBar.close();
             expandProgressBar = null;
-            expansionWindow.send('summary-closed');
+
+            if (expansionWindow) {
+
+                expansionWindow.send('summary-closed');
+
+            }
 
         }, 5000);
 

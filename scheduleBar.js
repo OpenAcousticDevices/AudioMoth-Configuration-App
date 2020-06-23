@@ -21,7 +21,7 @@ var canvasHolder = document.getElementById('canvas-holder');
 var clickableCanvas;
 var clickCallback;
 
-var selectedPeriods = [];
+var selectedPeriod = null;
 
 /* Function to rescale */
 
@@ -51,24 +51,6 @@ function rescale (canvas) {
 
 }
 
-function containsTimePeriod (periods, p) {
-
-    var i;
-
-    for (i = 0; i < periods.length; i++) {
-
-        if (periods[i].startMins === p.startMins && periods[i].endMins === p.endMins) {
-
-            return true;
-
-        }
-
-    }
-
-    return false;
-
-}
-
 function updateCanvas () {
 
     var timePeriods, i, startMins, endMins, recX, recLen, currentTimeDate, currentMins, currentX;
@@ -89,9 +71,9 @@ function updateCanvas () {
         recX = startMins * timeCanvas.width / 1440;
         recLen = (endMins - startMins) * timeCanvas.width / 1440;
 
-        if (containsTimePeriod(selectedPeriods, timePeriods[i])) {
+        if (selectedPeriod !== null && (selectedPeriod.startMins === timePeriods[i].startMins && selectedPeriod.endMins === timePeriods[i].endMins)) {
 
-            timeContext.fillStyle = '#0000FF';
+            timeContext.fillStyle = '#007BFF';
 
         } else {
 
@@ -191,17 +173,16 @@ function updateSelectedPeriod (event) {
 
 /* Set clicked period to specific index */
 
-exports.setSelectedPeriods = function (periods) {
+exports.setSelectedPeriod = function (period) {
 
-    selectedPeriods = periods;
+    selectedPeriod = period;
     updateCanvas();
 
 };
 
-exports.selectAll = function () {
+exports.clearSelectedPeriod = function () {
 
-    selectedPeriods = schedule.getTimePeriods();
-    selectedPeriods = ui.isLocalTime() ? timeHandler.convertTimePeriodsToLocal(selectedPeriods) : selectedPeriods;
+    selectedPeriod = null;
     updateCanvas();
 
 };
@@ -238,6 +219,8 @@ exports.drawTimeLabels = drawTimeLabels;
 
 exports.prepareScheduleCanvas = function (clickable, callback) {
 
+    var offset;
+
     clickCallback = null;
 
     if (clickable) {
@@ -251,7 +234,11 @@ exports.prepareScheduleCanvas = function (clickable, callback) {
         clickableCanvas.height = timeCanvas.height;
 
         clickableCanvas.style.position = 'absolute';
-        clickableCanvas.style.left = timeCanvas.offsetLeft + 'px';
+
+        clickableCanvas.style.left = '50%';
+        offset = -1 * clickableCanvas.width / 2;
+        clickableCanvas.style.marginLeft = offset + 'px';
+
         clickableCanvas.style.top = timeCanvas.offsetTop + 'px';
 
         canvasHolder.appendChild(clickableCanvas);

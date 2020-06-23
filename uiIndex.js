@@ -696,7 +696,10 @@ electron.ipcRenderer.on('load', function () {
 
         });
 
+        ui.setTimezoneStatus(localTime);
+
         scheduleBar.setSchedule(sortedPeriods);
+        uiSchedule.updateTimeList();
 
         uiSchedule.setFirstRecordingDate(start);
         uiSchedule.setLastRecordingDate(end);
@@ -716,8 +719,6 @@ electron.ipcRenderer.on('load', function () {
         };
 
         uiSettings.fillUI(settings);
-
-        ui.setTimezoneStatus(localTime);
 
         ledCheckbox.checked = ledEnabled;
         lowVoltageCutoffCheckbox.checked = lowVoltageCutoffEnabled;

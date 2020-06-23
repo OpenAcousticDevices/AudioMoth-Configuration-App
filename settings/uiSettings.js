@@ -108,7 +108,7 @@ exports.getSettings = function () {
         lowerFilter: uiFiltering.getLowerSliderValue(),
         higherFilter: uiFiltering.getHigherSliderValue(),
         amplitudeThresholdingEnabled: uiFiltering.amplitudeThresholdingIsEnabled(),
-        amplitudeThreshold: parseInt(uiFiltering.getamplitudeThreshold())
+        amplitudeThreshold: parseInt(uiFiltering.getAmplitudeThreshold())
     };
 
     return settings;

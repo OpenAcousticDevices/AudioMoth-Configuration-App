@@ -10,6 +10,7 @@
     <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
 
         <div class="container" style="text-align: center; padding: 11px;">
+
             <div class="row">
                 <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
 
@@ -17,16 +18,67 @@
                         <div class="col-12">
                             <div style="margin-left: 8px; margin-right: 8px">
                                 <table class="table" style="margin-bottom: 8px;">
+                                    <tr class="max-length-text" style="font-size: 12px;" title="Max length of a file when expanded.">
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px"></td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">15 s</td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">30 s</td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">1 min</td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">5 min</td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">10 min</td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">1 hr</td>
+                                        <td align="center" style="padding: 0px" name="max-length-radio-label">None</td>
+                                    </tr>
+                                    <tr class="max-length-text" title="Select the max length of an expanded file.">
+                                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="max-length-type-label">Maximum file length:</td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="0" name="max-length-radio" >
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="1" name="max-length-radio" >
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value=2 name="max-length-radio" >
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="3" name="max-length-radio" >
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="4" name="max-length-radio" >
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="5" name="max-length-radio" >
+                                        </td>
+                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                            <input class="settings-inputs" type="radio" value="6" name="max-length-radio" checked>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 8px;">
+                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+
+                    <div class="row" style="margin-top: 1%; margin-bottom: 8px;">
+                        <div class="col-12">
+                            <div style="margin-left: 8px; margin-right: 8px">
+                                <table class="table" style="margin-bottom: 8px;">
                                     <tr class="settings-text" style="font-size: 12px;" title="Select multiple files or a folder of recordings.">
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px" name="selection-radio-label">File</td>
-                                        <td align="center" style="padding: 0px" name="selection-radio-label">Folder</td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;" name="selection-radio-label">File</td>
+                                        <td align="center" style="padding: 0px; width: 45px;" name="selection-radio-label">Folder</td>
                                     </tr>
                                     <tr class="settings-text" title="Select multiple files or a folder of recordings.">
                                         <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="selection-type-label">Selection type:</td>
@@ -48,18 +100,12 @@
                         </div>
                     </div>
 
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 8px;">
-                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
-
                     <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
                         <div class="col-4">
                             <button id="file-button" class="btn btn-primary" style="width: 100%; margin-left: 16px;">Select Files</button>
                         </div>
                         <div class="col-8">
-                            <div style="margin-top: 11px; text-align: left;">
+                            <div style="margin-top: 11px; text-align: right; margin-right: 16px;">
                                 <span id="file-label" title="Amplitude thresholded recordings will have a file name ending in 'T.WAV'.">No T.WAV files selected.</span>
                             </div>
                         </div>

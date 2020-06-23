@@ -14,7 +14,10 @@ const dialog = electron.remote.dialog;
 const path = require('path');
 const fs = require('fs');
 
-const expander = require('../decompress.js');
+const nightMode = require('../nightMode.js');
+const expander = require('./expander.js');
+
+const MAX_LENGTHS = [15, 30, 60, 300, 600, 3600, null];
 
 var currentWindow = electron.remote.getCurrentWindow();
 
@@ -25,6 +28,20 @@ var expandButton = document.getElementById('expand-button');
 
 var files = [];
 var expanding = false;
+
+electron.ipcRenderer.on('night-mode', function (e, nm) {
+
+    if (nm !== undefined) {
+
+        nightMode.setNightMode(nm);
+
+    } else {
+
+        nightMode.toggle();
+
+    }
+
+});
 
 function disableUI () {
 
@@ -60,7 +77,7 @@ function sleep (milliseconds) {
 
 function expandFiles () {
 
-    var i, successCount, errorCount, errors, errorFiles, cancelled, response, filePath, fileContent, j;
+    var i, successCount, errorCount, errors, errorFiles, cancelled, response, filePath, fileContent, j, maxLength;
 
     if (!files) {
 
@@ -86,9 +103,15 @@ function expandFiles () {
         }
 
         console.log('Expanding: ' + files[i]);
-        electron.ipcRenderer.send('set-bar-progress', i, path.basename(files[i]));
+        electron.ipcRenderer.send('set-bar-progress', i, 0, path.basename(files[i]));
 
-        response = expander.decompress(files[i]);
+        maxLength = MAX_LENGTHS[getSelectedRadioValue('max-length-radio')];
+
+        response = expander.expand(files[i], maxLength, function (progress) {
+
+            electron.ipcRenderer.send('set-bar-progress', i, progress, path.basename(files[i]));
+
+        });
 
         if (response.success) {
 

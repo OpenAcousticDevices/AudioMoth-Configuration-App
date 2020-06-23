@@ -10,7 +10,7 @@ const Slider = require('bootstrap-slider');
 
 const SLIDER_STEPS = [100, 100, 100, 100, 200, 500, 500, 1000];
 
-var compressionThresholdValues;
+var amplitudeThresholdValues;
 
 var filterTypeLabel = document.getElementById('filter-type-label');
 var filterRadioButtons = document.getElementsByName('filter-radio');
@@ -144,54 +144,53 @@ function updateFilterLabel () {
 
 }
 
-function calculateSliderPosition (thresholdValue) {
-
-    if (!compressionThresholdValues) calculateCompressionThresholdValues();
-
-    for (let i = 0; i < compressionThresholdValues.length; i++) {
-
-        if (compressionThresholdValues[i] === thresholdValue) {
-
-            return i * 32768 / (compressionThresholdValues.length - 1);
-
-        }
-
-    }
-
-}
-
-function calculateCompressionThresholdValues () {
+function calculateAmplitudeThresholdValues () {
 
     var i, j, step;
 
     step = 2;
 
-    compressionThresholdValues = [0, 2, 4, 6, 8, 10, 12, 14, 16];
+    amplitudeThresholdValues = [0, 2, 4, 6, 8, 10, 12, 14, 16];
 
     for (i = 0; i < 11; i += 1) {
 
         for (j = 0; j < 8; j += 1) {
 
-            compressionThresholdValues.push(compressionThresholdValues.last() + step);
+            amplitudeThresholdValues.push(amplitudeThresholdValues.last() + step);
 
         }
+
         step *= 2;
 
     }
 
 }
 
-function computeCompressionThreshold () {
+function lookupAmplitudeThresholdingSliderValue (amplitudeThreshold) {
 
-    if (!compressionThresholdValues) calculateCompressionThresholdValues();
+    if (!amplitudeThresholdValues) calculateAmplitudeThresholdValues();
 
-    return compressionThresholdValues[Math.round((compressionThresholdValues.length - 1) * amplitudeThresholdingSlider.getValue() / 32768)];
+    var index = amplitudeThresholdValues.findIndex(x => x === amplitudeThreshold);
+
+    return index ? Math.round(index / (amplitudeThresholdValues.length - 1) * 32768) : 0;
+
+}
+
+function lookupAmplitudeThreshold (sliderValue) {
+
+    if (!amplitudeThresholdValues) calculateAmplitudeThresholdValues();
+
+    return amplitudeThresholdValues[Math.round((amplitudeThresholdValues.length - 1) * sliderValue / 32768)];
 
 }
 
 function updateAmplitudeThresholdingLabel () {
 
-    var threshold = computeCompressionThreshold();
+    var threshold, sliderValue;
+
+    sliderValue = amplitudeThresholdingSlider.getValue();
+
+    threshold = lookupAmplitudeThreshold(sliderValue);
 
     amplitudeThresholdingLabel.textContent = 'Audio segments with amplitude less than ' + threshold + ' will not be written to the SD card.';
 
@@ -258,7 +257,7 @@ exports.setAmplitudeThreshold = function (enabled, amplitudeThreshold) {
 
     amplitudeThresholdingCheckbox.checked = enabled;
 
-    amplitudeThresholdingSlider.setValue(calculateSliderPosition(amplitudeThreshold));
+    amplitudeThresholdingSlider.setValue(lookupAmplitudeThresholdingSliderValue(amplitudeThreshold));
 
 };
 
@@ -308,9 +307,11 @@ exports.getHigherSliderValue = function () {
 
 };
 
-exports.getamplitudeThreshold = function () {
+exports.getAmplitudeThreshold = function () {
 
-    return computeCompressionThreshold();
+    var sliderValue = amplitudeThresholdingSlider.getValue();
+
+    return lookupAmplitudeThreshold(sliderValue);
 
 };
 
@@ -320,7 +321,7 @@ exports.amplitudeThresholdingIsEnabled = function () {
 
 };
 
-/* Enable/disable compression UI based on checkbox */
+/* Enable/disable amplitude threshold UI based on checkbox */
 
 function updateAmplitudeThresholdingUI () {
 

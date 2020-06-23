@@ -10,6 +10,7 @@
 
 const electron = require('electron');
 const menu = electron.remote.Menu;
+const ipc = electron.ipcRenderer;
 
 const strftime = require('strftime');
 
@@ -201,6 +202,12 @@ function checkUtcToggleability () {
     return true;
 
 }
+
+ipc.on('poll-night-mode', function () {
+
+    electron.ipcRenderer.send('night-mode-poll-reply', nightMode.isEnabled());
+
+});
 
 exports.checkUtcToggleability = checkUtcToggleability;
 

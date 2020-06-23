@@ -6,6 +6,7 @@ module.exports = {
         "padded-blocks": ["error", "always"],
         "no-useless-escape": 0,
         "object-curly-spacing": ["error", "never"],
-        "no-extend-native": ["error", { "exceptions": ["Array"] }]
+        "no-extend-native": ["error", { "exceptions": ["Array"] }],
+        "standard/no-callback-literal": 0
     }
 };

@@ -209,6 +209,8 @@ lastRecordingDateLabel.addEventListener('click', function () {
 
 });
 
+exports.updateTimeList = uiScheduleEditor.updateTimeList;
+
 /* Prepare UI */
 
 exports.prepareUI = function (changeFunction) {
