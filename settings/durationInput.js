@@ -123,32 +123,20 @@ exports.updateHighlights = function (div) {
 
 function updateValue (inputKey, node) {
 
-    var currentNumbersEntered, currentInputValue, newValue, maxValue, minValue;
+    var currentNumbersEntered, currentInputValue, newValue, maxValue;
 
     currentNumbersEntered = parseInt(getAttributeValue(node, 'numbersEntered'));
     currentInputValue = getAttributeValue(node, 'inputValue');
 
     maxValue = getAttributeValue(node, 'maxValue');
-    maxValue = (maxValue === null) ? DEFAULT_MAX_VALUE : parseInt(maxValue);
-
-    minValue = getAttributeValue(node, 'minValue');
-    minValue = (minValue === null) ? DEFAULT_MIN_VALUE : parseInt(minValue);
+    maxValue = (maxValue === null) ? DEFAULT_MAX_VALUE : maxValue;
 
     if (currentNumbersEntered === 1) {
 
         newValue = inputKey;
 
-        if (parseInt(newValue) < minValue) {
-
-            setAttributeValue(node, 'inputValue', minValue.toString());
-            getSpanFromChild(node).innerText = minValue.toString();
-
-        } else {
-
-            setAttributeValue(node, 'inputValue', parseInt(newValue));
-            getSpanFromChild(node).innerText = newValue;
-
-        }
+        setAttributeValue(node, 'inputValue', parseInt(newValue));
+        getSpanFromChild(node).innerText = newValue;
 
     } else {
 
@@ -156,21 +144,10 @@ function updateValue (inputKey, node) {
 
             newValue = inputKey;
 
-            if (parseInt(newValue) < minValue) {
+            setAttributeValue(node, 'inputValue', parseInt(newValue));
+            getSpanFromChild(node).innerText = newValue;
 
-                setAttributeValue(node, 'inputValue', minValue.toString());
-                getSpanFromChild(node).innerText = minValue.toString();
-
-                setAttributeValue(node, 'numbersEntered', 1);
-
-            } else {
-
-                setAttributeValue(node, 'inputValue', parseInt(newValue));
-                getSpanFromChild(node).innerText = newValue;
-
-                setAttributeValue(node, 'numbersEntered', 1);
-
-            }
+            setAttributeValue(node, 'numbersEntered', 1);
 
         } else {
 
