@@ -283,7 +283,7 @@ class DurationInput extends HTMLElement {
 
     connectedCallback () {
 
-        var parent, attributes, width, height, i, divNode, inputNode, holderNode, spanNode, minValue;
+        var parent, attributes, width, height, i, divNode, blockerNode, inputNode, holderNode, spanNode, minValue;
 
         parent = this.parentNode;
 
@@ -319,6 +319,9 @@ class DurationInput extends HTMLElement {
 
         divNode.appendChild(inputNode);
 
+        blockerNode = document.createElement('div');
+        blockerNode.style = 'position: absolute; top: 0px; margin-left: 0px; margin-top: 0px; width: 100%; height: 100%;';
+
         holderNode = document.createElement('div');
         holderNode.className = 'duration-holder';
         holderNode.style = 'position: absolute; top: 0px; margin-left: 5%; margin-top: 2px; width: 90%;';
@@ -330,7 +333,9 @@ class DurationInput extends HTMLElement {
 
         holderNode.appendChild(spanNode);
 
-        divNode.appendChild(holderNode);
+        blockerNode.appendChild(holderNode);
+
+        divNode.appendChild(blockerNode);
 
         parent.appendChild(divNode);
 
