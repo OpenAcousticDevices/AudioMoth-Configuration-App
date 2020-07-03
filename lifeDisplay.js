@@ -75,15 +75,15 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
 function formatFileSize (fileSize) {
 
-    fileSize = Math.round(fileSize / 1024);
+    fileSize = Math.round(fileSize / 1000);
 
     if (fileSize < 10000) {
 
-        return fileSize + ' KB';
+        return fileSize + ' kB';
 
     }
 
-    fileSize = Math.round(fileSize / 1024);
+    fileSize = Math.round(fileSize / 1000);
 
     if (fileSize < 10000) {
 
@@ -91,7 +91,7 @@ function formatFileSize (fileSize) {
 
     }
 
-    fileSize = Math.round(fileSize / 1024);
+    fileSize = Math.round(fileSize / 1000);
 
     return fileSize + ' GB';
 
