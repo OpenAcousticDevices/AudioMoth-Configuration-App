@@ -96,14 +96,6 @@ function convertTimePeriodToLocal (timePeriod) {
     startMins = convertTimeToLocal(timePeriod.startMins);
     endMins = convertTimeToLocal(timePeriod.endMins);
 
-    /* If the start and end times are the same, the time period covers the entire day */
-
-    if (startMins === endMins) {
-
-        return timePeriod;
-
-    }
-
     return {
         startMins: startMins,
         endMins: endMins
@@ -192,12 +184,6 @@ function convertTimePeriodsToLocal (tps) {
         });
 
     }
-
-    localTimePeriods = checkTimePeriodsForSplits(localTimePeriods);
-
-    localTimePeriods = sortPeriods(localTimePeriods);
-
-    localTimePeriods = checkTimePeriodsForOverlaps(localTimePeriods);
 
     return localTimePeriods;
 

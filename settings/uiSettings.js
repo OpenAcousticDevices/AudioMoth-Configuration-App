@@ -4,6 +4,9 @@
  * November 2019
  *****************************************************************************/
 
+const electron = require('electron');
+const dialog = electron.remote.dialog;
+
 const uiFiltering = require('./uiFiltering.js');
 const durationInput = require('./durationInput.js');
 
@@ -19,6 +22,9 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 
 var recordingDurationLabel = document.getElementById('recording-duration-label');
 var sleepDurationLabel = document.getElementById('sleep-duration-label');
+
+/* Whether or not the warning on sleep duration being set less than 5 has been displayed this app load */
+var sleepWarningDisplayed = false;
 
 /* Add listeners to all radio buttons which update the life display */
 
@@ -70,6 +76,31 @@ exports.prepareUI = function (changeFunction) {
     recordingDurationInput.addEventListener('change', changeFunction);
 
     sleepDurationInput.addEventListener('change', changeFunction);
+
+    sleepDurationInput.addEventListener('focusout', function () {
+
+        var buttonIndex;
+
+        if (!sleepWarningDisplayed && durationInput.getValue(sleepDurationInput) < 5) {
+
+            sleepWarningDisplayed = true;
+
+            buttonIndex = dialog.showMessageBoxSync({
+                type: 'warning',
+                buttons: ['Yes', 'No'],
+                title: 'Are you sure?',
+                message: 'In some circumstances, your AudioMoth may not be able to open and a close each file in less than 5 seconds. Are you sure you wish to continue?'
+            });
+
+            if (buttonIndex !== 0) {
+
+                durationInput.setValue(sleepDurationInput, 5);
+
+            }
+
+        }
+
+    });
 
     dutyCheckBox.addEventListener('change', function () {
 

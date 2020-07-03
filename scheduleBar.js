@@ -51,9 +51,21 @@ function rescale (canvas) {
 
 }
 
+function drawPeriod (startMins, endMins, timeCanvas) {
+
+    var recX, recLen;
+
+    /* width / 1440 minutes */
+    recX = startMins * timeCanvas.width / 1440;
+    recLen = (endMins - startMins) * timeCanvas.width / 1440;
+
+    timeContext.fillRect(recX, 0, recLen, timeCanvas.height);
+
+}
+
 function updateCanvas () {
 
-    var timePeriods, i, startMins, endMins, recX, recLen, currentTimeDate, currentMins, currentX;
+    var timePeriods, i, startMins, endMins, currentTimeDate, currentMins, currentX, localMidnight, localMidnightPx, startingAtMidnight, endingAtMidnight;
 
     timePeriods = schedule.getTimePeriods();
     timePeriods = ui.isLocalTime() ? timeHandler.convertTimePeriodsToLocal(timePeriods) : timePeriods;
@@ -62,16 +74,34 @@ function updateCanvas () {
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);
 
+    localMidnight = timeHandler.convertTimeToLocal(1440);
+    startingAtMidnight = false;
+    endingAtMidnight = false;
+
     for (i = 0; i < timePeriods.length; i++) {
 
         startMins = timePeriods[i].startMins;
         endMins = timePeriods[i].endMins;
 
-        /* width / 1440 minutes */
-        recX = startMins * timeCanvas.width / 1440;
-        recLen = (endMins - startMins) * timeCanvas.width / 1440;
+        if (ui.isLocalTime()) {
 
-        if (selectedPeriod !== null && (selectedPeriod.startMins === timePeriods[i].startMins && selectedPeriod.endMins === timePeriods[i].endMins)) {
+            /* If a time period is split across UTC midnight then set flags to enable the line denoting a split */
+
+            if (startMins === localMidnight) {
+
+                startingAtMidnight = true;
+
+            }
+
+            if (endMins === localMidnight) {
+
+                endingAtMidnight = true;
+
+            }
+
+        }
+
+        if (selectedPeriod !== null && (selectedPeriod.startMins === startMins && selectedPeriod.endMins === endMins)) {
 
             timeContext.fillStyle = '#007BFF';
 
@@ -81,7 +111,29 @@ function updateCanvas () {
 
         }
 
-        timeContext.fillRect(recX, 0, recLen, timeCanvas.height);
+        if (startMins > endMins) {
+
+            drawPeriod(startMins, 1440, timeCanvas);
+            drawPeriod(0, endMins, timeCanvas);
+
+        } else if (startMins === endMins) {
+
+            drawPeriod(0, 1440, timeCanvas);
+
+        } else {
+
+            drawPeriod(startMins, endMins, timeCanvas);
+
+        }
+
+    }
+
+    if (startingAtMidnight && endingAtMidnight) {
+
+        localMidnightPx = localMidnight / 1440 * timeCanvas.width;
+
+        timeContext.fillStyle = '#CC0000';
+        timeContext.fillRect(localMidnightPx, 0, 0.002 * timeCanvas.width, timeCanvas.height);
 
     }
 
@@ -129,14 +181,32 @@ function updateCanvasTimer () {
 
 }
 
+/* Update which period is selected when schedule bar is clicked */
+
 function updateSelectedPeriod (event) {
 
-    var clickX, timePeriods, i, startMins, endMins, recX, recLen, selectedIndex;
-
-    var rect = clickableCanvas.getBoundingClientRect();
-    clickX = event.clientX - rect.left;
+    var rect, clickMins, timePeriods, i, startMins, endMins, selectedIndex;
 
     timePeriods = schedule.getTimePeriods();
+
+    /* If there's only one possible time period and it covers the entire length of the schedule, don't bother with the full check */
+
+    if (timePeriods.length === 1 && timePeriods[0].startMins === 0 && timePeriods[0].endMins === 1440) {
+
+        selectedIndex = 0;
+
+        if (clickCallback) {
+
+            clickCallback(selectedIndex);
+
+        }
+
+        return;
+
+    }
+
+    rect = clickableCanvas.getBoundingClientRect();
+    clickMins = (event.clientX - rect.left) / clickableCanvas.width * 1440;
 
     if (ui.isLocalTime()) {
 
@@ -151,13 +221,21 @@ function updateSelectedPeriod (event) {
         startMins = timePeriods[i].startMins;
         endMins = timePeriods[i].endMins;
 
-        /* width / 1440 minutes */
-        recX = startMins * clickableCanvas.width / 1440;
-        recLen = (endMins - startMins) * clickableCanvas.width / 1440;
+        if (startMins > endMins) {
 
-        if (clickX >= recX && clickX < (recX + recLen)) {
+            if ((clickMins >= startMins && clickMins < 1440) || (clickMins >= 0 && clickMins < endMins)) {
 
-            selectedIndex = i;
+                selectedIndex = i;
+
+            }
+
+        } else {
+
+            if (clickMins >= startMins && clickMins < endMins) {
+
+                selectedIndex = i;
+
+            }
 
         }
 
@@ -180,12 +258,14 @@ exports.setSelectedPeriod = function (period) {
 
 };
 
-exports.clearSelectedPeriod = function () {
+function clearSelectedPeriod () {
 
     selectedPeriod = null;
     updateCanvas();
 
 };
+
+exports.clearSelectedPeriod = clearSelectedPeriod;
 
 /* Draw labels below time period canvas */
 
