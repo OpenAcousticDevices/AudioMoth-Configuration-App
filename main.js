@@ -398,7 +398,7 @@ ipcMain.on('set-bar-error', (event, name) => {
 
 });
 
-ipcMain.on('set-bar-completed', (event, successCount, errorCount) => {
+ipcMain.on('set-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
     var messageText;
 
@@ -410,7 +410,17 @@ ipcMain.on('set-bar-completed', (event, successCount, errorCount) => {
 
             messageText = 'Errors occurred in ' + errorCount + ' file';
             messageText += (errorCount === 1 ? '' : 's');
-            messageText += '.<br>See ERRORS.TXT for details.';
+            messageText += '.<br>';
+
+            if (errorWritingLog) {
+
+                messageText += 'Failed to write ERRORS.TXT to destination.';
+
+            } else {
+
+                messageText += 'See ERRORS.TXT for details.';
+
+            }
 
         } else {
 
