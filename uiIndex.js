@@ -390,7 +390,7 @@ function configureDevice () {
 
     audiomoth.setPacket(packet, function (err, data) {
 
-        var k, j, matches, packetLength, showError;
+        var k, j, matches, packetLength, showError, possibleFirmwareVersion;
 
         showError = function () {
 
@@ -413,11 +413,16 @@ function configureDevice () {
 
             for (k = 0; k < constants.packetLengthVersions.length; k++) {
 
-                if (constants.packetLengthVersions[k].firmwareVersion === firmwareVersion) {
+                possibleFirmwareVersion = (k === 0) ? '0.0.0' : constants.packetLengthVersions[k].firmwareVersion;
 
-                    packetLength = constants.packetLengthVersions[k].packetLength;
+                if (isOlderSemanticVersion(firmwareVersion.split('.'), possibleFirmwareVersion.split('.'))) {
+
+                    console.log('Using packet length', packetLength);
+                    break;
 
                 }
+
+                packetLength = constants.packetLengthVersions[k].packetLength;
 
             }
 

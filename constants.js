@@ -87,10 +87,6 @@ exports.packetLengthVersions = [{
     firmwareVersion: '1.2.2',
     packetLength: 43
 }, {
-    firmwareVersion: '1.3.0',
-    packetLength: 43
-}, {
-    // TODO: Is this the correct version number?
     firmwareVersion: '1.4.0',
     packetLength: 58
 }];
