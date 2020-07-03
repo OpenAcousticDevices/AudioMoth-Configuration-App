@@ -640,6 +640,12 @@ function updateLifeDisplayOnChange () {
 uiSchedule.prepareUI(updateLifeDisplayOnChange);
 uiSettings.prepareUI(updateLifeDisplayOnChange);
 
+lifeDisplay.getPanel().addEventListener('click', function () {
+
+    lifeDisplay.toggleSizeWarning(updateLifeDisplayOnChange);
+
+});
+
 /* Add listeners to save/load menu options */
 
 electron.ipcRenderer.on('save', function () {

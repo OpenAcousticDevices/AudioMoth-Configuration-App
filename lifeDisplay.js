@@ -8,6 +8,8 @@
 
 /* global document */
 
+const MAX_WAV_LENGTH = 4294966806;
+
 /* UI components */
 
 var lifeDisplayPanel = document.getElementById('life-display-panel');
@@ -15,6 +17,16 @@ var lifeDisplayPanel = document.getElementById('life-display-panel');
 /* Energy consumed while device is awaiting an active period */
 
 var sleepEnergy = 0.1;
+
+/* Whether or not the life display box should display the warning or original information */
+
+var displaySizeWarning = true;
+
+exports.getPanel = function () {
+
+    return lifeDisplayPanel;
+
+};
 
 /* Obtain number of recording periods in a day and the total extra time in the form of truncated recording periods */
 
@@ -89,9 +101,10 @@ function formatFileSize (fileSize) {
 
 exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, dutyEnabled) {
 
-    var text, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime, upto, i, period, maxLength, length, upToSize, maxFileSize;
+    var text, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime, upToFile, upToTotal, i, period, maxLength, length, upToSize, maxFileSize, recordingSize, prevPeriod, prevLength;
 
-    upto = amplitudeThresholdingEnabled ? 'up to ' : '';
+    upToFile = amplitudeThresholdingEnabled ? 'up to ' : '';
+    upToTotal = amplitudeThresholdingEnabled ? 'up to ' : '';
 
     /* If no recording periods exist, do not perform energy calculations */
 
@@ -135,6 +148,21 @@ exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepL
             period = schedule[i];
             length = period.endMins - period.startMins;
 
+            /* If the periods differ in size, include 'up to' when describing the file size. If amplitude thresholding is enabled, it already will include this */
+
+            if (i > 0 && !amplitudeThresholdingEnabled) {
+
+                prevPeriod = schedule[i - 1];
+                prevLength = prevPeriod.endMins - prevPeriod.startMins;
+
+                if (length !== prevLength) {
+
+                    upToFile = 'up to ';
+
+                }
+
+            }
+
             totalRecLength += length;
 
             maxLength = (length > maxLength) ? length : maxLength;
@@ -149,32 +177,48 @@ exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepL
 
     totalRecCount = completeRecCount + truncatedRecCount;
 
-    /* Generate life display message */
-
-    text = 'Each day this will produce ';
-
-    text += totalRecCount + ' file';
-
-    text += totalRecCount > 1 ? 's ' : ' ';
-
     if (completeRecCount > 1) {
 
         if (dutyEnabled) {
 
-            upToSize = formatFileSize(recSize);
+            upToSize = recSize;
 
         } else {
 
             maxFileSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * maxLength * 60;
-            upToSize = formatFileSize(maxFileSize);
+            upToSize = maxFileSize;
 
         }
 
-        text += 'each ' + upto + upToSize + ', ';
-
     }
 
-    text += 'totalling ' + upto + formatFileSize(totalSize) + '.<br/>';
+    recordingSize = (completeRecCount > 1) ? upToSize : totalSize;
+
+    /* Generate life display message */
+
+    text = '';
+
+    if (recordingSize > MAX_WAV_LENGTH && displaySizeWarning) {
+
+        text += '<b>Recordings will exceed the 4.3 GB max size of a WAV file so will be split.</b><br/>';
+
+    } else {
+
+        text += 'Each day this will produce ';
+
+        text += totalRecCount + ' file';
+
+        text += totalRecCount > 1 ? 's, ' : ' ';
+
+        if (completeRecCount > 1) {
+
+            text += 'each ' + upToFile + formatFileSize(upToSize) + ', ';
+
+        }
+
+        text += 'totalling ' + upToTotal + formatFileSize(totalSize) + '.<br/>';
+
+    }
 
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
@@ -187,5 +231,23 @@ exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepL
     text += 'Daily energy consumption will be approximately ' + energyUsed + ' mAh.';
 
     lifeDisplayPanel.innerHTML = text;
+
+};
+
+exports.toggleSizeWarning = function (updateFunction) {
+
+    displaySizeWarning = !displaySizeWarning;
+    updateFunction();
+
+    if (!displaySizeWarning) {
+
+        setTimeout(function () {
+
+            displaySizeWarning = true;
+            updateFunction();
+
+        }, 5000);
+
+    }
 
 };
