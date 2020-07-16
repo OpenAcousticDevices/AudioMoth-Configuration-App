@@ -13,7 +13,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 256000,
     sampleRateDivider: 32,
-    current: 10.5
+    startCurrent: 11.0,
+    recordCurrent: 10.0
 }, {
     trueSampleRate: 16,
     clockDivider: 4,
@@ -21,7 +22,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 256000,
     sampleRateDivider: 16,
-    current: 12.0
+    startCurrent: 11.2,
+    recordCurrent: 10.9
 }, {
     trueSampleRate: 32,
     clockDivider: 4,
@@ -29,7 +31,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 256000,
     sampleRateDivider: 8,
-    current: 12.5
+    startCurrent: 11.5,
+    recordCurrent: 12.3
 }, {
     trueSampleRate: 48,
     clockDivider: 4,
@@ -37,7 +40,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 8,
-    current: 13.5
+    startCurrent: 11.8,
+    recordCurrent: 14.0
 }, {
     trueSampleRate: 96,
     clockDivider: 4,
@@ -45,7 +49,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 4,
-    current: 17.5
+    startCurrent: 12.7,
+    recordCurrent: 17.4
 }, {
     trueSampleRate: 192,
     clockDivider: 4,
@@ -53,7 +58,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 2,
-    current: 24.5
+    startCurrent: 14.5,
+    recordCurrent: 25.6
 }, {
     trueSampleRate: 256,
     clockDivider: 4,
@@ -61,7 +67,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 256000,
     sampleRateDivider: 1,
-    current: 30.0
+    startCurrent: 15.8,
+    recordCurrent: 29.5
 }, {
     trueSampleRate: 384,
     clockDivider: 4,
@@ -69,7 +76,8 @@ exports.configurations = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 1,
-    current: 39.0
+    startCurrent: 18.2,
+    recordCurrent: 41.6
 }];
 
 /* Packet lengths for each version */
