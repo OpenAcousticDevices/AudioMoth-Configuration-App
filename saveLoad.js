@@ -51,7 +51,8 @@ function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, ba
 
     }
 
-    configuration = '{ "timePeriods": ' + JSON.stringify(timePeriods) + ',\n';
+    configuration = '{\n';
+    configuration += '"timePeriods": ' + JSON.stringify(timePeriods) + ',\n';
     configuration += '"ledEnabled": ' + ledEnabled + ',\n';
     configuration += '"lowVoltageCutoffEnabled": ' + lowVoltageCutoffEnabled + ',\n';
     configuration += '"batteryLevelCheckEnabled": ' + batteryLevelCheckEnabled + ',\n';
