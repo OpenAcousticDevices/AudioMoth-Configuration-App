@@ -44,6 +44,7 @@ function addTimeOnClick () {
 
     scheduleEditor.updateScheduleBar();
     updateTimeList();
+    scheduleEditor.clearSelectedPeriod();
 
 }
 
@@ -91,6 +92,7 @@ function removeTimeOnClick () {
     scheduleEditor.updateScheduleBar();
     updateTimeList();
     removeTimeButton.disabled = true;
+    scheduleEditor.clearSelectedPeriod();
 
 }
 
@@ -169,8 +171,15 @@ function clearTimesOnClick () {
     scheduleEditor.clearTimes();
     updateTimeList();
     removeTimeButton.disabled = true;
+    scheduleEditor.clearSelectedPeriod();
 
 }
+
+exports.disableRemoveTimeButton = function () {
+
+    removeTimeButton.disabled = true;
+
+};
 
 exports.prepareUI = function (changeFunction) {
 
