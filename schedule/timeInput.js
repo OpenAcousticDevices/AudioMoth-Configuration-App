@@ -646,7 +646,7 @@ class TimeInput extends HTMLElement {
 
     connectedCallback () {
 
-        var parent, width, height, divNode, attributes, i, inputNode, holderNode, hourSpanNode, colonSpanNode, minuteSpanNode;
+        var parent, width, height, divNode, attributes, i, inputNode, blockerNode, holderNode, hourSpanNode, colonSpanNode, minuteSpanNode;
 
         parent = this.parentNode;
 
@@ -679,6 +679,9 @@ class TimeInput extends HTMLElement {
 
         divNode.appendChild(inputNode);
 
+        blockerNode = document.createElement('div');
+        blockerNode.style = 'position: absolute; top: 0px; margin-left: 0px; margin-top: 0px; width: 100%; height: 100%;';
+
         holderNode = document.createElement('div');
         holderNode.className = 'time-holder';
         holderNode.style = 'position: absolute; top: 0px; margin-left: 9px; margin-top: 3px;';
@@ -699,7 +702,8 @@ class TimeInput extends HTMLElement {
         holderNode.appendChild(colonSpanNode);
         holderNode.appendChild(minuteSpanNode);
 
-        divNode.appendChild(holderNode);
+        blockerNode.appendChild(holderNode);
+        divNode.appendChild(blockerNode);
 
         parent.appendChild(divNode);
 
