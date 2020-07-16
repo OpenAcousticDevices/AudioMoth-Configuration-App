@@ -131,8 +131,6 @@ function expandFiles () {
 
     }
 
-    electron.ipcRenderer.send('set-bar-completed', successCount, errorCount);
-
     if (errorCount > 0) {
 
         filePath = path.join(path.dirname(errorFiles[0]), 'ERRORS.TXT');
@@ -145,20 +143,23 @@ function expandFiles () {
 
         }
 
-        fs.writeFile(filePath, fileContent, function (err) {
+        try {
 
-            if (err) {
+            fs.writeFileSync(filePath, fileContent);
 
-                console.error(err);
-                return;
+        } catch (err) {
 
-            }
+            console.error(err);
+            electron.ipcRenderer.send('set-bar-completed', successCount, errorCount, true);
+            return;
 
-            console.log('Error summary written to ' + filePath);
+        }
 
-        });
+        console.log('Error summary written to ' + filePath);
 
     }
+
+    electron.ipcRenderer.send('set-bar-completed', successCount, errorCount, false);
 
 }
 
