@@ -16,7 +16,11 @@ var lifeDisplayPanel = document.getElementById('life-display-panel');
 
 /* Energy consumed while device is awaiting an active period */
 
-var sleepEnergy = 0.1;
+const SLEEP_ENERGY = 0.125;
+
+/* Time spent opening files and waiting for microphone to warm up before recording starts */
+
+const START_UP_TIME = 2;
 
 /* Whether or not the life display box should display the warning or original information */
 
@@ -54,8 +58,16 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
         if (timeRemaining > 0) {
 
-            truncatedRecTime += timeRemaining;
-            truncatedRecCount += 1;
+            if (timeRemaining >= recSecs) {
+
+                completeRecCount += 1;
+
+            } else {
+
+                truncatedRecTime += timeRemaining;
+                truncatedRecCount += 1;
+
+            }
 
         }
 
@@ -101,7 +113,7 @@ function formatFileSize (fileSize) {
 
 exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, dutyEnabled) {
 
-    var text, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, totalRecLength, truncatedRecCount, truncatedRecTime, upToFile, upToTotal, i, period, maxLength, length, upToSize, maxFileSize, recordingSize, prevPeriod, prevLength;
+    var text, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, energyPrecision, totalRecLength, truncatedRecCount, truncatedRecTime, upToFile, upToTotal, i, period, maxLength, length, upToSize, maxFileSize, recordingSize, prevPeriod, prevLength;
 
     upToFile = amplitudeThresholdingEnabled ? 'up to ' : '';
     upToTotal = amplitudeThresholdingEnabled ? 'up to ' : '';
@@ -222,11 +234,15 @@ exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepL
 
     /* Calculate amount of energy used both recording a sleeping over the course of a day */
 
-    energyUsed = totalRecLength * configuration.current / 3600;
+    energyUsed = Math.min(86400 - totalRecCount * START_UP_TIME, totalRecLength) * configuration.recordCurrent / 3600;
 
-    energyUsed += (86400 - totalRecLength) * sleepEnergy / 3600;
+    energyUsed += totalRecCount * START_UP_TIME * configuration.startCurrent / 3600;
 
-    energyUsed = Math.round(energyUsed / 10) * 10;
+    energyUsed += Math.max(0, 86400 - totalRecCount * START_UP_TIME - totalRecLength) * SLEEP_ENERGY / 3600;
+
+    energyPrecision = energyUsed > 100 ? 10 : energyUsed > 50 ? 5 : energyUsed > 20 ? 2 : 1;
+
+    energyUsed = Math.round(energyUsed / energyPrecision) * energyPrecision;
 
     text += 'Daily energy consumption will be approximately ' + energyUsed + ' mAh.';
 
