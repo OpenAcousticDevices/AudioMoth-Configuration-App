@@ -41,6 +41,8 @@ exports.updateTimezoneStatus = function (isLocalTime) {
     dateInput.updateLocalTimeStatus(firstRecordingDateInput, isLocalTime);
     dateInput.updateLocalTimeStatus(lastRecordingDateInput, isLocalTime);
 
+    uiScheduleEditor.disableRemoveTimeButton();
+
 };
 
 function startlastRecordingDateError (input) {
