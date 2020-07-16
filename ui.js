@@ -148,6 +148,8 @@ function setTimezoneStatus (local) {
 
     timezoneLabel.innerHTML = timezoneText;
 
+    scheduleBar.clearSelectedPeriod();
+
     update();
 
 }
