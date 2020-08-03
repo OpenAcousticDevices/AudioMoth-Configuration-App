@@ -98,29 +98,35 @@ exports.saveConfiguration = saveConfiguration;
 
 function getSampleRateIndex (jsonSampleRateIndex, jsonSampleRate) {
 
-    var i;
+    var i, closestIndex, distance, minDistance;
 
     if (typeof jsonSampleRateIndex === 'undefined') {
 
         jsonSampleRate /= 1000;
 
+        minDistance = -1;
+        closestIndex = 0;
+
         for (i = 0; i < constants.configurations.length; i++) {
 
-            if (constants.configurations[i].trueSampleRate === jsonSampleRate) {
+            distance = Math.abs(constants.configurations[i].trueSampleRate - jsonSampleRate);
 
-                return i;
+            if (minDistance === -1 || distance < minDistance) {
+
+                minDistance = distance;
+                closestIndex = i;
 
             }
 
         }
+
+        return closestIndex;
 
     } else {
 
         return jsonSampleRateIndex;
 
     }
-
-    return 0;
 
 }
 
