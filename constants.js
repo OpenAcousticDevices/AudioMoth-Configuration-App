@@ -80,6 +80,37 @@ exports.configurations = [{
     recordCurrent: 41.6
 }];
 
+/* Configuration settings to be used when a device is on firmware < 1.4.4 */
+
+exports.oldConfigurations = [{
+    trueSampleRate: 8,
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 128000,
+    sampleRateDivider: 16,
+    startCurrent: 11.0,
+    recordCurrent: 10.0
+}, {
+    trueSampleRate: 16,
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 128000,
+    sampleRateDivider: 8,
+    startCurrent: 11.2,
+    recordCurrent: 10.9
+}, {
+    trueSampleRate: 32,
+    clockDivider: 4,
+    acquisitionCycles: 16,
+    oversampleRate: 1,
+    sampleRate: 128000,
+    sampleRateDivider: 4,
+    startCurrent: 11.5,
+    recordCurrent: 12.3
+}];
+
 /* Packet lengths for each version */
 
 exports.packetLengthVersions = [{

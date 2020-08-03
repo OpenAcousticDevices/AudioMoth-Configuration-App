@@ -192,7 +192,7 @@ function configureDevice () {
 
     console.log('Configuring device');
 
-    var i, index, packet, sampleRateConfiguration, timePeriods, firstRecordingDateTimestamp, lastRecordingDateTimestamp, lowerFilter, higherFilter, firstRecordingDate, lastRecordingDate, settings, amplitudeThreshold, today, dayDiff, firstRecordingDateText, lastRecordingDateText, earliestRecordingTime, latestRecordingTime;
+    var i, index, packet, configurations, sampleRateConfiguration, timePeriods, firstRecordingDateTimestamp, lastRecordingDateTimestamp, lowerFilter, higherFilter, firstRecordingDate, lastRecordingDate, settings, amplitudeThreshold, today, dayDiff, firstRecordingDateText, lastRecordingDateText, earliestRecordingTime, latestRecordingTime;
 
     settings = uiSettings.getSettings();
 
@@ -207,7 +207,9 @@ function configureDevice () {
 
     packet[index++] = settings.gain;
 
-    sampleRateConfiguration = constants.configurations[settings.sampleRateIndex];
+    configurations = (isOlderSemanticVersion(firmwareVersion.split('.'), ['1', '4', '4']) && settings.sampleRateIndex < 3) ? constants.oldConfigurations : constants.configurations;
+
+    sampleRateConfiguration = configurations[settings.sampleRateIndex];
 
     packet[index++] = sampleRateConfiguration.clockDivider;
 
