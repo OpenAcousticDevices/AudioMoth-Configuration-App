@@ -11,8 +11,8 @@ exports.configurations = [{
     clockDivider: 4,
     acquisitionCycles: 16,
     oversampleRate: 1,
-    sampleRate: 256000,
-    sampleRateDivider: 32,
+    sampleRate: 384000,
+    sampleRateDivider: 48,
     startCurrent: 11.0,
     recordCurrent: 10.0
 }, {
@@ -20,8 +20,8 @@ exports.configurations = [{
     clockDivider: 4,
     acquisitionCycles: 16,
     oversampleRate: 1,
-    sampleRate: 256000,
-    sampleRateDivider: 16,
+    sampleRate: 384000,
+    sampleRateDivider: 24,
     startCurrent: 11.2,
     recordCurrent: 10.9
 }, {
@@ -29,8 +29,8 @@ exports.configurations = [{
     clockDivider: 4,
     acquisitionCycles: 16,
     oversampleRate: 1,
-    sampleRate: 256000,
-    sampleRateDivider: 8,
+    sampleRate: 384000,
+    sampleRateDivider: 12,
     startCurrent: 11.5,
     recordCurrent: 12.3
 }, {
@@ -61,11 +61,11 @@ exports.configurations = [{
     startCurrent: 14.5,
     recordCurrent: 25.6
 }, {
-    trueSampleRate: 256,
+    trueSampleRate: 250,
     clockDivider: 4,
     acquisitionCycles: 16,
     oversampleRate: 1,
-    sampleRate: 256000,
+    sampleRate: 250000,
     sampleRateDivider: 1,
     startCurrent: 15.8,
     recordCurrent: 29.5
