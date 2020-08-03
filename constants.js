@@ -83,7 +83,7 @@ exports.configurations = [{
 /* Packet lengths for each version */
 
 exports.packetLengthVersions = [{
-    firmwareVersion: '< 1.2.0',
+    firmwareVersion: '0.0.0',
     packetLength: 39
 }, {
     firmwareVersion: '1.2.0',

@@ -54,7 +54,7 @@ var configureButton = document.getElementById('configure-button');
 
 /* Store version number for packet size checks */
 
-var firmwareVersion = '< 1.2.0';
+var firmwareVersion = '0.0.0';
 
 /* Values read from AudioMoth */
 
@@ -102,7 +102,7 @@ function getAudioMothPacket () {
             date = null;
             id = null;
             batteryState = null;
-            firmwareVersion = '< 1.2.0';
+            firmwareVersion = '0.0.0';
 
             versionWarningShown = false;
 
@@ -118,7 +118,7 @@ function getAudioMothPacket () {
 
             if (firmwareVersionArr[0] === 0) {
 
-                firmwareVersion = '< 1.2.0';
+                firmwareVersion = '0.0.0';
 
             } else {
 
@@ -413,7 +413,7 @@ function configureDevice () {
 
             for (k = 0; k < constants.packetLengthVersions.length; k++) {
 
-                possibleFirmwareVersion = (k === 0) ? '0.0.0' : constants.packetLengthVersions[k].firmwareVersion;
+                possibleFirmwareVersion = constants.packetLengthVersions[k].firmwareVersion;
 
                 if (isOlderSemanticVersion(firmwareVersion.split('.'), possibleFirmwareVersion.split('.'))) {
 
@@ -553,7 +553,15 @@ function updateFirmwareDisplay (version) {
 
     if (version !== firmwareDisplay.value) {
 
-        firmwareDisplay.textContent = version;
+        if (version === '0.0.0') {
+
+            firmwareDisplay.textContent = '< 1.2.0';
+
+        } else {
+
+            firmwareDisplay.textContent = version;
+
+        }
 
     }
 
