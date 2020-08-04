@@ -93,7 +93,7 @@ function isOlderSemanticVersion (aVersion, bVersion) {
 
 function getAudioMothPacket () {
 
-    var firmwareVersionArr;
+    var firmwareVersionArr, displayVersionWarning;
 
     audiomoth.getPacket(function (err, packet) {
 
@@ -119,24 +119,31 @@ function getAudioMothPacket () {
             if (firmwareVersionArr[0] === 0) {
 
                 firmwareVersion = '0.0.0';
+                displayVersionWarning = true;
 
             } else {
 
                 firmwareVersion = firmwareVersionArr[0] + '.' + firmwareVersionArr[1] + '.' + firmwareVersionArr[2];
 
-                if (isOlderSemanticVersion(firmwareVersionArr, [1, 4, 0]) && !versionWarningShown) {
+                if (isOlderSemanticVersion(firmwareVersionArr, [1, 4, 0])) {
 
-                    versionWarningShown = true;
-
-                    dialog.showMessageBox(electron.remote.getCurrentWindow(), {
-                        type: 'warning',
-                        title: 'Firmware update recommended',
-                        message: 'Please update your AudioMoth firmware to at least version 1.4.0 in order to use all the features of this version of the AudioMoth Configuration App.'
-                    });
+                    displayVersionWarning = true;
 
                 }
 
             }
+
+        }
+
+        if (displayVersionWarning && !versionWarningShown) {
+
+            versionWarningShown = true;
+
+            dialog.showMessageBox(electron.remote.getCurrentWindow(), {
+                type: 'warning',
+                title: 'Firmware update recommended',
+                message: 'Please update your AudioMoth firmware to at least version 1.4.0 in order to use all the features of this version of the AudioMoth Configuration App.'
+            });
 
         }
 
