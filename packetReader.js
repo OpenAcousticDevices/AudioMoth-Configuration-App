@@ -72,13 +72,15 @@ typedef struct {
     uint16_t lowerFilterFreq;
     uint16_t higherFilterFreq;
     uint16_t amplitudeThreshold;
+    uint8_t requireAcousticConfiguration;
+    AM_batteryLevelDisplayType_t batteryLevelDisplayType;
 } configSettings_t;
 
 */
 
 exports.read = function (packet) {
 
-    var i, j, time, gain, clockDivider, acquisitionCycles, oversampleRate, sampleRate, sampleRateDivider, sleepDuration, recordDuration, enableLED, activeStartStopPeriods, startStopPeriods, timezoneHours, enableLowVoltageCutoff, disableBatteryLevelDisplay, timezoneMinutes, disableSleepRecordCycle, earliestRecordingTime, latestRecordingTime, lowerFilterFreq, higherFilterFreq, amplitudeThreshold, startMinutes, stopMinutes;
+    var i, j, time, gain, clockDivider, acquisitionCycles, oversampleRate, sampleRate, sampleRateDivider, sleepDuration, recordDuration, enableLED, activeStartStopPeriods, startStopPeriods, timezoneHours, enableLowVoltageCutoff, disableBatteryLevelDisplay, timezoneMinutes, disableSleepRecordCycle, earliestRecordingTime, latestRecordingTime, lowerFilterFreq, higherFilterFreq, amplitudeThreshold, startMinutes, stopMinutes, requireAcousticConfig, displayVoltageRange;
 
     /* Read and decode configuration packet */
 
@@ -126,6 +128,12 @@ exports.read = function (packet) {
 
     amplitudeThreshold = twoBytesToNumber(packet, 56);
 
+    var packedByte = packet[58];
+
+    displayVoltageRange = (packedByte >> 1) & 1;
+
+    requireAcousticConfig = packedByte & 1;
+
     /* Display configuration */
 
     console.log('Current time: ', formatDate(time));
@@ -163,5 +171,9 @@ exports.read = function (packet) {
     console.log('Higher filter value:', higherFilterFreq);
 
     console.log('Amplitude threshold:', amplitudeThreshold);
+
+    console.log('Acoustic configuration required:', requireAcousticConfig === 1);
+
+    console.log('Use NiMH/LiPo voltage range for battery level indication:', displayVoltageRange === 1);
 
 };

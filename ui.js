@@ -93,7 +93,7 @@ exports.updateDate = function (date) {
 
 };
 
-exports.disableTimeDisplay = function () {
+exports.disableTimeDisplay = function (blankValue) {
 
     if (timeDisplay) {
 
@@ -101,7 +101,11 @@ exports.disableTimeDisplay = function () {
 
         timezoneLabel.style.color = 'lightgrey';
 
-        deviceDate = new Date(0);
+        if (blankValue) {
+
+            deviceDate = new Date(0);
+
+        }
 
     }
 

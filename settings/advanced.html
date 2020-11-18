@@ -1,4 +1,4 @@
-<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
+<div style="border: #cdcdcd thin solid; width: 100%;">
     <div class="row" style="margin-top: 8px;">
         <div class="col-8" style="text-align: left;">
             <span class="settings-text" style="margin-left: 17px;">Enable filtering:</span>
@@ -8,7 +8,7 @@
         </div>
     </div>
 
-    <div class="row" style="margin-top: 8px;">
+    <div class="row" style="margin-top: 1px;">
         <div class="col-12">
             <div style="margin-left: 5px; margin-right: 4px">
                 <table class="table" style="margin-bottom: 4px;" title="Type of filter.">
@@ -117,6 +117,26 @@
     <div class="row" style="margin-top: 8px;">
         <div class="col-12" style="margin-left: 16px;">
             <label class="settings-text" id="amplitude-thresholding-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;"></label>
+        </div>
+    </div>
+</div>
+
+<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-9" style="text-align: left;">
+            <span style="margin-left: 17px;">Always require acoustic chime on switching to CUSTOM:</span>
+        </div>
+        <div class="col-3" style="text-align: right;" title="Whether the time or deployment ID must be set by an acoustic chime before CUSTOM recording starts.">
+            <input id="acoustic-config-checkbox" type="checkbox" style="margin-right: 16px;">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-9" style="text-align: left;">
+            <span style="margin-left: 17px;">Use NiMH/LiPo voltage range for battery level indication:</span>
+        </div>
+        <div class="col-3" style="text-align: right;" title="Whether voltage range of a NiMH/LiPo battery should be displayed instead of battery level.">
+            <input id="voltage-range-checkbox" type="checkbox" style="margin-right: 16px;">
         </div>
     </div>
 </div>

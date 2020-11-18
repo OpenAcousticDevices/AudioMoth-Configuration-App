@@ -16,39 +16,46 @@
                     <div class="row" style="margin-left: 0px;">
                         <div class="col-12" style="text-align: center; padding-top: 5px; padding-bottom: 5px">
                             <span style="font-size: 25px; font-family: &apos;Lucida Console&apos;, Monaco, monospace">
-                                <div id="time-display" style="display: inline-block;"></div>
-                                <div id="timezone-label" style="display: inline-block;"></div>
+                                <div id="time-display" style="display: inline-block; color: lightgrey;"></div>
+                                <div id="timezone-label" style="display: inline-block; color: lightgrey;"></div>
                             </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Device information -->
             <div class="row" style="margin-top: 8px;">
                 <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
                     <div class="row" style="margin-top: 5px;">
                         <div class="col-6" style="text-align: left;">
-                            <span id="id-label" style="margin-left: 20px;">Device ID:</span>
+                            <span id="id-label" style="margin-left: 20px; color: lightgrey;">Device ID:</span>
                         </div>
                         <div class="col-6" style="text-align: right;">
-                            <span id="id-display" style="margin-right: 20px; border: none; text-align: right;">0000000000000000</span>
+                            <span id="id-display" style="margin-right: 20px; border: none; text-align: right; color: lightgrey;">-</span>
                         </div>
                     </div>
                     <div class="row" style="margin-top: 5px;">
                         <div class="col-6" style="text-align: left;">
-                            <span id="firmware-label" style="margin-left: 20px;">Firmware version:</span>
+                            <span id="firmware-description-label" style="margin-left: 20px; color: lightgrey;">Firmware description:</span>
                         </div>
                         <div class="col-6" style="text-align: right;">
-                            <span id="firmware-display" class="firmware-display" style="margin-right: 20px;">0.0.0</span>
+                            <span id="firmware-description-display" style="margin-right: 20px; color: lightgrey;">-</span>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 5px;">
+                        <div class="col-6" style="text-align: left;">
+                            <span id="firmware-version-label" style="margin-left: 20px; color: lightgrey;">Firmware version:</span>
+                        </div>
+                        <div class="col-6" style="text-align: right;">
+                            <span id="firmware-version-display" style="margin-right: 20px; color: lightgrey;">-</span>
                         </div>
                     </div>
                     <div class="row" style="margin-top: 5px; margin-bottom: 5px;">
                         <div class="col-6" style="text-align: left;">
-                            <span id="battery-label" style="margin-left: 20px;">Battery:</span>
+                            <span id="battery-label" style="margin-left: 20px; color: lightgrey;">Battery:</span>
                         </div>
                         <div class="col-6" style="text-align: right;">
-                            <span id="battery-display" style="margin-right: 20px;">0.0V</span>
+                            <span id="battery-display" style="margin-right: 20px; color: lightgrey;">-</span>
                         </div>
                     </div>
                 </div>
@@ -72,7 +79,7 @@
             </div>
 
             <!-- Tab content -->
-            <div class="tab-content" style="margin-top: 8px;">
+            <div class="tab-content" style="margin-top: 4px;">
             
                 <div role="tabpanel" class="tab-pane fade in active show" id="settings-tab" role="tabpanel">
                     <div id="settings-content"></div> 

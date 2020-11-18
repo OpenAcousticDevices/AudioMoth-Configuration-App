@@ -23,6 +23,10 @@ var sleepDurationInput = document.getElementById('sleep-duration-input');
 var recordingDurationLabel = document.getElementById('recording-duration-label');
 var sleepDurationLabel = document.getElementById('sleep-duration-label');
 
+var acousticConfigCheckBox = document.getElementById('acoustic-config-checkbox');
+
+var voltageRangeCheckBox = document.getElementById('voltage-range-checkbox');
+
 /* Whether or not the warning on sleep duration being set less than 5 has been displayed this app load */
 var sleepWarningDisplayed = false;
 
@@ -139,7 +143,9 @@ exports.getSettings = function () {
         lowerFilter: uiFiltering.getLowerSliderValue(),
         higherFilter: uiFiltering.getHigherSliderValue(),
         amplitudeThresholdingEnabled: uiFiltering.amplitudeThresholdingIsEnabled(),
-        amplitudeThreshold: parseInt(uiFiltering.getAmplitudeThreshold())
+        amplitudeThreshold: parseInt(uiFiltering.getAmplitudeThreshold()),
+        requireAcousticConfig: acousticConfigCheckBox.checked,
+        displayVoltageRange: voltageRangeCheckBox.checked
     };
 
     return settings;
@@ -175,5 +181,8 @@ exports.fillUI = function (settings) {
 
     durationInput.setValue(sleepDurationInput, settings.sleepDuration);
     durationInput.setValue(recordingDurationInput, settings.recordDuration);
+
+    acousticConfigCheckBox.checked = settings.requireAcousticConfig;
+    voltageRangeCheckBox.checked = settings.displayVoltageRange;
 
 };

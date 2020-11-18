@@ -169,7 +169,7 @@ app.on('ready', function () {
     var menu, menuTemplate, iconLocation, windowHeight;
 
     iconLocation = '/build/icon.ico';
-    windowHeight = shrinkWindowHeight(641);
+    windowHeight = shrinkWindowHeight(665);
 
     if (process.platform === 'linux') {
 
@@ -300,6 +300,13 @@ app.on('ready', function () {
             click: function () {
 
                 openAboutWindow();
+
+            }
+        }, {
+            label: 'Check For Updates',
+            click: function () {
+
+                mainWindow.webContents.send('update-check');
 
             }
         }, {

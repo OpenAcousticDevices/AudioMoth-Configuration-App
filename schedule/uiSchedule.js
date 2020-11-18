@@ -236,7 +236,7 @@ exports.prepareUI = function (changeFunction) {
 
     /* Set up time display */
 
-    ui.disableTimeDisplay();
+    ui.disableTimeDisplay(true);
     ui.showTime();
 
 };

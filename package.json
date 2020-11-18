@@ -1,10 +1,14 @@
 {
   "name": "AudioMoth-Config",
-  "version": "1.3.6",
+  "version": "1.4.0",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "author": "openacousticdevices.info",
   "license": "ISC",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/OpenAcousticDevices/AudioMoth-Configuration-App.git"
+  },
   "scripts": {
     "postinstall": "install-app-deps",
     "start": "electron .",
@@ -51,23 +55,23 @@
     }
   },
   "devDependencies": {
-    "electron": "8.2.4",
-    "electron-builder": "^22.8.1",
+    "electron": "8.5.2",
+    "electron-builder": "^22.9.1",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
+    "eslint-plugin-standard": "^4.0.2"
   },
   "dependencies": {
-    "audiomoth-hid": "^2.0.4",
+    "audiomoth-hid": "^2.1.0",
     "bootstrap": "4.3.1",
     "bootstrap-slider": "^10.6.2",
     "electron-debug": "3.0.1",
     "electron-localshortcut": "^3.2.1",
     "electron-progressbar": "^1.2.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.1",
     "jsonschema": "1.2.4",
     "popper.js": "^1.15.0",
     "showdown": "^1.9.1",

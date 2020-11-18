@@ -128,4 +128,9 @@ exports.packetLengthVersions = [{
 }, {
     firmwareVersion: '1.4.0',
     packetLength: 58
+}, {
+    firmwareVersion: '1.5.0',
+    packetLength: 59
 }];
+
+exports.supportedFirmwareDescs = ['AudioMoth-Firmware-Basic', 'AudioMoth-Firmware-Basic-RC1', 'AudioMoth-Firmware-Basic-RC2', 'AudioMoth-Firmware-Basic-RC3'];

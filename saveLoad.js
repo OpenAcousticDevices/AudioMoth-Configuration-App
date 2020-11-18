@@ -8,6 +8,7 @@
 
 const electron = require('electron');
 const dialog = electron.remote.dialog;
+const BrowserWindow = electron.remote.BrowserWindow;
 
 const fs = require('fs');
 const Validator = require('jsonschema').Validator;
@@ -25,13 +26,15 @@ const defaultSettings = {
     lowerFilter: 0,
     higherFilter: 24000,
     amplitudeThresholdingEnabled: false,
-    amplitudeThreshold: 0
+    amplitudeThreshold: 0,
+    requireAcousticConfig: false,
+    displayVoltageRange: false
 };
 exports.defaultSettings = defaultSettings;
 
 /* Save configuration settings in UI to .config file */
 
-function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, callback) {
+function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, callback) {
 
     var configuration, fileName, sampleRate, filterType;
 
@@ -71,7 +74,9 @@ function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, ba
     configuration += '"lowerFilter": ' + lowerFilter + ',\n';
     configuration += '"higherFilter": ' + higherFilter + ',\n';
     configuration += '"amplitudeThresholdingEnabled": ' + amplitudeThresholdingEnabled + ',\n';
-    configuration += '"amplitudeThreshold": ' + amplitudeThreshold + '\n';
+    configuration += '"amplitudeThreshold": ' + amplitudeThreshold + ',\n';
+    configuration += '"requireAcousticConfig": ' + requireAcousticConfig + ',\n';
+    configuration += '"displayVoltageRange": ' + displayVoltageRange + '\n';
     configuration += '}';
 
     fileName = dialog.showSaveDialogSync({
@@ -134,11 +139,16 @@ function getSampleRateIndex (jsonSampleRateIndex, jsonSampleRate) {
 
 function useLoadedConfiguration (err, data, callback) {
 
-    var jsonObj, validator, schema, timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold;
+    var jsonObj, validator, schema, timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange;
 
     if (err) {
 
-        dialog.showErrorBox('Load failed', 'Configuration file could not be loaded.');
+        dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+            type: 'error',
+            title: 'Load failed',
+            message: 'Configuration file could not be loaded.'
+        });
+
         console.error(err);
 
     } else {
@@ -229,6 +239,12 @@ function useLoadedConfiguration (err, data, callback) {
                     },
                     amplitudeThreshold: {
                         type: 'integer'
+                    },
+                    requireAcousticConfig: {
+                        type: 'boolean'
+                    },
+                    displayVoltageRange: {
+                        type: 'boolean'
                     }
                 },
                 required: ['timePeriods', 'ledEnabled', 'sleepDuration']
@@ -307,13 +323,22 @@ function useLoadedConfiguration (err, data, callback) {
             amplitudeThresholdingEnabled = (typeof jsonObj.amplitudeThresholdingEnabled === 'undefined') ? false : jsonObj.amplitudeThresholdingEnabled;
             amplitudeThreshold = amplitudeThresholdingEnabled ? jsonObj.amplitudeThreshold : 0;
 
-            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold);
+            requireAcousticConfig = (typeof jsonObj.requireAcousticConfig === 'undefined') ? false : jsonObj.requireAcousticConfig;
+
+            displayVoltageRange = (typeof jsonObj.displayVoltageRange === 'undefined') ? false : jsonObj.displayVoltageRange;
+
+            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange);
 
             console.log('Config loaded');
 
         } catch (usageErr) {
 
-            dialog.showErrorBox('Incorrect format', 'Configuration file was not readable.');
+            dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+                type: 'error',
+                title: 'Incorrect format',
+                message: 'Configuration file was not readable.'
+            });
+
             console.error(usageErr);
 
         }
