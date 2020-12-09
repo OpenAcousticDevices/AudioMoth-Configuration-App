@@ -890,6 +890,7 @@ electron.ipcRenderer.on('update-check', function () {
 
             dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
                 type: 'info',
+                buttons: ['OK'],
                 title: 'Update not needed',
                 message: 'Your app is on the latest version (' + response.latestVersion + ').'
             });
