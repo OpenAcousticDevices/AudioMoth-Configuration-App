@@ -13,7 +13,7 @@ const scheduleBar = require('../scheduleBar.js');
 const timeHandler = require('../timeHandler.js');
 const schedule = require('../schedule/schedule.js');
 
-var timeList = document.getElementById('time-list');
+const timeList = document.getElementById('time-list');
 
 exports.setSelectedPeriod = scheduleBar.setSelectedPeriod;
 exports.clearSelectedPeriod = scheduleBar.clearSelectedPeriod;
@@ -22,11 +22,9 @@ exports.clearSelectedPeriod = scheduleBar.clearSelectedPeriod;
 
 function removeTime (timePeriod, tps) {
 
-    var i, startMins;
+    const startMins = timePeriod.startMins;
 
-    startMins = timePeriod.startMins;
-
-    for (i = 0; i < tps.length; i++) {
+    for (let i = 0; i < tps.length; i++) {
 
         if (tps[i].startMins === startMins) {
 
@@ -77,11 +75,11 @@ exports.overlaps = overlaps;
 
 function addTime (startMins, endMins) {
 
-    var timePeriods, i, newStart, newEnd;
+    let timePeriods, newStart, newEnd;
 
     timePeriods = schedule.getTimePeriods();
 
-    for (i = 0; i < timePeriods.length; i++) {
+    for (let i = 0; i < timePeriods.length; i++) {
 
         /* If an overlap occurs, attempt to merge the overlapping time periods */
 
@@ -119,9 +117,9 @@ function addTime (startMins, endMins) {
 
 function formatAndAddTime (startTimestamp, endTimestamp) {
 
-    var timePeriod, utcPeriod, added;
+    let utcPeriod, added;
 
-    timePeriod = {
+    const timePeriod = {
         startMins: startTimestamp,
         endMins: endTimestamp
     };
@@ -185,10 +183,8 @@ exports.setTimePeriods = schedule.setTimePeriods;
 
 scheduleBar.prepareScheduleCanvas(true, function (selectedIndex) {
 
-    var event = new Event('change');
-
     timeList.options.selectedIndex = selectedIndex;
     timeList.focus();
-    timeList.dispatchEvent(event);
+    timeList.dispatchEvent(new Event('change'));
 
 });

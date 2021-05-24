@@ -15,19 +15,17 @@ const timeHandler = require('../timeHandler.js');
 
 const dateInput = require('./dateInput.js');
 
-var firstRecordingDateCheckbox = document.getElementById('first-date-checkbox');
-var firstRecordingDateLabel = document.getElementById('first-date-label');
-var firstRecordingDateInput = document.getElementById('first-date-input');
+const firstRecordingDateCheckbox = document.getElementById('first-date-checkbox');
+const firstRecordingDateLabel = document.getElementById('first-date-label');
+const firstRecordingDateInput = document.getElementById('first-date-input');
 
-var lastRecordingDateCheckbox = document.getElementById('last-date-checkbox');
-var lastRecordingDateLabel = document.getElementById('last-date-label');
-var lastRecordingDateInput = document.getElementById('last-date-input');
+const lastRecordingDateCheckbox = document.getElementById('last-date-checkbox');
+const lastRecordingDateLabel = document.getElementById('last-date-label');
+const lastRecordingDateInput = document.getElementById('last-date-input');
 
-exports.updateTimezoneStatus = function (isLocalTime) {
+exports.updateTimezoneStatus = (isLocalTime) => {
 
-    var timezoneText;
-
-    timezoneText = 'UTC';
+    let timezoneText = 'UTC';
 
     if (isLocalTime) {
 
@@ -125,23 +123,21 @@ function updateLastRecordingDateUI () {
 
 }
 
-exports.getFirstRecordingDate = function () {
+exports.getFirstRecordingDate = () => {
 
     return firstRecordingDateCheckbox.checked ? firstRecordingDateInput.value : '';
 
 };
 
-exports.getLastRecordingDate = function () {
+exports.getLastRecordingDate = () => {
 
     return lastRecordingDateCheckbox.checked ? lastRecordingDateInput.value : '';
 
 };
 
-exports.setFirstRecordingDate = function (firstRecordingDate) {
+exports.setFirstRecordingDate = (firstRecordingDate) => {
 
-    var today;
-
-    today = new Date();
+    const today = new Date();
 
     firstRecordingDateCheckbox.checked = (firstRecordingDate !== '');
     updateFirstRecordingDateUI();
@@ -150,11 +146,9 @@ exports.setFirstRecordingDate = function (firstRecordingDate) {
 
 };
 
-exports.setLastRecordingDate = function (lastRecordingDate) {
+exports.setLastRecordingDate = (lastRecordingDate) => {
 
-    var today;
-
-    today = new Date();
+    const today = new Date();
 
     lastRecordingDateCheckbox.checked = (lastRecordingDate !== '');
     updateLastRecordingDateUI();
@@ -215,19 +209,17 @@ exports.updateTimeList = uiScheduleEditor.updateTimeList;
 
 /* Prepare UI */
 
-exports.prepareUI = function (changeFunction) {
+exports.prepareUI = (changeFunction) => {
 
-    var year, month, day, today;
+    const today = new Date();
 
-    today = new Date();
+    const year = ('000' + today.getUTCFullYear()).slice(-4);
+    const month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
+    const day = ('0' + today.getUTCDate()).slice(-2);
+    const todayString = year + '-' + month + '-' + day;
 
-    year = ('000' + today.getUTCFullYear()).slice(-4);
-    month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
-    day = ('0' + today.getUTCDate()).slice(-2);
-    today = year + '-' + month + '-' + day;
-
-    firstRecordingDateInput.value = today;
-    lastRecordingDateInput.value = today;
+    firstRecordingDateInput.value = todayString;
+    lastRecordingDateInput.value = todayString;
 
     updateFirstRecordingDateUI();
     updateLastRecordingDateUI();

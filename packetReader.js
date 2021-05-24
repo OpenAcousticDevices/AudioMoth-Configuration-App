@@ -22,7 +22,7 @@ function twoBytesToNumber (buffer, offset) {
 
 function digitWithLeadingZero (value) {
 
-    var formattedString = '0' + value;
+    const formattedString = '0' + value;
 
     return formattedString.substring(formattedString.length - 2);
 
@@ -37,6 +37,24 @@ function formatTime (minutes) {
 function formatDate (date) {
 
     return (date.valueOf() / 1000) + ' - ' + date.toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' (UTC)';
+
+}
+
+function formatPercentage (mantissa, exponent) {
+
+    let response = '';
+
+    if (exponent < 0) {
+
+        response += '0.0000'.substring(0, 1 - exponent);
+
+    }
+
+    response += mantissa;
+
+    for (let i = 0; i < exponent; i += 1) response += '0';
+
+    return response;
 
 }
 
@@ -74,35 +92,42 @@ typedef struct {
     uint16_t amplitudeThreshold;
     uint8_t requireAcousticConfiguration;
     AM_batteryLevelDisplayType_t batteryLevelDisplayType;
+    uint8_t minimumAmplitudeThresholdDuration;
+    uint8_t enableAmplitudeThresholdDecibelScale : 1;
+    uint8_t amplitudeThresholdDecibels : 7;
+    uint8_t enableAmplitudeThresholdPercentageScale : 1;
+    uint8_t amplitudeThresholdPercentageMantissa : 4;
+    int8_t amplitudeThresholdPercentageExponent : 3;
 } configSettings_t;
 
 */
 
-exports.read = function (packet) {
+exports.read = (packet) => {
 
-    var i, j, time, gain, clockDivider, acquisitionCycles, oversampleRate, sampleRate, sampleRateDivider, sleepDuration, recordDuration, enableLED, activeStartStopPeriods, startStopPeriods, timezoneHours, enableLowVoltageCutoff, disableBatteryLevelDisplay, timezoneMinutes, disableSleepRecordCycle, earliestRecordingTime, latestRecordingTime, lowerFilterFreq, higherFilterFreq, amplitudeThreshold, startMinutes, stopMinutes, requireAcousticConfig, displayVoltageRange;
+    let startMinutes, stopMinutes;
+    // , amplitudeThresholdPercentageExponent, amplitudeThresholdPercentageMantissa, amplitudeThresholdPercentage, enableAmplitudeThresholdPercentageScale, amplitudeThresholdDecibel, amplitudeThresholdScale;
 
     /* Read and decode configuration packet */
 
-    time = audiomoth.convertFourBytesFromBufferToDate(packet, 0);
+    const time = audiomoth.convertFourBytesFromBufferToDate(packet, 0);
 
-    gain = packet[4];
-    clockDivider = packet[5];
-    acquisitionCycles = packet[6];
-    oversampleRate = packet[7];
+    const gain = packet[4];
+    const clockDivider = packet[5];
+    const acquisitionCycles = packet[6];
+    const oversampleRate = packet[7];
 
-    sampleRate = fourBytesToNumber(packet, 8);
-    sampleRateDivider = packet[12];
+    const sampleRate = fourBytesToNumber(packet, 8);
+    const sampleRateDivider = packet[12];
 
-    sleepDuration = twoBytesToNumber(packet, 13);
-    recordDuration = twoBytesToNumber(packet, 15);
+    const sleepDuration = twoBytesToNumber(packet, 13);
+    const recordDuration = twoBytesToNumber(packet, 15);
 
-    enableLED = packet[17];
+    const enableLED = packet[17];
 
-    activeStartStopPeriods = packet[18];
-    startStopPeriods = [];
+    const activeStartStopPeriods = packet[18];
+    const startStopPeriods = [];
 
-    for (i = 0; i < activeStartStopPeriods; i += 1) {
+    for (let i = 0; i < activeStartStopPeriods; i += 1) {
 
         startMinutes = twoBytesToNumber(packet, 19 + 4 * i);
         stopMinutes = twoBytesToNumber(packet, 21 + 4 * i);
@@ -111,28 +136,81 @@ exports.read = function (packet) {
 
     }
 
-    timezoneHours = packet[39];
+    const timezoneHours = packet[39];
 
-    enableLowVoltageCutoff = packet[40];
-    disableBatteryLevelDisplay = packet[41];
+    const enableLowVoltageCutoff = packet[40];
+    const disableBatteryLevelDisplay = packet[41];
 
-    timezoneMinutes = packet[42];
+    const timezoneMinutes = packet[42];
 
-    disableSleepRecordCycle = packet[43];
+    const disableSleepRecordCycle = packet[43];
 
-    earliestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 44);
-    latestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 48);
+    const earliestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 44);
+    const latestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 48);
 
-    lowerFilterFreq = twoBytesToNumber(packet, 52);
-    higherFilterFreq = twoBytesToNumber(packet, 54);
+    const lowerFilterFreq = twoBytesToNumber(packet, 52);
+    const higherFilterFreq = twoBytesToNumber(packet, 54);
 
-    amplitudeThreshold = twoBytesToNumber(packet, 56);
+    const amplitudeThreshold = twoBytesToNumber(packet, 56);
 
-    var packedByte = packet[58];
+    const packedByte0 = packet[58];
 
-    displayVoltageRange = (packedByte >> 1) & 1;
+    const requireAcousticConfig = packedByte0 & 1;
 
-    requireAcousticConfig = packedByte & 1;
+    const displayVoltageRange = (packedByte0 >> 1) & 1;
+
+    const minimumAmplitudeThresholdDuration = (packedByte0 >> 2) & 0b111111;
+
+    /* Amplitude threshold decibel scale */
+
+    const packedByte1 = packet[59];
+
+    /* Read bottom 7 bits */
+
+    const enableAmplitudeThresholdDecibelScale = packedByte1 & 1;
+
+    const amplitudeThresholdDecibel = -1 * ((packedByte1 >> 1) & 0b1111111);
+
+    /* Amplitude threshold percentage scale */
+
+    const packedByte2 = packet[60];
+
+    const enableAmplitudeThresholdPercentageScale = packedByte2 & 1;
+
+    /* Read the percentage value as a 4-bit mantissa and a 3-bit exponent */
+
+    const amplitudeThresholdPercentageMantissa = (packedByte2 >> 1) & 0b1111;
+
+    /* Read final 3 bits and read as 3-bit two's complement */
+
+    let amplitudeThresholdPercentageExponent = (packedByte2 >> 5) & 0b111;
+    amplitudeThresholdPercentageExponent = amplitudeThresholdPercentageExponent < 0b100 ? amplitudeThresholdPercentageExponent : amplitudeThresholdPercentageExponent - 0b1000;
+
+    const amplitudeThresholdPercentage = formatPercentage(amplitudeThresholdPercentageMantissa, amplitudeThresholdPercentageExponent) + '%';
+
+    /* Which amplitude threshold scale should be displayed */
+
+    let amplitudeThresholdScale;
+
+    if (enableAmplitudeThresholdPercentageScale === 1 && enableAmplitudeThresholdDecibelScale === 0) {
+
+        amplitudeThresholdScale = 'Percentage';
+
+    } else if (enableAmplitudeThresholdDecibelScale === 1 && enableAmplitudeThresholdPercentageScale === 0) {
+
+        amplitudeThresholdScale = 'Decibel';
+
+    } else {
+
+        amplitudeThresholdScale = '16-Bit';
+
+    }
+
+    const packedByte3 = packet[61];
+
+    const energySaverModeEnabled = packedByte3 & 1;
+
+    const disable48DCFilter = (packedByte3 >> 1) & 1;
 
     /* Display configuration */
 
@@ -158,7 +236,7 @@ exports.read = function (packet) {
 
     console.log('Active recording periods:', activeStartStopPeriods);
 
-    for (j = 0; j < activeStartStopPeriods; j++) {
+    for (let j = 0; j < activeStartStopPeriods.length; j++) {
 
         console.log('Start: ' + formatTime(startStopPeriods[j].startMinutes) + ' - Stop: ' + formatTime(startStopPeriods[j].stopMinutes));
 
@@ -170,10 +248,33 @@ exports.read = function (packet) {
     console.log('Lower filter value:', lowerFilterFreq);
     console.log('Higher filter value:', higherFilterFreq);
 
-    console.log('Amplitude threshold:', amplitudeThreshold);
+    console.log('Amplitude threshold percentage flag:', (enableAmplitudeThresholdPercentageScale === 1));
+    console.log('Amplitude threshold decibel flag:', (enableAmplitudeThresholdDecibelScale === 1));
+
+    console.log('Amplitude threshold (16-bit):', amplitudeThreshold);
+
+    if (amplitudeThresholdScale === 'Percentage') {
+
+        console.log('Percentage exponent:', amplitudeThresholdPercentageExponent);
+        console.log('Percentage mantissa:', amplitudeThresholdPercentageMantissa);
+        console.log('Amplitude threshold (percentage):', amplitudeThresholdPercentage);
+
+    } else if (amplitudeThresholdScale === 'Decibel') {
+
+        console.log('Amplitude threshold (decibels):', amplitudeThresholdDecibel);
+
+    }
+
+    console.log('Displayed amplitude threshold scale:', amplitudeThresholdScale);
+
+    console.log('Minimum amplitude threshold duration:', minimumAmplitudeThresholdDuration);
 
     console.log('Acoustic configuration required:', requireAcousticConfig === 1);
 
     console.log('Use NiMH/LiPo voltage range for battery level indication:', displayVoltageRange === 1);
+
+    console.log('Energy saver mode enabled:', energySaverModeEnabled === 1);
+
+    console.log('48 Hz DC blocking filter disabled:', disable48DCFilter === 1);
 
 };

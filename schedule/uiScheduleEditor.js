@@ -14,13 +14,13 @@ const timeInput = require('./timeInput.js');
 
 /* UI components */
 
-var timeList = document.getElementById('time-list');
-var addTimeButton = document.getElementById('add-time-button');
-var removeTimeButton = document.getElementById('remove-time-button');
-var clearTimeButton = document.getElementById('clear-time-button');
+const timeList = document.getElementById('time-list');
+const addTimeButton = document.getElementById('add-time-button');
+const removeTimeButton = document.getElementById('remove-time-button');
+const clearTimeButton = document.getElementById('clear-time-button');
 
-var startTimeInput = document.getElementById('start-time-input');
-var endTimeInput = document.getElementById('end-time-input');
+const startTimeInput = document.getElementById('start-time-input');
+const endTimeInput = document.getElementById('end-time-input');
 
 /* Function which uses changed schedule to update life approximation */
 
@@ -30,13 +30,11 @@ var updateLifeDisplayOnChange;
 
 function addTimeOnClick () {
 
-    var startTimeSplit, endTimeSplit, startTimestamp, endTimestamp;
+    const startTimeSplit = timeInput.getValue(startTimeInput).split(':');
+    const endTimeSplit = timeInput.getValue(endTimeInput).split(':');
 
-    startTimeSplit = timeInput.getValue(startTimeInput).split(':');
-    endTimeSplit = timeInput.getValue(endTimeInput).split(':');
-
-    startTimestamp = (parseInt(startTimeSplit[0], 10) * 60) + parseInt(startTimeSplit[1], 10);
-    endTimestamp = (parseInt(endTimeSplit[0], 10) * 60) + parseInt(endTimeSplit[1], 10);
+    const startTimestamp = (parseInt(startTimeSplit[0], 10) * 60) + parseInt(startTimeSplit[1], 10);
+    let endTimestamp = (parseInt(endTimeSplit[0], 10) * 60) + parseInt(endTimeSplit[1], 10);
 
     endTimestamp = (endTimestamp > 0) ? endTimestamp : 1440;
 
@@ -50,11 +48,9 @@ function addTimeOnClick () {
 
 function getTimePeriodFromList () {
 
-    var values, timePeriod;
+    const values = timeList.value.split(',');
 
-    values = timeList.value.split(',');
-
-    timePeriod = {
+    const timePeriod = {
         startMins: parseInt(values[0], 10),
         endMins: parseInt(values[1], 10)
     };
@@ -68,15 +64,13 @@ function getTimePeriodFromList () {
 
 function removeTimeOnClick () {
 
-    var timePeriods, timePeriod, ltps;
+    let timePeriods = schedule.getTimePeriods();
 
-    timePeriods = schedule.getTimePeriods();
-
-    timePeriod = getTimePeriodFromList();
+    const timePeriod = getTimePeriodFromList();
 
     if (ui.isLocalTime()) {
 
-        ltps = timeHandler.convertTimePeriodsToLocal(timePeriods);
+        let ltps = timeHandler.convertTimePeriodsToLocal(timePeriods);
         ltps = scheduleEditor.removeTime(timePeriod, ltps);
 
         timePeriods = timeHandler.convertLocalTimePeriodsToUTC(ltps);
@@ -100,9 +94,9 @@ function removeTimeOnClick () {
 
 function updateTimeList () {
 
-    var timePeriods, tp, i, startMins, endMins, timezoneText, timezoneOffset, option;
+    let tp;
 
-    timePeriods = schedule.getTimePeriods();
+    const timePeriods = schedule.getTimePeriods();
 
     if (ui.isLocalTime()) {
 
@@ -124,15 +118,15 @@ function updateTimeList () {
 
     });
 
-    for (i = 0; i < tp.length; i += 1) {
+    for (let i = 0; i < tp.length; i += 1) {
 
-        startMins = tp[i].startMins;
-        endMins = tp[i].endMins;
+        const startMins = tp[i].startMins;
+        const endMins = tp[i].endMins;
 
-        timezoneText = '(UTC';
+        let timezoneText = '(UTC';
         if (ui.isLocalTime()) {
 
-            timezoneOffset = timeHandler.calculateTimezoneOffsetHours();
+            const timezoneOffset = timeHandler.calculateTimezoneOffsetHours();
 
             if (timezoneOffset >= 0) {
 
@@ -146,7 +140,7 @@ function updateTimeList () {
 
         timezoneText += ')';
 
-        option = document.createElement('option');
+        const option = document.createElement('option');
         option.text = timeHandler.minsToTimeString(startMins) + ' - ' + timeHandler.minsToTimeString(endMins) + ' ' + timezoneText;
         option.value = [startMins, endMins];
         timeList.add(option);
@@ -175,15 +169,13 @@ function clearTimesOnClick () {
 
 }
 
-exports.disableRemoveTimeButton = function () {
+exports.disableRemoveTimeButton = () => {
 
     removeTimeButton.disabled = true;
 
 };
 
-exports.prepareUI = function (changeFunction) {
-
-    var valueSplit, selectedTimePeriod;
+exports.prepareUI = (changeFunction) => {
 
     updateLifeDisplayOnChange = changeFunction;
 
@@ -197,8 +189,8 @@ exports.prepareUI = function (changeFunction) {
 
         if (timeList.value !== null && timeList.value !== '') {
 
-            valueSplit = timeList.value.split(',');
-            selectedTimePeriod = {startMins: parseInt(valueSplit[0]), endMins: parseInt(valueSplit[1])};
+            const valueSplit = timeList.value.split(',');
+            const selectedTimePeriod = {startMins: parseInt(valueSplit[0]), endMins: parseInt(valueSplit[1])};
             scheduleEditor.setSelectedPeriod(selectedTimePeriod);
 
         } else {

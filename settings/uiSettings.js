@@ -8,24 +8,21 @@ const electron = require('electron');
 const dialog = electron.remote.dialog;
 
 const uiFiltering = require('./uiFiltering.js');
+const uiAdvanced = require('./uiAdvanced.js');
 const durationInput = require('./durationInput.js');
 
 /* UI components */
 
-var sampleRadioButtons = document.getElementsByName('sample-rate-radio');
-var gainRadioButtons = document.getElementsByName('gain-radio');
+const sampleRadioButtons = document.getElementsByName('sample-rate-radio');
+const gainRadioButtons = document.getElementsByName('gain-radio');
 
-var dutyCheckBox = document.getElementById('duty-checkbox');
+const dutyCheckBox = document.getElementById('duty-checkbox');
 
-var recordingDurationInput = document.getElementById('recording-duration-input');
-var sleepDurationInput = document.getElementById('sleep-duration-input');
+const recordingDurationInput = document.getElementById('recording-duration-input');
+const sleepDurationInput = document.getElementById('sleep-duration-input');
 
-var recordingDurationLabel = document.getElementById('recording-duration-label');
-var sleepDurationLabel = document.getElementById('sleep-duration-label');
-
-var acousticConfigCheckBox = document.getElementById('acoustic-config-checkbox');
-
-var voltageRangeCheckBox = document.getElementById('voltage-range-checkbox');
+const recordingDurationLabel = document.getElementById('recording-duration-label');
+const sleepDurationLabel = document.getElementById('sleep-duration-label');
 
 /* Whether or not the warning on sleep duration being set less than 5 has been displayed this app load */
 var sleepWarningDisplayed = false;
@@ -34,9 +31,7 @@ var sleepWarningDisplayed = false;
 
 function addRadioButtonListeners (changeFunction) {
 
-    var i;
-
-    for (i = 0; i < sampleRadioButtons.length; i++) {
+    for (let i = 0; i < sampleRadioButtons.length; i++) {
 
         sampleRadioButtons[i].addEventListener('change', function () {
 
@@ -73,26 +68,39 @@ function updateDutyCycleUI () {
 
 }
 
+/* Run check on recording duration and amplitude threshold minimum trigger time */
+
+function checkRecordingDuration () {
+
+    if (dutyCheckBox.checked) {
+
+        const duration = durationInput.getValue(recordingDurationInput);
+        uiFiltering.checkMinimumTriggerTime(duration);
+
+    }
+
+}
+
 /* Prepare UI */
 
-exports.prepareUI = function (changeFunction) {
+exports.prepareUI = (changeFunction) => {
 
     recordingDurationInput.addEventListener('change', changeFunction);
 
+    recordingDurationInput.addEventListener('focusout', checkRecordingDuration);
+
     sleepDurationInput.addEventListener('change', changeFunction);
 
-    sleepDurationInput.addEventListener('focusout', function () {
-
-        var buttonIndex;
+    sleepDurationInput.addEventListener('focusout', () => {
 
         if (!sleepWarningDisplayed && durationInput.getValue(sleepDurationInput) < 5) {
 
             sleepWarningDisplayed = true;
 
-            buttonIndex = dialog.showMessageBoxSync({
+            const buttonIndex = dialog.showMessageBoxSync({
                 type: 'warning',
                 buttons: ['Yes', 'No'],
-                title: 'Are you sure?',
+                title: 'Minimum sleep duration',
                 message: 'In some circumstances, your AudioMoth may not be able to open and a close each file in less than 5 seconds. Are you sure you wish to continue?'
             });
 
@@ -106,7 +114,7 @@ exports.prepareUI = function (changeFunction) {
 
     });
 
-    dutyCheckBox.addEventListener('change', function () {
+    dutyCheckBox.addEventListener('change', () => {
 
         updateDutyCycleUI();
         changeFunction();
@@ -117,7 +125,8 @@ exports.prepareUI = function (changeFunction) {
 
     updateDutyCycleUI();
 
-    uiFiltering.prepareUI(changeFunction);
+    uiFiltering.prepareUI(changeFunction, checkRecordingDuration);
+    uiAdvanced.prepareUI(changeFunction);
 
     durationInput.setValue(sleepDurationInput, 5);
     durationInput.setValue(recordingDurationInput, 55);
@@ -130,29 +139,38 @@ function getSelectedRadioValue (radioName) {
 
 }
 
-exports.getSettings = function () {
+exports.getSettings = () => {
 
-    var settings = {
+    const settings = {
         sampleRateIndex: parseInt(getSelectedRadioValue('sample-rate-radio')),
         gain: parseInt(getSelectedRadioValue('gain-radio')),
         dutyEnabled: dutyCheckBox.checked,
         recordDuration: durationInput.getValue(recordingDurationInput),
         sleepDuration: durationInput.getValue(sleepDurationInput),
         passFiltersEnabled: uiFiltering.filteringIsEnabled(),
-        filterType: uiFiltering.getFilterType(),
+        filterTypeIndex: uiFiltering.getFilterType(),
         lowerFilter: uiFiltering.getLowerSliderValue(),
         higherFilter: uiFiltering.getHigherSliderValue(),
         amplitudeThresholdingEnabled: uiFiltering.amplitudeThresholdingIsEnabled(),
-        amplitudeThreshold: parseInt(uiFiltering.getAmplitudeThreshold()),
-        requireAcousticConfig: acousticConfigCheckBox.checked,
-        displayVoltageRange: voltageRangeCheckBox.checked
+        amplitudeThreshold: parseFloat(uiFiltering.getAmplitudeThreshold()),
+        requireAcousticConfig: uiAdvanced.isAcousticConfigRequired(),
+        displayVoltageRange: uiAdvanced.displayVoltageRange(),
+        minimumAmplitudeThresholdDuration: uiFiltering.getMinimumAmplitudeThresholdDuration(),
+        amplitudeThresholdingScaleIndex: uiFiltering.getAmplitudeThresholdScaleIndex(),
+        energySaverModeEnabled: uiAdvanced.isEnergySaverModeEnabled(),
+        disable48DCFilter: uiAdvanced.is48DCFilterDisabled()
     };
 
     return settings;
 
 };
 
-exports.fillUI = function (settings) {
+exports.get16BitAmplitudeThreshold = uiFiltering.get16BitAmplitudeThreshold;
+exports.getPercentageAmplitudeThreshold = uiFiltering.getPercentageAmplitudeThreshold;
+exports.getDecibelAmplitudeThreshold = uiFiltering.getDecibelAmplitudeThreshold;
+exports.getPercentageAmplitudeThresholdExponentMantissa = uiFiltering.getPercentageAmplitudeThresholdExponentMantissa;
+
+exports.fillUI = (settings) => {
 
     sampleRadioButtons[settings.sampleRateIndex].checked = true;
     gainRadioButtons[settings.gain].checked = true;
@@ -160,29 +178,19 @@ exports.fillUI = function (settings) {
     dutyCheckBox.checked = settings.dutyEnabled;
     updateDutyCycleUI();
 
-    if (settings.dutyEnabled) {
-
-        recordingDurationInput.value = settings.recordDuration;
-        sleepDurationInput.value = settings.sleepDuration;
-
-    } else {
-
-        recordingDurationInput.value = 86400;
-        sleepDurationInput.value = 0;
-
-    }
-
     uiFiltering.sampleRateChange();
     uiFiltering.setFilters(settings.passFiltersEnabled, settings.lowerFilter, settings.higherFilter, settings.filterType);
     uiFiltering.updateFilterUI();
 
+    uiFiltering.setAmplitudeThresholdScaleIndex(settings.amplitudeThresholdingScaleIndex);
     uiFiltering.setAmplitudeThreshold(settings.amplitudeThresholdingEnabled, settings.amplitudeThreshold);
     uiFiltering.updateAmplitudeThresholdingUI();
 
     durationInput.setValue(sleepDurationInput, settings.sleepDuration);
     durationInput.setValue(recordingDurationInput, settings.recordDuration);
 
-    acousticConfigCheckBox.checked = settings.requireAcousticConfig;
-    voltageRangeCheckBox.checked = settings.displayVoltageRange;
+    uiAdvanced.fillUI(settings);
+
+    uiFiltering.setMinimumAmplitudeThresholdDuration(settings.minimumAmplitudeThresholdDuration);
 
 };

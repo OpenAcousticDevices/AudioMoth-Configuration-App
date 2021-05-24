@@ -28,34 +28,37 @@ const constants = require('./constants.js');
 
 const uiSchedule = require('./schedule/uiSchedule.js');
 const uiSettings = require('./settings/uiSettings.js');
-const uiFiltering = require('./settings/uiFiltering.js');
 
 const versionChecker = require('./versionChecker.js');
 
-const UINT16_MAX = 0xFFFF;
 const UINT32_MAX = 0xFFFFFFFF;
+const UINT16_MAX = 0xFFFF;
 const SECONDS_IN_DAY = 86400;
+
+const AMPLITUDE_THRESHOLD_SCALE_PERCENTAGE = 0;
+const AMPLITUDE_THRESHOLD_SCALE_16BIT = 1;
+const AMPLITUDE_THRESHOLD_SCALE_DECIBEL = 2;
 
 /* UI components */
 
-var applicationMenu = Menu.getApplicationMenu();
+const applicationMenu = Menu.getApplicationMenu();
 
-var idDisplay = document.getElementById('id-display');
-var idLabel = document.getElementById('id-label');
+const idDisplay = document.getElementById('id-display');
+const idLabel = document.getElementById('id-label');
 
-var firmwareVersionDisplay = document.getElementById('firmware-version-display');
-var firmwareVersionLabel = document.getElementById('firmware-version-label');
-var firmwareDescriptionDisplay = document.getElementById('firmware-description-display');
-var firmwareDescriptionLabel = document.getElementById('firmware-description-label');
+const firmwareVersionDisplay = document.getElementById('firmware-version-display');
+const firmwareVersionLabel = document.getElementById('firmware-version-label');
+const firmwareDescriptionDisplay = document.getElementById('firmware-description-display');
+const firmwareDescriptionLabel = document.getElementById('firmware-description-label');
 
-var batteryDisplay = document.getElementById('battery-display');
-var batteryLabel = document.getElementById('battery-label');
+const batteryDisplay = document.getElementById('battery-display');
+const batteryLabel = document.getElementById('battery-label');
 
-var ledCheckbox = document.getElementById('led-checkbox');
-var lowVoltageCutoffCheckbox = document.getElementById('low-voltage-cutoff-checkbox');
-var batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
+const ledCheckbox = document.getElementById('led-checkbox');
+const lowVoltageCutoffCheckbox = document.getElementById('low-voltage-cutoff-checkbox');
+const batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
 
-var configureButton = document.getElementById('configure-button');
+const configureButton = document.getElementById('configure-button');
 
 /* Store version number for packet size checks and description for compatibility check */
 
@@ -82,12 +85,10 @@ var communicating = false;
 
 function isOlderSemanticVersion (aVersion, bVersion) {
 
-    var aVersionNum, bVersionNum;
-
     for (let i = 0; i < aVersion.length; i++) {
 
-        aVersionNum = aVersion[i];
-        bVersionNum = bVersion[i];
+        const aVersionNum = aVersion[i];
+        const bVersionNum = bVersion[i];
 
         if (aVersionNum > bVersionNum) {
 
@@ -105,33 +106,133 @@ function isOlderSemanticVersion (aVersion, bVersion) {
 
 }
 
-/* Request, receive and handle AudioMoth information packet */
+/* Request, receive and handle packet containing battery level and complete request chain by using values */
 
-function getAudioMothPacket () {
+function requestBatteryState () {
 
-    var firmwareVersionArr;
+    audiomoth.getBatteryState(function (err, battery) {
 
-    if (communicating) {
+        if (err) {
 
-        return;
+            console.error(err);
+            disableDisplay();
 
-    }
+        } else if (battery === null) {
 
-    audiomoth.getPacket(function (err, packet) {
-
-        if (err || packet === null) {
-
-            date = null;
-            id = null;
-            batteryState = null;
-            firmwareVersion = '0.0.0';
-            firmwareDescription = '-';
+            disableDisplay();
 
         } else {
 
-            date = audiomoth.convertFourBytesFromBufferToDate(packet, 1);
+            batteryState = battery;
 
-            id = audiomoth.convertEightBytesFromBufferToID(packet, 1 + 4);
+            usePacketValues();
+
+        }
+
+    });
+
+}
+
+/* Request, receive and handle packet containing the current firmware version and check the version/description to see if a warning message should be shown */
+
+function requestFirmwareVersion () {
+
+    audiomoth.getFirmwareVersion(function (err, versionArr) {
+
+        if (err) {
+
+            console.error(err);
+            disableDisplay();
+
+        } else if (versionArr === null) {
+
+            disableDisplay();
+
+        } else {
+
+            firmwareVersion = versionArr[0] + '.' + versionArr[1] + '.' + versionArr[2];
+
+            if (!versionWarningShown) {
+
+                if (!constants.isSupportedFirmwareDescription(firmwareDescription)) {
+
+                    versionWarningShown = true;
+
+                    dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
+                        type: 'warning',
+                        title: 'Unsupported firmware',
+                        message: 'The firmware installed on your AudioMoth may not be supported by this version of the AudioMoth Configuration App.'
+                    });
+
+                } else if (isOlderSemanticVersion(versionArr, constants.latestFirmwareVersionArray)) {
+
+                    versionWarningShown = true;
+
+                    dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
+                        type: 'warning',
+                        title: 'Firmware update recommended',
+                        message: 'Update to at least version ' + constants.latestFirmwareVersionString + ' of AudioMoth-Firmware-Basic to use all the features of this version of the AudioMoth Configuration App.'
+                    });
+
+                }
+
+            }
+
+            requestBatteryState();
+
+        }
+
+    });
+
+}
+
+/* Request, receive and handle the packet containing the description of the current firmware */
+
+function requestFirmwareDescription () {
+
+    audiomoth.getFirmwareDescription(function (err, description) {
+
+        if (err || description === null || description === '') {
+
+            if (err) {
+
+                console.error(err);
+
+            }
+
+            disableDisplay();
+
+        } else {
+
+            firmwareDescription = description;
+
+            requestFirmwareVersion();
+
+        }
+
+    });
+
+}
+
+/* Request, receive and handle the packet containing the ID of the current device */
+
+function requestID () {
+
+    audiomoth.getID(function (err, deviceId) {
+
+        if (err || deviceId === null) {
+
+            if (err) {
+
+                console.error(err);
+
+            }
+
+            disableDisplay();
+
+        } else {
+
+            id = deviceId;
 
             /* If a new device is connected, allow warnings */
 
@@ -143,42 +244,37 @@ function getAudioMothPacket () {
 
             }
 
-            batteryState = audiomoth.convertOneByteFromBufferToBatteryState(packet, 1 + 4 + 8);
-
-            firmwareVersionArr = audiomoth.convertThreeBytesFromBufferToFirmwareVersion(packet, 1 + 4 + 8 + 1);
-            firmwareVersion = firmwareVersionArr[0] + '.' + firmwareVersionArr[1] + '.' + firmwareVersionArr[2];
-
-            firmwareDescription = audiomoth.convertBytesFromBufferToFirmwareDescription(packet, 1 + 4 + 8 + 1 + 3);
-
-            if (!versionWarningShown && !constants.supportedFirmwareDescs.includes(firmwareDescription)) {
-
-                versionWarningShown = true;
-
-                dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
-                    type: 'warning',
-                    title: 'Unsupported firmware',
-                    message: 'The firmware installed on your AudioMoth may not be supported by this version of the AudioMoth Configuration App.'
-                });
-
-            } else {
-
-                if (!versionWarningShown && isOlderSemanticVersion(firmwareVersionArr, [1, 5, 0])) {
-
-                    versionWarningShown = true;
-
-                    dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
-                        type: 'warning',
-                        title: 'Firmware update recommended',
-                        message: 'Update to at least version 1.5.0 of AudioMoth-Firmware-Basic to use all the features of this version of the AudioMoth Configuration App.'
-                    });
-
-                }
-
-            }
+            requestFirmwareDescription();
 
         }
 
-        usePacketValues();
+    });
+
+}
+
+/* Request, receive and handle AudioMoth information packet */
+
+function getAudioMothPacket () {
+
+    if (communicating) {
+
+        return;
+
+    }
+
+    audiomoth.getTime(function (err, currentDate) {
+
+        if (err || currentDate === null) {
+
+            date = null;
+
+        } else {
+
+            date = currentDate;
+
+        }
+
+        requestID();
 
         setTimeout(getAudioMothPacket, 200);
 
@@ -222,9 +318,7 @@ function usePacketValues () {
 
 function writeLittleEndianBytes (buffer, start, byteCount, value) {
 
-    var i;
-
-    for (i = 0; i < byteCount; i++) {
+    for (let i = 0; i < byteCount; i++) {
 
         buffer[start + i] = (value >> (i * 8)) & 255;
 
@@ -238,15 +332,13 @@ function sendPacket (packet) {
 
     audiomoth.setPacket(packet, function (err, data) {
 
-        var k, j, matches, packetLength, showError, possibleFirmwareVersion;
-
-        showError = function () {
+        const showError = () => {
 
             dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
                 type: 'error',
                 title: 'Configuration failed',
                 message: 'The connected AudioMoth did not respond correctly and the configuration may not have been applied. Please try again.'
-             });
+            });
 
             configureButton.style.color = '';
 
@@ -258,16 +350,16 @@ function sendPacket (packet) {
 
         } else {
 
-            matches = true;
+            let matches = true;
 
             /* Check if the firmware version of the device being configured has a known packet length */
             /* If not, the length of the packet sent/received is used */
 
-            packetLength = Math.min(packet.length, data.length - 1);
+            let packetLength = Math.min(packet.length, data.length - 1);
 
-            for (k = 0; k < constants.packetLengthVersions.length; k++) {
+            for (let k = 0; k < constants.packetLengthVersions.length; k++) {
 
-                possibleFirmwareVersion = constants.packetLengthVersions[k].firmwareVersion;
+                const possibleFirmwareVersion = constants.packetLengthVersions[k].firmwareVersion;
 
                 if (isOlderSemanticVersion(firmwareVersion.split('.'), possibleFirmwareVersion.split('.'))) {
 
@@ -282,7 +374,7 @@ function sendPacket (packet) {
 
             /* Verify the packet sent was read correctly by the device by comparing it to the returned packet */
 
-            for (j = 0; j < packetLength; j++) {
+            for (let j = 0; j < packetLength; j++) {
 
                 if (packet[j] !== data[j + 1]) {
 
@@ -309,18 +401,16 @@ function sendPacket (packet) {
 
 function configureDevice () {
 
-    var i, index, delay, sendTime, maxPacketLength, packet, configurations, sampleRateConfiguration, timePeriods, firstRecordingDateTimestamp, lastRecordingDateTimestamp, lowerFilter, higherFilter, firstRecordingDate, lastRecordingDate, settings, amplitudeThreshold, today, dayDiff, firstRecordingDateText, lastRecordingDateText, earliestRecordingTime, latestRecordingTime, now, sendTimeDiff, USB_LAG, MINIMUM_DELAY, MILLISECONDS_IN_SECOND;
-
     communicating = true;
 
     ui.disableTimeDisplay(false);
     configureButton.disabled = true;
 
-    USB_LAG = 20;
+    const USB_LAG = 20;
 
-    MINIMUM_DELAY = 100;
+    const MINIMUM_DELAY = 100;
 
-    MILLISECONDS_IN_SECOND = 1000;
+    const MILLISECONDS_IN_SECOND = 1000;
 
     setTimeout(function () {
 
@@ -328,29 +418,27 @@ function configureDevice () {
 
         getAudioMothPacket();
 
-        configureButton.disabled = false;
-
     }, 1500);
 
     console.log('Configuring device');
 
-    settings = uiSettings.getSettings();
+    const settings = uiSettings.getSettings();
 
     /* Build configuration packet */
 
-    index = 0;
+    let index = 0;
 
     /* Packet length is only increased with updates, so take the size of the latest firmware version packet */
 
-    maxPacketLength = constants.packetLengthVersions.slice(-1)[0].packetLength;
+    const maxPacketLength = constants.packetLengthVersions.slice(-1)[0].packetLength;
 
-    packet = new Uint8Array(maxPacketLength);
+    const packet = new Uint8Array(maxPacketLength);
 
     /* Increment to next second transition */
 
-    sendTime = new Date();
+    const sendTime = new Date();
 
-    delay = MILLISECONDS_IN_SECOND - sendTime.getMilliseconds() - USB_LAG;
+    let delay = MILLISECONDS_IN_SECOND - sendTime.getMilliseconds() - USB_LAG;
 
     if (delay < MINIMUM_DELAY) delay += MILLISECONDS_IN_SECOND;
 
@@ -363,9 +451,9 @@ function configureDevice () {
 
     packet[index++] = settings.gain;
 
-    configurations = (isOlderSemanticVersion(firmwareVersion.split('.'), ['1', '4', '4']) && settings.sampleRateIndex < 3) ? constants.oldConfigurations : constants.configurations;
+    const configurations = (isOlderSemanticVersion(firmwareVersion.split('.'), ['1', '4', '4']) && settings.sampleRateIndex < 3) ? constants.oldConfigurations : constants.configurations;
 
-    sampleRateConfiguration = configurations[settings.sampleRateIndex];
+    const sampleRateConfiguration = configurations[settings.sampleRateIndex];
 
     packet[index++] = sampleRateConfiguration.clockDivider;
 
@@ -386,7 +474,7 @@ function configureDevice () {
 
     packet[index++] = ledCheckbox.checked ? 1 : 0;
 
-    timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
+    let timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
 
     timePeriods = timePeriods.sort(function (a, b) {
 
@@ -396,7 +484,7 @@ function configureDevice () {
 
     packet[index++] = timePeriods.length;
 
-    for (i = 0; i < timePeriods.length; i++) {
+    for (let i = 0; i < timePeriods.length; i++) {
 
         writeLittleEndianBytes(packet, index, 2, timePeriods[i].startMins);
         index += 2;
@@ -406,7 +494,7 @@ function configureDevice () {
 
     }
 
-    for (i = 0; i < (scheduleBar.MAX_PERIODS + 1) - timePeriods.length; i++) {
+    for (let i = 0; i < (scheduleBar.MAX_PERIODS + 1) - timePeriods.length; i++) {
 
         writeLittleEndianBytes(packet, index, 2, 0);
         index += 2;
@@ -432,13 +520,15 @@ function configureDevice () {
 
     /* Start/stop dates */
 
-    today = new Date();
-    dayDiff = today.getDate() - today.getUTCDate();
+    const today = new Date();
+    const dayDiff = today.getDate() - today.getUTCDate();
 
-    var timezoneOffset = -60 * today.getTimezoneOffset();
+    const timezoneOffset = -60 * today.getTimezoneOffset();
 
-    firstRecordingDateText = uiSchedule.getFirstRecordingDate();
-    firstRecordingDate = new Date(uiSchedule.getFirstRecordingDate());
+    const firstRecordingDateText = uiSchedule.getFirstRecordingDate();
+    const firstRecordingDate = new Date(uiSchedule.getFirstRecordingDate());
+
+    let earliestRecordingTime;
 
     if (firstRecordingDateText === '') {
 
@@ -456,14 +546,14 @@ function configureDevice () {
 
         }
 
-        firstRecordingDateTimestamp = (firstRecordingDate === -1) ? 0 : new Date(firstRecordingDate).valueOf() / 1000;
-
-        earliestRecordingTime = firstRecordingDateTimestamp;
+        earliestRecordingTime = (firstRecordingDate === -1) ? 0 : new Date(firstRecordingDate).valueOf() / 1000;
 
     }
 
-    lastRecordingDateText = uiSchedule.getLastRecordingDate();
-    lastRecordingDate = new Date(uiSchedule.getLastRecordingDate());
+    const lastRecordingDateText = uiSchedule.getLastRecordingDate();
+    const lastRecordingDate = new Date(uiSchedule.getLastRecordingDate());
+
+    let latestRecordingTime;
 
     if (lastRecordingDateText === '') {
 
@@ -479,7 +569,7 @@ function configureDevice () {
 
         }
 
-        lastRecordingDateTimestamp = (lastRecordingDate === -1) ? 0 : new Date(lastRecordingDate).valueOf() / 1000;
+        const lastRecordingDateTimestamp = (lastRecordingDate === -1) ? 0 : new Date(lastRecordingDate).valueOf() / 1000;
 
         /* Make latestRecordingTime timestamp inclusive by setting it to the end of the chosen day */
         latestRecordingTime = lastRecordingDateTimestamp + SECONDS_IN_DAY;
@@ -497,23 +587,28 @@ function configureDevice () {
     writeLittleEndianBytes(packet, index, 4, latestRecordingTime);
     index += 4;
 
+    let lowerFilter, higherFilter;
+
     /* Filter settings */
 
     if (settings.passFiltersEnabled) {
 
-        switch (settings.filterType) {
+        switch (settings.filterTypeIndex) {
 
-        case uiFiltering.FILTER_LOW:
+        case 0:
+            /* Low-pass */
             lowerFilter = UINT16_MAX;
             higherFilter = settings.higherFilter / 100;
             break;
-        case uiFiltering.FILTER_HIGH:
-            lowerFilter = settings.lowerFilter / 100;
-            higherFilter = UINT16_MAX;
-            break;
-        case uiFiltering.FILTER_BAND:
+        case 1:
+            /* Band-pass */
             lowerFilter = settings.lowerFilter / 100;
             higherFilter = settings.higherFilter / 100;
+            break;
+        case 2:
+            /* High-pass */
+            lowerFilter = settings.lowerFilter / 100;
+            higherFilter = UINT16_MAX;
             break;
 
         }
@@ -530,24 +625,147 @@ function configureDevice () {
     writeLittleEndianBytes(packet, index, 2, higherFilter);
     index += 2;
 
-    /* CMV settings */
+    /* Amplitude threshold */
 
-    amplitudeThreshold = settings.amplitudeThreshold;
+    let amplitudeThreshold;
 
-    writeLittleEndianBytes(packet, index, 2, settings.amplitudeThresholdingEnabled ? amplitudeThreshold : 0);
+    const amplitudeThresholdingScaleIndex = settings.amplitudeThresholdingScaleIndex;
+
+    if (settings.amplitudeThresholdingEnabled) {
+
+        let percentageAmplitudeThreshold;
+
+        /* Amplitude threshold value is based on the value displayed to the user, rather than the raw position on the slider */
+        /* E.g. 10% selected, threshold = 10% of the max amplitude */
+
+        switch (amplitudeThresholdingScaleIndex) {
+
+        case AMPLITUDE_THRESHOLD_SCALE_16BIT:
+            amplitudeThreshold = uiSettings.get16BitAmplitudeThreshold();
+            break;
+
+        case AMPLITUDE_THRESHOLD_SCALE_PERCENTAGE:
+            percentageAmplitudeThreshold = uiSettings.getPercentageAmplitudeThresholdExponentMantissa();
+            amplitudeThreshold = Math.round(32768 * percentageAmplitudeThreshold.mantissa * Math.pow(10, percentageAmplitudeThreshold.exponent) / 100);
+            break;
+
+        case AMPLITUDE_THRESHOLD_SCALE_DECIBEL:
+            amplitudeThreshold = Math.round(32768 * Math.pow(10, uiSettings.getDecibelAmplitudeThreshold() / 20));
+            break;
+
+        }
+
+    } else {
+
+        amplitudeThreshold = 0;
+
+    }
+
+    writeLittleEndianBytes(packet, index, 2, amplitudeThreshold);
     index += 2;
 
     /* Pack values into a single byte */
 
     /* Whether or not deployment ID is required */
-    var requireAcousticConfig = settings.requireAcousticConfig ? 1 : 0;
+    const requireAcousticConfig = settings.requireAcousticConfig ? 1 : 0;
 
     /* Whether to use NiMH/LiPo voltage range for battery level indication */
-    var displayVoltageRange = settings.displayVoltageRange ? 1 : 0;
+    const displayVoltageRange = settings.displayVoltageRange ? 1 : 0;
 
-    var packetValue = (displayVoltageRange << 1) + requireAcousticConfig;
+    /* Minimum amplitude threshold duration, voltage range and whether acoustic configuration is required before deployment */
 
-    packet[index++] = packetValue;
+    let minimumAmplitudeThresholdDuration;
+
+    if (settings.amplitudeThresholdingEnabled) {
+
+        const minimumAmplitudeThresholdDurations = [0, 1, 2, 5, 10, 15, 30, 60];
+        minimumAmplitudeThresholdDuration = minimumAmplitudeThresholdDurations[settings.minimumAmplitudeThresholdDuration];
+
+    } else {
+
+        minimumAmplitudeThresholdDuration = 0;
+
+    }
+
+    let packedValue0 = requireAcousticConfig;
+    packedValue0 |= (displayVoltageRange << 1);
+    packedValue0 |= (minimumAmplitudeThresholdDuration << 2);
+
+    packet[index++] = packedValue0;
+
+    let enableAmplitudeThresholdDecibelScale, enableAmplitudeThresholdPercentageScale;
+
+    if (settings.amplitudeThresholdingEnabled) {
+
+        switch (amplitudeThresholdingScaleIndex) {
+
+        case AMPLITUDE_THRESHOLD_SCALE_16BIT:
+            enableAmplitudeThresholdDecibelScale = 1;
+            enableAmplitudeThresholdPercentageScale = 1;
+            break;
+
+        case AMPLITUDE_THRESHOLD_SCALE_PERCENTAGE:
+            enableAmplitudeThresholdDecibelScale = 0;
+            enableAmplitudeThresholdPercentageScale = 1;
+            break;
+
+        case AMPLITUDE_THRESHOLD_SCALE_DECIBEL:
+            enableAmplitudeThresholdDecibelScale = 1;
+            enableAmplitudeThresholdPercentageScale = 0;
+            break;
+
+        }
+
+        /* Decibel-scale amplitude threshold */
+
+        const amplitudeThresholdDecibels = (amplitudeThresholdingScaleIndex === AMPLITUDE_THRESHOLD_SCALE_DECIBEL) ? Math.abs(uiSettings.getDecibelAmplitudeThreshold()) : 0;
+
+        let packedValue1 = enableAmplitudeThresholdDecibelScale & 1;
+        packedValue1 |= (amplitudeThresholdDecibels << 1);
+
+        packet[index++] = packedValue1;
+
+        /* Percentage-scale amplitude threshold */
+
+        let amplitudeThresholdPercentageExponent, amplitudeThresholdPercentageMantissa;
+
+        if (amplitudeThresholdingScaleIndex === AMPLITUDE_THRESHOLD_SCALE_PERCENTAGE) {
+
+            const percentageAmplitudeThreshold = uiSettings.getPercentageAmplitudeThresholdExponentMantissa();
+
+            amplitudeThresholdPercentageExponent = percentageAmplitudeThreshold.exponent;
+            amplitudeThresholdPercentageMantissa = percentageAmplitudeThreshold.mantissa;
+
+        } else {
+
+            amplitudeThresholdPercentageExponent = 0;
+            amplitudeThresholdPercentageMantissa = 0;
+
+        }
+
+        let packedValue2 = enableAmplitudeThresholdPercentageScale & 1;
+        packedValue2 |= (amplitudeThresholdPercentageMantissa << 1);
+        packedValue2 |= (amplitudeThresholdPercentageExponent << 5);
+
+        packet[index++] = packedValue2;
+
+    } else {
+
+        packet[index++] = 0;
+        packet[index++] = 0;
+
+    }
+
+    /* Whether to use NiMH/LiPo voltage range for battery level indication */
+    const energySaverModeEnabled = settings.energySaverModeEnabled ? 1 : 0;
+
+    /* Whether to turn off the 48Hz DC blocking filter which is on by default */
+    const disable48DCFilter = settings.disable48DCFilter ? 1 : 0;
+
+    let packedByte3 = energySaverModeEnabled & 1;
+    packedByte3 |= (disable48DCFilter << 1);
+
+    packet[index++] = packedByte3;
 
     console.log('Packet length: ', index);
 
@@ -558,8 +776,8 @@ function configureDevice () {
 
     packetReader.read(packet);
 
-    now = new Date();
-    sendTimeDiff = sendTime.getTime() - now.getTime();
+    const now = new Date();
+    const sendTimeDiff = sendTime.getTime() - now.getTime();
 
     if (sendTimeDiff <= 0) {
 
@@ -601,22 +819,20 @@ function initialiseDisplay () {
 
 function disableDisplay () {
 
+    ui.updateDate(date);
+    updateIdDisplay(id);
+    updateFirmwareDisplay(firmwareVersion, firmwareDescription);
+    updateBatteryDisplay(batteryState);
+
     ui.disableTimeDisplay(false);
 
     idLabel.style.color = 'lightgrey';
-
     idDisplay.style.color = 'lightgrey';
-
     firmwareVersionLabel.style.color = 'lightgrey';
-
     firmwareVersionDisplay.style.color = 'lightgrey';
-
     firmwareDescriptionLabel.style.color = 'lightgrey';
-
     firmwareDescriptionDisplay.style.color = 'lightgrey';
-
     batteryLabel.style.color = 'lightgrey';
-
     batteryDisplay.style.color = 'lightgrey';
 
     configureButton.disabled = true;
@@ -627,17 +843,7 @@ function disableDisplay () {
 
 function enableDisplay () {
 
-    var textColor;
-
-    if (ui.isNightMode()) {
-
-        textColor = 'white';
-
-    } else {
-
-        textColor = 'black';
-
-    }
+    const textColor = ui.isNightMode() ? 'white' : 'black';
 
     idLabel.style.color = textColor;
 
@@ -665,11 +871,19 @@ function enableDisplay () {
 
 /* Insert retrieved values into device information display */
 
-function updateIdDisplay (id) {
+function updateIdDisplay (deviceId) {
 
-    if (id !== idDisplay.textContent) {
+    if (deviceId !== idDisplay.textContent) {
 
-        idDisplay.textContent = id;
+        if (deviceId === null) {
+
+            idDisplay.textContent = '-';
+
+        } else {
+
+            idDisplay.textContent = deviceId;
+
+        }
 
     }
 
@@ -679,9 +893,9 @@ function updateFirmwareDisplay (version, description) {
 
     if (version !== firmwareVersionDisplay.value) {
 
-        if (version === '0.0.0' && constants.supportedFirmwareDescs.includes(firmwareDescription)) {
+        if (version === '0.0.0') {
 
-            firmwareVersionDisplay.textContent = '< 1.2.0';
+            firmwareVersionDisplay.textContent = '-';
 
         } else {
 
@@ -693,21 +907,37 @@ function updateFirmwareDisplay (version, description) {
 
     if (description !== firmwareDescriptionDisplay.textContent) {
 
-        firmwareDescriptionDisplay.textContent = description;
+        if (description === '') {
+
+            firmwareDescriptionDisplay.textContent = '-';
+
+        } else {
+
+            firmwareDescriptionDisplay.textContent = description;
+
+        }
 
     }
 
 };
 
-function updateBatteryDisplay (batteryState) {
+function updateBatteryDisplay (battery) {
 
-    batteryDisplay.textContent = batteryState;
+    if (battery === null) {
+
+        batteryDisplay.textContent = '-';
+
+    } else {
+
+        batteryDisplay.textContent = battery;
+
+    }
 
 };
 
 function copyDeviceID () {
 
-    var id = idDisplay.textContent;
+    const id = idDisplay.textContent;
 
     if (id !== '0000000000000000') {
 
@@ -742,18 +972,16 @@ function toggleNightMode () {
 
 function updateLifeDisplayOnChange () {
 
-    var sortedPeriods, settings;
-
-    sortedPeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
+    let sortedPeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
     sortedPeriods = sortedPeriods.sort(function (a, b) {
 
         return a.startMins - b.startMins;
 
     });
 
-    settings = uiSettings.getSettings();
+    const settings = uiSettings.getSettings();
 
-    lifeDisplay.updateLifeDisplay(sortedPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.dutyEnabled);
+    lifeDisplay.updateLifeDisplay(sortedPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.dutyEnabled, settings.energySaverModeEnabled);
 
 }
 
@@ -767,39 +995,46 @@ lifeDisplay.getPanel().addEventListener('click', function () {
 
 electron.ipcRenderer.on('save', function () {
 
-    var timePeriods, localTime, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, dutyEnabled, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, firstRecordingDate, lastRecordingDate, requireAcousticConfig, displayVoltageRange, settings;
+    const timePeriods = scheduleBar.getTimePeriods();
 
-    timePeriods = scheduleBar.getTimePeriods();
+    const localTime = ui.isLocalTime();
 
-    localTime = ui.isLocalTime();
+    const ledEnabled = ledCheckbox.checked;
+    const lowVoltageCutoffEnabled = lowVoltageCutoffCheckbox.checked;
+    const batteryLevelCheckEnabled = batteryLevelCheckbox.checked;
 
-    ledEnabled = ledCheckbox.checked;
-    lowVoltageCutoffEnabled = lowVoltageCutoffCheckbox.checked;
-    batteryLevelCheckEnabled = batteryLevelCheckbox.checked;
+    const settings = uiSettings.getSettings();
 
-    settings = uiSettings.getSettings();
+    const sampleRateIndex = settings.sampleRateIndex;
+    const gain = settings.gain;
+    const recordDuration = settings.recordDuration;
+    const sleepDuration = settings.sleepDuration;
+    const dutyEnabled = settings.dutyEnabled;
 
-    sampleRateIndex = settings.sampleRateIndex;
-    gain = settings.gain;
-    recordDuration = settings.recordDuration;
-    sleepDuration = settings.sleepDuration;
-    dutyEnabled = settings.dutyEnabled;
+    const passFiltersEnabled = settings.passFiltersEnabled;
+    const filterTypeIndex = settings.filterTypeIndex;
+    const lowerFilter = settings.lowerFilter;
+    const higherFilter = settings.higherFilter;
 
-    passFiltersEnabled = settings.passFiltersEnabled;
-    filterType = settings.filterType;
-    lowerFilter = settings.lowerFilter;
-    higherFilter = settings.higherFilter;
-    amplitudeThresholdingEnabled = settings.amplitudeThresholdingEnabled;
-    amplitudeThreshold = settings.amplitudeThreshold;
+    const amplitudeThresholdingEnabled = settings.amplitudeThresholdingEnabled;
+    const amplitudeThreshold = settings.amplitudeThreshold;
 
-    firstRecordingDate = uiSchedule.getFirstRecordingDate();
-    lastRecordingDate = uiSchedule.getLastRecordingDate();
+    const firstRecordingDate = uiSchedule.getFirstRecordingDate();
+    const lastRecordingDate = uiSchedule.getLastRecordingDate();
 
-    requireAcousticConfig = settings.requireAcousticConfig;
+    const requireAcousticConfig = settings.requireAcousticConfig;
 
-    displayVoltageRange = settings.displayVoltageRange;
+    const displayVoltageRange = settings.displayVoltageRange;
 
-    saveLoad.saveConfiguration(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, function (err) {
+    const minimumAmplitudeThresholdDuration = settings.minimumAmplitudeThresholdDuration;
+
+    const amplitudeThresholdingScaleIndex = settings.amplitudeThresholdingScaleIndex;
+
+    const energySaverModeEnabled = settings.energySaverModeEnabled;
+
+    const disable48DCFilter = settings.disable48DCFilter;
+
+    saveLoad.saveConfiguration(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, function (err) {
 
         if (err) {
 
@@ -817,11 +1052,9 @@ electron.ipcRenderer.on('save', function () {
 
 electron.ipcRenderer.on('load', function () {
 
-    saveLoad.loadConfiguration(function (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, start, end, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange) {
+    saveLoad.loadConfiguration(function (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, start, end, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter) {
 
-        var sortedPeriods, settings;
-
-        sortedPeriods = timePeriods;
+        let sortedPeriods = timePeriods;
         sortedPeriods = sortedPeriods.sort(function (a, b) {
 
             return a.startMins - b.startMins;
@@ -836,7 +1069,7 @@ electron.ipcRenderer.on('load', function () {
         uiSchedule.setFirstRecordingDate(start);
         uiSchedule.setLastRecordingDate(end);
 
-        settings = {
+        const settings = {
             sampleRateIndex: sampleRateIndex,
             gain: gain,
             dutyEnabled: dutyEnabled,
@@ -849,7 +1082,11 @@ electron.ipcRenderer.on('load', function () {
             amplitudeThresholdingEnabled: amplitudeThresholdingEnabled,
             amplitudeThreshold: amplitudeThreshold,
             requireAcousticConfig: requireAcousticConfig,
-            displayVoltageRange: displayVoltageRange
+            displayVoltageRange: displayVoltageRange,
+            minimumAmplitudeThresholdDuration: minimumAmplitudeThresholdDuration,
+            amplitudeThresholdingScaleIndex: amplitudeThresholdingScaleIndex,
+            energySaverModeEnabled: energySaverModeEnabled,
+            disable48DCFilter: disable48DCFilter
         };
 
         uiSettings.fillUI(settings);
@@ -860,7 +1097,7 @@ electron.ipcRenderer.on('load', function () {
 
         ui.update();
 
-        lifeDisplay.updateLifeDisplay(sortedPeriods, constants.configurations[sampleRateIndex], recordDuration, sleepDuration, amplitudeThresholdingEnabled, dutyEnabled);
+        updateLifeDisplayOnChange();
 
     });
 
@@ -869,8 +1106,6 @@ electron.ipcRenderer.on('load', function () {
 electron.ipcRenderer.on('update-check', function () {
 
     versionChecker.checkLatestRelease(function (response) {
-
-        var buttonIndex;
 
         if (response.error) {
 
@@ -899,10 +1134,10 @@ electron.ipcRenderer.on('update-check', function () {
 
         }
 
-        buttonIndex = dialog.showMessageBoxSync({
+        const buttonIndex = dialog.showMessageBoxSync({
             type: 'warning',
             buttons: ['Yes', 'No'],
-            title: 'Are you sure?',
+            title: 'Download newer version',
             message: 'A newer version of this app is available (' + response.latestVersion + '), would you like to download it?'
         });
 
@@ -931,7 +1166,31 @@ electron.ipcRenderer.on('night-mode', toggleNightMode);
 
 electron.ipcRenderer.on('local-time', toggleTimezoneStatus);
 
-configureButton.addEventListener('click', configureDevice);
+configureButton.addEventListener('click', () => {
+
+    const timePeriods = scheduleBar.getTimePeriods();
+
+    if (timePeriods.length === 0) {
+
+        const buttonIndex = dialog.showMessageBoxSync({
+            type: 'warning',
+            buttons: ['Yes', 'No'],
+            title: 'No recording periods',
+            message: 'No recording periods have been scheduled. This means the AudioMoth will not record when in CUSTOM mode. Are you sure you wish to apply this configuration?'
+        });
+
+        if (buttonIndex === 1) {
+
+            console.log('Configuration cancelled');
+            return;
+
+        }
+
+    }
+
+    configureDevice();
+
+});
 
 ui.checkUtcToggleability();
 

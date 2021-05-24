@@ -2,28 +2,26 @@
 
 /* global document */
 
-var dateInputs = document.getElementsByClassName('custom-date-input');
+const dateInputs = document.getElementsByClassName('custom-date-input');
 
 function dateToUTCString (date) {
 
-    var year, month, day;
-
-    year = ('000' + date.getUTCFullYear()).slice(-4);
-    month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
-    day = ('0' + date.getUTCDate()).slice(-2);
+    const year = ('000' + date.getUTCFullYear()).slice(-4);
+    const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+    const day = ('0' + date.getUTCDate()).slice(-2);
     return year + '-' + month + '-' + day;
 
 }
 
-exports.updateLocalTimeStatus = function (input, isLocalTime) {
+exports.updateLocalTimeStatus = (input, isLocalTime) => {
 
-    var today, todayYear, todayMonth, todayDay, dayDiff, currentDate, lastValidDate;
+    let todayYear, todayMonth, todayDay, currentDate;
 
-    today = new Date();
+    const today = new Date();
 
-    dayDiff = today.getDate() - today.getUTCDate();
+    const dayDiff = today.getDate() - today.getUTCDate();
 
-    lastValidDate = new Date(input.getAttribute('lastValidDate'));
+    const lastValidDate = new Date(input.getAttribute('lastValidDate'));
 
     if (isLocalTime) {
 
@@ -57,8 +55,6 @@ exports.updateLocalTimeStatus = function (input, isLocalTime) {
 
 function isValidDate (input, d) {
 
-    var maxDate, minDate;
-
     if (!(d instanceof Date)) {
 
         return false;
@@ -71,7 +67,7 @@ function isValidDate (input, d) {
 
     }
 
-    maxDate = new Date(input.getAttribute('max'));
+    const maxDate = new Date(input.getAttribute('max'));
 
     if (d > maxDate.getTime()) {
 
@@ -79,7 +75,7 @@ function isValidDate (input, d) {
 
     }
 
-    minDate = new Date(input.getAttribute('min'));
+    const minDate = new Date(input.getAttribute('min'));
 
     if (d.getTime() < minDate.getTime()) {
 
@@ -99,11 +95,9 @@ function setToLastValidDate (input, lastValidDateString) {
 
 function handleFocusOut (e) {
 
-    var input, inputDate;
+    const input = e.srcElement;
 
-    input = e.srcElement;
-
-    inputDate = new Date(input.value);
+    const inputDate = new Date(input.value);
 
     if (isValidDate(input, inputDate)) {
 
@@ -132,24 +126,22 @@ function handleFocusOut (e) {
 
 }
 
-var year, month, day, today;
+const today = new Date();
 
-today = new Date();
-
-year = ('000' + today.getUTCFullYear()).slice(-4);
-month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
-day = ('0' + today.getUTCDate()).slice(-2);
-today = year + '-' + month + '-' + day;
+const year = ('000' + today.getUTCFullYear()).slice(-4);
+const month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
+const day = ('0' + today.getUTCDate()).slice(-2);
+const todayString = year + '-' + month + '-' + day;
 
 for (let i = 0; i < dateInputs.length; i++) {
 
     dateInputs[i].addEventListener('focusout', handleFocusOut);
 
-    setToLastValidDate(dateInputs[i], today);
+    setToLastValidDate(dateInputs[i], todayString);
 
     dateInputs[i].setAttribute('lastValidDate', dateInputs[i].value);
 
-    dateInputs[i].setAttribute('min', today);
+    dateInputs[i].setAttribute('min', todayString);
     dateInputs[i].setAttribute('max', '2029-12-31');
 
 }

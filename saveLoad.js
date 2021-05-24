@@ -22,23 +22,27 @@ const defaultSettings = {
     recordDuration: 55,
     sleepDuration: 5,
     passFiltersEnabled: false,
-    filterType: 1,
+    filterTypeIndex: 1,
     lowerFilter: 0,
     higherFilter: 24000,
     amplitudeThresholdingEnabled: false,
     amplitudeThreshold: 0,
     requireAcousticConfig: false,
-    displayVoltageRange: false
+    displayVoltageRange: false,
+    minimumAmplitudeThresholdDuration: 0,
+    amplitudeThresholdingScaleIndex: 0,
+    energySaverModeEnabled: false,
+    disable48DCFilter: false
 };
 exports.defaultSettings = defaultSettings;
 
 /* Save configuration settings in UI to .config file */
 
-function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, callback) {
+function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, callback) {
 
-    var configuration, fileName, sampleRate, filterType;
+    const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
 
-    sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+    let filterType;
 
     switch (filterTypeIndex) {
 
@@ -54,7 +58,25 @@ function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, ba
 
     }
 
-    configuration = '{\n';
+    let amplitudeThresholdingScale;
+
+    switch (amplitudeThresholdingScaleIndex) {
+
+    case 0:
+        amplitudeThresholdingScale = 'percentage';
+        break;
+    case 1:
+        amplitudeThresholdingScale = '16bit';
+        break;
+    case 2:
+        amplitudeThresholdingScale = 'decibel';
+        break;
+
+    }
+
+    const versionString = electron.remote.app.getVersion();
+
+    let configuration = '{\n';
     configuration += '"timePeriods": ' + JSON.stringify(timePeriods) + ',\n';
     configuration += '"ledEnabled": ' + ledEnabled + ',\n';
     configuration += '"lowVoltageCutoffEnabled": ' + lowVoltageCutoffEnabled + ',\n';
@@ -76,10 +98,15 @@ function saveConfiguration (timePeriods, ledEnabled, lowVoltageCutoffEnabled, ba
     configuration += '"amplitudeThresholdingEnabled": ' + amplitudeThresholdingEnabled + ',\n';
     configuration += '"amplitudeThreshold": ' + amplitudeThreshold + ',\n';
     configuration += '"requireAcousticConfig": ' + requireAcousticConfig + ',\n';
-    configuration += '"displayVoltageRange": ' + displayVoltageRange + '\n';
+    configuration += '"displayVoltageRange": ' + displayVoltageRange + ',\n';
+    configuration += '"minimumAmplitudeThresholdDuration": ' + minimumAmplitudeThresholdDuration + ',\n';
+    configuration += '"amplitudeThresholdingScale": \"' + amplitudeThresholdingScale + '\",\n';
+    configuration += '"version": \"' + versionString + '\",\n';
+    configuration += '"energySaverModeEnabled": ' + energySaverModeEnabled + ',\n';
+    configuration += '"disable48DCFilter": ' + disable48DCFilter + '\n';
     configuration += '}';
 
-    fileName = dialog.showSaveDialogSync({
+    const fileName = dialog.showSaveDialogSync({
         title: 'Save configuration',
         nameFieldLabel: 'Configuration name',
         defaultPath: 'AudioMoth.config',
@@ -103,18 +130,16 @@ exports.saveConfiguration = saveConfiguration;
 
 function getSampleRateIndex (jsonSampleRateIndex, jsonSampleRate) {
 
-    var i, closestIndex, distance, minDistance;
-
     if (typeof jsonSampleRateIndex === 'undefined') {
 
         jsonSampleRate /= 1000;
 
-        minDistance = -1;
-        closestIndex = 0;
+        let minDistance = -1;
+        let closestIndex = 0;
 
-        for (i = 0; i < constants.configurations.length; i++) {
+        for (let i = 0; i < constants.configurations.length; i++) {
 
-            distance = Math.abs(constants.configurations[i].trueSampleRate - jsonSampleRate);
+            const distance = Math.abs(constants.configurations[i].trueSampleRate - jsonSampleRate);
 
             if (minDistance === -1 || distance < minDistance) {
 
@@ -139,8 +164,6 @@ function getSampleRateIndex (jsonSampleRateIndex, jsonSampleRate) {
 
 function useLoadedConfiguration (err, data, callback) {
 
-    var jsonObj, validator, schema, timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange;
-
     if (err) {
 
         dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
@@ -157,9 +180,9 @@ function useLoadedConfiguration (err, data, callback) {
 
         try {
 
-            jsonObj = JSON.parse(data);
-            validator = new Validator();
-            schema = {
+            const jsonObj = JSON.parse(data);
+            const validator = new Validator();
+            const schema = {
                 id: '/configuration',
                 type: 'object',
                 properties: {
@@ -238,12 +261,27 @@ function useLoadedConfiguration (err, data, callback) {
                         type: 'boolean'
                     },
                     amplitudeThreshold: {
-                        type: 'integer'
+                        type: 'number'
                     },
                     requireAcousticConfig: {
                         type: 'boolean'
                     },
                     displayVoltageRange: {
+                        type: 'boolean'
+                    },
+                    minimumAmplitudeThresholdDuration: {
+                        type: 'integer'
+                    },
+                    amplitudeThresholdingScale: {
+                        type: 'string'
+                    },
+                    version: {
+                        type: 'string'
+                    },
+                    energySaverModeEnabled: {
+                        type: 'boolean'
+                    },
+                    disable48DCFilter: {
                         type: 'boolean'
                     }
                 },
@@ -263,19 +301,19 @@ function useLoadedConfiguration (err, data, callback) {
 
             console.log(jsonObj);
 
-            timePeriods = [];
+            const timePeriods = jsonObj.timePeriods;
 
-            timePeriods = jsonObj.timePeriods;
+            const ledEnabled = jsonObj.ledEnabled;
+            const lowVoltageCutoffEnabled = (typeof jsonObj.lowVoltageCutoffEnabled === 'undefined') ? jsonObj.batteryCheckEnabled : jsonObj.lowVoltageCutoffEnabled;
+            const batteryLevelCheckEnabled = jsonObj.batteryLevelCheckEnabled;
 
-            ledEnabled = jsonObj.ledEnabled;
-            lowVoltageCutoffEnabled = (typeof jsonObj.lowVoltageCutoffEnabled === 'undefined') ? jsonObj.batteryCheckEnabled : jsonObj.lowVoltageCutoffEnabled;
-            batteryLevelCheckEnabled = jsonObj.batteryLevelCheckEnabled;
+            const sampleRateIndex = getSampleRateIndex(jsonObj.sampleRateIndex, jsonObj.sampleRate);
 
-            sampleRateIndex = getSampleRateIndex(jsonObj.sampleRateIndex, jsonObj.sampleRate);
+            const gain = (typeof jsonObj.gain === 'undefined') ? jsonObj.gainIndex : jsonObj.gain;
 
-            gain = (typeof jsonObj.gain === 'undefined') ? jsonObj.gainIndex : jsonObj.gain;
+            const dutyEnabled = (typeof jsonObj.dutyEnabled === 'undefined') ? true : jsonObj.dutyEnabled;
 
-            dutyEnabled = (typeof jsonObj.dutyEnabled === 'undefined') ? true : jsonObj.dutyEnabled;
+            let sleepDuration, recordDuration;
 
             if (dutyEnabled) {
 
@@ -289,47 +327,78 @@ function useLoadedConfiguration (err, data, callback) {
 
             }
 
-            localTime = jsonObj.localTime;
-            firstRecordingDate = (typeof jsonObj.firstRecordingDate === 'undefined') ? '' : jsonObj.firstRecordingDate;
-            lastRecordingDate = (typeof jsonObj.lastRecordingDate === 'undefined') ? '' : jsonObj.lastRecordingDate;
+            const localTime = jsonObj.localTime;
+            const firstRecordingDate = (typeof jsonObj.firstRecordingDate === 'undefined') ? '' : jsonObj.firstRecordingDate;
+            const lastRecordingDate = (typeof jsonObj.lastRecordingDate === 'undefined') ? '' : jsonObj.lastRecordingDate;
 
-            passFiltersEnabled = (typeof jsonObj.passFiltersEnabled === 'undefined') ? false : jsonObj.passFiltersEnabled;
+            const passFiltersEnabled = (typeof jsonObj.passFiltersEnabled === 'undefined') ? false : jsonObj.passFiltersEnabled;
+
+            let filterTypeIndex;
 
             if (passFiltersEnabled) {
 
                 switch (jsonObj.filterType) {
 
                 case 'low':
-                    filterType = 0;
+                    filterTypeIndex = 0;
                     break;
                 case 'band':
-                    filterType = 1;
+                    filterTypeIndex = 1;
                     break;
                 case 'high':
-                    filterType = 2;
+                    filterTypeIndex = 2;
                     break;
 
                 }
 
             } else {
 
-                filterType = 0;
+                filterTypeIndex = 0;
 
             }
 
-            lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? -1 : jsonObj.lowerFilter;
-            higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? -1 : jsonObj.higherFilter;
+            const lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? -1 : jsonObj.lowerFilter;
+            const higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? -1 : jsonObj.higherFilter;
 
-            amplitudeThresholdingEnabled = (typeof jsonObj.amplitudeThresholdingEnabled === 'undefined') ? false : jsonObj.amplitudeThresholdingEnabled;
-            amplitudeThreshold = amplitudeThresholdingEnabled ? jsonObj.amplitudeThreshold : 0;
+            const amplitudeThresholdingEnabled = (typeof jsonObj.amplitudeThresholdingEnabled === 'undefined') ? false : jsonObj.amplitudeThresholdingEnabled;
+            const amplitudeThreshold = amplitudeThresholdingEnabled ? jsonObj.amplitudeThreshold : 0;
 
-            requireAcousticConfig = (typeof jsonObj.requireAcousticConfig === 'undefined') ? false : jsonObj.requireAcousticConfig;
+            const requireAcousticConfig = (typeof jsonObj.requireAcousticConfig === 'undefined') ? false : jsonObj.requireAcousticConfig;
 
-            displayVoltageRange = (typeof jsonObj.displayVoltageRange === 'undefined') ? false : jsonObj.displayVoltageRange;
+            const displayVoltageRange = (typeof jsonObj.displayVoltageRange === 'undefined') ? false : jsonObj.displayVoltageRange;
 
-            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange);
+            const minimumAmplitudeThresholdDuration = (typeof jsonObj.minimumAmplitudeThresholdDuration === 'undefined') ? 0 : jsonObj.minimumAmplitudeThresholdDuration;
 
-            console.log('Config loaded');
+            let amplitudeThresholdingScaleIndex;
+
+            /* Previous versions of the app used 0 - 32768 as the amplitude threshold scale. If the scale index isn't in the save file, assume it's from an older app version and match threshold and scale to old range */
+
+            switch (jsonObj.amplitudeThresholdingScale) {
+
+            case 'percentage':
+                amplitudeThresholdingScaleIndex = 0;
+                break;
+            case '16bit':
+                amplitudeThresholdingScaleIndex = 1;
+                break;
+            case 'decibel':
+                amplitudeThresholdingScaleIndex = 2;
+                break;
+            default:
+                amplitudeThresholdingScaleIndex = 1;
+                break;
+
+            }
+
+            const energySaverModeEnabled = (jsonObj.energySaverModeEnabled === 'undefined') ? false : jsonObj.energySaverModeEnabled;
+
+            const disable48DCFilter = (jsonObj.disable48DCFilter === 'undefined') ? false : jsonObj.disable48DCFilter;
+
+            const version = (typeof jsonObj.version === 'undefined') ? '< 1.5.0' : jsonObj.version;
+
+            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter);
+
+            console.log('Loaded config created by Configuration App version ' + version);
 
         } catch (usageErr) {
 
@@ -349,9 +418,9 @@ function useLoadedConfiguration (err, data, callback) {
 
 /* Display open dialog to allow users to load a .config file */
 
-exports.loadConfiguration = function (callback) {
+exports.loadConfiguration = (callback) => {
 
-    var fileName = dialog.showOpenDialogSync({
+    const fileName = dialog.showOpenDialogSync({
         title: 'Open configuration',
         nameFieldLabel: 'Configuration name',
         defaultPath: 'AudioMoth.config',

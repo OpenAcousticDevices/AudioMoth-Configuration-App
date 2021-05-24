@@ -1,126 +1,3 @@
-<div style="border: #cdcdcd thin solid; width: 100%;">
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-8" style="text-align: left;">
-            <span class="settings-text" style="margin-left: 17px;">Enable filtering:</span>
-        </div>
-        <div class="col-4" style="text-align: right;">
-            <input class="settings-inputs" id="filter-checkbox" type="checkbox" style="margin-right: 16px;">
-        </div>
-    </div>
-
-    <div class="row" style="margin-top: 1px;">
-        <div class="col-12">
-            <div style="margin-left: 5px; margin-right: 4px">
-                <table class="table" style="margin-bottom: 4px;" title="Type of filter.">
-                    <tr class="settings-text" style="font-size: 12px;">
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px" name="filter-radio-label">Low</td>                     
-                        <td align="center" style="padding: 0px" name="filter-radio-label">Band</td>
-                        <td align="center" style="padding: 0px" name="filter-radio-label">High</td>
-                    </tr>
-                    <tr class="settings-text">
-                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="filter-type-label">Filter type:</td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="0" name="filter-radio">
-                        </td>                        
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="1" name="filter-radio" checked>
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="2" name="filter-radio">
-                        </td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- High-pass filter -->
-    <div class="row" id="high-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="high-pass-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
-        </div>
-        <div class="col-8" title="The cut-off frequency of the high-pass filter." style="padding-left: 0px; padding-right: 0px;">
-            <input class="settings-inputs" id="high-pass-filter-slider" data-slider-id="high-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="18000" style="width: 370px;">
-        </div>
-        <div class="col-1" style="text-align: right; padding-left: 18px; padding-right: 0px;">
-            <span class="settings-text" id="high-pass-filter-max-label" style="font-weight: bold;">24kHz</span>
-        </div>
-    </div>
-
-    <!-- Low-pass filter -->
-    <div class="row" id="low-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: flex; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="low-pass-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
-        </div>
-        <div class="col-8" title="The cut-off frequency of the low-pass filter." style="padding-left: 0px; padding-right: 0px;">
-            <input class="settings-inputs" id="low-pass-filter-slider" data-slider-id="low-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="6000" style="width: 370px;">
-        </div>
-        <div class="col-1" style="text-align: right; padding-left: 18px; padding-right: 0px;">
-            <span class="settings-text" id="low-pass-filter-max-label" style="font-weight: bold;">24kHz</span>
-        </div>
-    </div>
-
-    <!-- Band-pass filter -->
-    <div class="row" id="band-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="band-pass-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
-        </div>
-        <div class="col-8" title="The low and high cut-off frequencies of the band-pass filter." style="padding-left: 0px; padding-right: 0px;">
-            <input class="settings-inputs" id="band-pass-filter-slider" data-slider-id="band-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="[6000,18000]" style="width: 370px;">
-        </div>
-        <div class="col-1" style="text-align: right; padding-left: 18px; padding-right: 0px;">
-            <span class="settings-text" id="band-pass-filter-max-label" style="font-weight: bold;">24kHz</span>
-        </div>
-    </div>
-
-
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-12" style="margin-left: 16px;">
-            <label class="settings-text" id="filter-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;">Recordings will be filtered to frequencies above 0.0 kHz.</label>
-        </div>
-    </div>
-
-</div>
-
-<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
-    <div class="row" style="margin-top: 8px;" title="">
-        <div class="col-6" style="text-align: left;">
-            <span class="settings-text" style="margin-left: 17px;">Enable amplitude threshold recording:</span>
-        </div>
-        <div class="col-6" style="text-align: right;">
-            <input class="settings-inputs" id="amplitude-thresholding-checkbox" type="checkbox" style="margin-right: 16px;">
-        </div>
-    </div>
-    <div class="row" style="margin-top: 8px; margin-bottom: 8px; display: flex; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="amplitude-thresholding-min-label" style="margin-left: 16px; font-weight: bold;">0</span>
-        </div>
-        <div class="col-8" style="padding-left: 0%; padding-right: 0%;" title="The amplitude threshold below which audio segments are not written to the SD card.">
-            <input class="settings-inputs" id="amplitude-thresholding-slider" data-slider-id="amplitude-thresholding-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="32768" data-slider-step="1" data-slider-value="0" style="width: 370px;">
-        </div>
-        <div class="col-1" style="text-align: right; padding-left: 18px; padding-right: 0px;">
-            <span class="settings-text" id="amplitude-thresholding-max-label" style="font-weight: bold;">32768</span>
-        </div>
-    </div>
-
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-12" style="margin-left: 16px;">
-            <label class="settings-text" id="amplitude-thresholding-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;"></label>
-        </div>
-    </div>
-</div>
-
 <div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
     <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
         <div class="col-9" style="text-align: left;">
@@ -137,6 +14,24 @@
         </div>
         <div class="col-3" style="text-align: right;" title="Whether voltage range of a NiMH/LiPo battery should be displayed instead of battery level.">
             <input id="voltage-range-checkbox" type="checkbox" style="margin-right: 16px;">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-9" style="text-align: left;">
+            <span style="margin-left: 17px;">Disable 48Hz DC blocking filter:</span>
+        </div>
+        <div class="col-3" style="text-align: right;" title="Whether to turn off a DC filter which is on by default.">
+            <input id="disable-48-dc-filter-checkbox" type="checkbox" style="margin-right: 16px;">
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="col-9" style="text-align: left;">
+            <span style="margin-left: 17px;">Enable energy saver mode:</span>
+        </div>
+        <div class="col-3" style="text-align: right;" title="Whether to enable the energy saver mode.">
+            <input id="energy-saver-mode-checkbox" type="checkbox" style="margin-right: 16px;">
         </div>
     </div>
 </div>

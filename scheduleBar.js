@@ -12,12 +12,12 @@ const ui = require('./ui.js');
 const timeHandler = require('./timeHandler.js');
 const schedule = require('./schedule/schedule.js');
 
-var timeCanvas = document.getElementById('time-canvas');
-var timeContext = timeCanvas.getContext('2d');
-var labelCanvas = document.getElementById('label-canvas');
-var labelContext = labelCanvas.getContext('2d');
+const timeCanvas = document.getElementById('time-canvas');
+const timeContext = timeCanvas.getContext('2d');
+const labelCanvas = document.getElementById('label-canvas');
+const labelContext = labelCanvas.getContext('2d');
 
-var canvasHolder = document.getElementById('canvas-holder');
+const canvasHolder = document.getElementById('canvas-holder');
 var clickableCanvas;
 var clickCallback;
 
@@ -27,7 +27,7 @@ var selectedPeriod = null;
 
 function rescale (canvas) {
 
-    var scaleFactor = 1;
+    let scaleFactor = 1;
 
     if (Object.prototype.hasOwnProperty.call(window, 'devicePixelRatio')) {
 
@@ -53,11 +53,9 @@ function rescale (canvas) {
 
 function drawPeriod (startMins, endMins, timeCanvas) {
 
-    var recX, recLen;
-
     /* width / 1440 minutes */
-    recX = startMins * timeCanvas.width / 1440;
-    recLen = (endMins - startMins) * timeCanvas.width / 1440;
+    const recX = startMins * timeCanvas.width / 1440;
+    const recLen = (endMins - startMins) * timeCanvas.width / 1440;
 
     timeContext.fillRect(recX, 0, recLen, timeCanvas.height);
 
@@ -65,23 +63,21 @@ function drawPeriod (startMins, endMins, timeCanvas) {
 
 function updateCanvas () {
 
-    var timePeriods, i, startMins, endMins, currentTimeDate, currentMins, currentX, localMidnight, localMidnightPx, startingAtMidnight, endingAtMidnight;
-
-    timePeriods = schedule.getTimePeriods();
+    let timePeriods = schedule.getTimePeriods();
     timePeriods = ui.isLocalTime() ? timeHandler.convertTimePeriodsToLocal(timePeriods) : timePeriods;
 
-    currentTimeDate = new Date();
+    const currentTimeDate = new Date();
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);
 
-    localMidnight = timeHandler.convertTimeToLocal(1440);
-    startingAtMidnight = false;
-    endingAtMidnight = false;
+    const localMidnight = timeHandler.convertTimeToLocal(1440);
+    let startingAtMidnight = false;
+    let endingAtMidnight = false;
 
-    for (i = 0; i < timePeriods.length; i++) {
+    for (let i = 0; i < timePeriods.length; i++) {
 
-        startMins = timePeriods[i].startMins;
-        endMins = timePeriods[i].endMins;
+        const startMins = timePeriods[i].startMins;
+        const endMins = timePeriods[i].endMins;
 
         if (ui.isLocalTime()) {
 
@@ -130,7 +126,7 @@ function updateCanvas () {
 
     if (startingAtMidnight && endingAtMidnight) {
 
-        localMidnightPx = localMidnight / 1440 * timeCanvas.width;
+        const localMidnightPx = localMidnight / 1440 * timeCanvas.width;
 
         timeContext.fillStyle = '#CC0000';
         timeContext.fillRect(localMidnightPx, 0, 0.002 * timeCanvas.width, timeCanvas.height);
@@ -153,6 +149,8 @@ function updateCanvas () {
     timeContext.fillRect(0.5 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
     timeContext.fillRect(0.75 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
 
+    let currentMins;
+
     if (ui.isLocalTime()) {
 
         currentMins = (currentTimeDate.getHours() * 60) + currentTimeDate.getMinutes();
@@ -163,7 +161,7 @@ function updateCanvas () {
 
     }
 
-    currentX = currentMins * timeCanvas.width / 1440;
+    const currentX = currentMins * timeCanvas.width / 1440;
 
     timeContext.fillStyle = '#00AF00';
     timeContext.fillRect((currentX - 1), 0, 0.004 * timeCanvas.width, timeCanvas.height);
@@ -185,15 +183,13 @@ function updateCanvasTimer () {
 
 function updateSelectedPeriod (event) {
 
-    var rect, clickMins, timePeriods, i, startMins, endMins, selectedIndex;
-
-    timePeriods = schedule.getTimePeriods();
+    let timePeriods = schedule.getTimePeriods();
 
     /* If there's only one possible time period and it covers the entire length of the schedule, don't bother with the full check */
 
     if (timePeriods.length === 1 && timePeriods[0].startMins === 0 && timePeriods[0].endMins === 1440) {
 
-        selectedIndex = 0;
+        const selectedIndex = 0;
 
         if (clickCallback) {
 
@@ -205,8 +201,8 @@ function updateSelectedPeriod (event) {
 
     }
 
-    rect = clickableCanvas.getBoundingClientRect();
-    clickMins = (event.clientX - rect.left) / clickableCanvas.width * 1440;
+    const rect = clickableCanvas.getBoundingClientRect();
+    const clickMins = (event.clientX - rect.left) / clickableCanvas.width * 1440;
 
     if (ui.isLocalTime()) {
 
@@ -214,12 +210,12 @@ function updateSelectedPeriod (event) {
 
     }
 
-    selectedIndex = -1;
+    let selectedIndex = -1;
 
-    for (i = 0; i < timePeriods.length; i++) {
+    for (let i = 0; i < timePeriods.length; i++) {
 
-        startMins = timePeriods[i].startMins;
-        endMins = timePeriods[i].endMins;
+        const startMins = timePeriods[i].startMins;
+        const endMins = timePeriods[i].endMins;
 
         if (startMins > endMins) {
 
@@ -251,7 +247,7 @@ function updateSelectedPeriod (event) {
 
 /* Set clicked period to specific index */
 
-exports.setSelectedPeriod = function (period) {
+exports.setSelectedPeriod = (period) => {
 
     selectedPeriod = period;
     updateCanvas();
@@ -271,7 +267,7 @@ exports.clearSelectedPeriod = clearSelectedPeriod;
 
 function drawTimeLabels () {
 
-    var fontSize = 0.32 * timeCanvas.height;
+    const fontSize = 0.32 * timeCanvas.height;
 
     labelContext.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
 
@@ -288,18 +284,16 @@ function drawTimeLabels () {
     }
 
     labelContext.fillText('00:00', 0, fontSize);
-    labelContext.fillText('06:00', 0.225 * timeCanvas.width, fontSize);
-    labelContext.fillText('12:00', 0.475 * timeCanvas.width, fontSize);
-    labelContext.fillText('18:00', 0.725 * timeCanvas.width, fontSize);
-    labelContext.fillText('24:00', 0.945 * timeCanvas.width, fontSize);
+    labelContext.fillText('06:00', 0.25 * timeCanvas.width, fontSize);
+    labelContext.fillText('12:00', 0.5 * timeCanvas.width, fontSize);
+    labelContext.fillText('18:00', 0.751 * timeCanvas.width, fontSize);
+    labelContext.fillText('24:00', timeCanvas.width, fontSize);
 
 }
 
 exports.drawTimeLabels = drawTimeLabels;
 
-exports.prepareScheduleCanvas = function (clickable, callback) {
-
-    var offset;
+exports.prepareScheduleCanvas = (clickable, callback) => {
 
     clickCallback = null;
 
@@ -316,7 +310,8 @@ exports.prepareScheduleCanvas = function (clickable, callback) {
         clickableCanvas.style.position = 'absolute';
 
         clickableCanvas.style.left = '50%';
-        offset = -1 * clickableCanvas.width / 2;
+
+        const offset = -1 * clickableCanvas.width / 2;
         clickableCanvas.style.marginLeft = offset + 'px';
 
         clickableCanvas.style.top = timeCanvas.offsetTop + 'px';
@@ -339,9 +334,9 @@ exports.prepareScheduleCanvas = function (clickable, callback) {
 
 };
 
-exports.setSchedule = function (timePeriods) {
+exports.setSchedule = (timePeriods) => {
 
-    var tps = timePeriods;
+    let tps = timePeriods;
 
     tps = timeHandler.sortPeriods(tps);
 

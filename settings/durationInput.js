@@ -1,3 +1,9 @@
+/****************************************************************************
+ * durationInput.js
+ * openacousticdevices.info
+ * November 2019
+ *****************************************************************************/
+
 'use strict';
 
 /* global document, HTMLElement, customElements, Event */
@@ -40,13 +46,13 @@ function setAttributeValue (node, attributeName, value) {
 
 }
 
-exports.getValue = function (div) {
+exports.getValue = (div) => {
 
     return parseInt(div.getAttribute('inputValue'));
 
 };
 
-exports.setValue = function (div, value) {
+exports.setValue = (div, value) => {
 
     div.setAttribute('inputValue', value.toString());
     div.setAttribute('numbersEntered', value.toString().length - 1);
@@ -54,14 +60,12 @@ exports.setValue = function (div, value) {
 
 };
 
-exports.setEnabled = function (div, setting) {
-
-    var span, textInput;
+exports.setEnabled = (div, setting) => {
 
     div.setAttribute('enabled', setting ? 'true' : 'false');
 
-    span = getSpan(div);
-    textInput = getTextInput(div);
+    const span = getSpan(div);
+    const textInput = getTextInput(div);
 
     if (setting) {
 
@@ -99,7 +103,7 @@ exports.setEnabled = function (div, setting) {
 
 function highlightInput (node) {
 
-    var span = getSpanFromChild(node);
+    const span = getSpanFromChild(node);
 
     if (getAttributeValue(node, 'selected') === 'true') {
 
@@ -115,7 +119,7 @@ function highlightInput (node) {
 
 }
 
-exports.updateHighlights = function (div) {
+exports.updateHighlights = (div) => {
 
     highlightInput(div.getElementsByClassName('duration-holder')[0]);
 
@@ -123,10 +127,10 @@ exports.updateHighlights = function (div) {
 
 function updateValue (inputKey, node) {
 
-    var currentNumbersEntered, currentInputValue, newValue, maxValue;
+    let newValue, maxValue;
 
-    currentNumbersEntered = parseInt(getAttributeValue(node, 'numbersEntered'));
-    currentInputValue = getAttributeValue(node, 'inputValue');
+    const currentNumbersEntered = parseInt(getAttributeValue(node, 'numbersEntered'));
+    const currentInputValue = getAttributeValue(node, 'inputValue');
 
     maxValue = getAttributeValue(node, 'maxValue');
     maxValue = (maxValue === null) ? DEFAULT_MAX_VALUE : maxValue;
@@ -173,7 +177,7 @@ function updateValue (inputKey, node) {
 
 function incrementValue (node) {
 
-    var newValue, maxValue, minValue;
+    let newValue, maxValue, minValue;
 
     maxValue = getAttributeValue(node, 'maxValue');
     maxValue = (maxValue === null) ? DEFAULT_MAX_VALUE : parseInt(maxValue);
@@ -193,7 +197,7 @@ function incrementValue (node) {
 
 function decrementValue (node) {
 
-    var newValue, minValue;
+    let newValue, minValue;
 
     minValue = getAttributeValue(node, 'minValue');
     minValue = (minValue === null) ? DEFAULT_MIN_VALUE : parseInt(minValue);
@@ -209,8 +213,6 @@ function decrementValue (node) {
 }
 
 function handleKeyDown (e) {
-
-    var patt, currentNumbersEntered, maxCharLength, minValue;
 
     if (e.key === 'Tab') {
 
@@ -238,7 +240,7 @@ function handleKeyDown (e) {
 
     if (e.key === 'Backspace' || e.key === 'Delete') {
 
-        minValue = getAttributeValue(e.target, 'minValue');
+        let minValue = getAttributeValue(e.target, 'minValue');
         minValue = (minValue === null) ? DEFAULT_MIN_VALUE : parseInt(minValue);
 
         setAttributeValue(e.target, 'inputValue', minValue.toString());
@@ -251,13 +253,13 @@ function handleKeyDown (e) {
 
     }
 
-    patt = new RegExp('^[0-9]$');
+    const patt = new RegExp('^[0-9]$');
 
     if (patt.test(e.key)) {
 
-        currentNumbersEntered = parseInt(getAttributeValue(e.target, 'numbersEntered'));
+        const currentNumbersEntered = parseInt(getAttributeValue(e.target, 'numbersEntered'));
 
-        maxCharLength = getAttributeValue(e.target, 'maxcharlength');
+        let maxCharLength = getAttributeValue(e.target, 'maxcharlength');
         maxCharLength = (maxCharLength === null) ? DEFAULT_MAX_CHAR_LENGTH : maxCharLength;
 
         if (currentNumbersEntered <= maxCharLength) {
@@ -283,11 +285,11 @@ class DurationInput extends HTMLElement {
 
     connectedCallback () {
 
-        var parent, attributes, width, height, i, divNode, blockerNode, inputNode, holderNode, spanNode, minValue;
+        let width, height, minValue;
 
-        parent = this.parentNode;
+        const parent = this.parentNode;
 
-        attributes = this.attributes;
+        const attributes = this.attributes;
 
         width = this.style.width;
         width = (width === '') ? DEFAULT_WIDTH : width;
@@ -296,10 +298,10 @@ class DurationInput extends HTMLElement {
 
         parent.removeChild(this);
 
-        divNode = document.createElement('div');
+        const divNode = document.createElement('div');
         divNode.style = 'position: relative;';
 
-        for (i = 0; i < attributes.length; i++) {
+        for (let i = 0; i < attributes.length; i++) {
 
             if (attributes[i].name !== 'style') {
 
@@ -312,21 +314,21 @@ class DurationInput extends HTMLElement {
         minValue = divNode.getAttribute('minValue');
         minValue = (minValue === null) ? DEFAULT_MIN_VALUE : parseInt(minValue);
 
-        inputNode = document.createElement('input');
+        const inputNode = document.createElement('input');
         inputNode.className = 'duration-text-input';
         inputNode.type = 'text';
         inputNode.style = 'width: ' + width + '; height: ' + height + '; color: white; caret-color: transparent;';
 
         divNode.appendChild(inputNode);
 
-        blockerNode = document.createElement('div');
+        const blockerNode = document.createElement('div');
         blockerNode.style = 'position: absolute; top: 0px; margin-left: 0px; margin-top: 0px; width: 100%; height: 100%;';
 
-        holderNode = document.createElement('div');
+        const holderNode = document.createElement('div');
         holderNode.className = 'duration-holder';
         holderNode.style = 'position: absolute; top: 0px; margin-left: 5%; margin-top: 2px; width: 90%;';
 
-        spanNode = document.createElement('span');
+        const spanNode = document.createElement('span');
         spanNode.className = 'duration-span';
         spanNode.innerText = minValue.toString();
         spanNode.style = 'float: right;';

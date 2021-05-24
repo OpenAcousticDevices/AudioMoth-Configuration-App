@@ -8,25 +8,17 @@
 
 /* global document */
 
-const MAX_WAV_LENGTH = 4294966806;
+const MAX_WAV_SIZE = 4294966806;
 
 /* UI components */
 
-var lifeDisplayPanel = document.getElementById('life-display-panel');
-
-/* Energy consumed while device is awaiting an active period */
-
-const SLEEP_ENERGY = 0.125;
-
-/* Time spent opening files and waiting for microphone to warm up before recording starts */
-
-const START_UP_TIME = 2;
+const lifeDisplayPanel = document.getElementById('life-display-panel');
 
 /* Whether or not the life display box should display the warning or original information */
 
 var displaySizeWarning = true;
 
-exports.getPanel = function () {
+exports.getPanel = () => {
 
     return lifeDisplayPanel;
 
@@ -36,50 +28,84 @@ exports.getPanel = function () {
 
 function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
-    var i, periodSecs, totalCompleteRecCount, completeRecCount, totalRecLength, timeRemaining, truncatedRecCount, truncatedRecTime;
+    let totalPrepTime = 0;
 
-    /* Total number of recordings of the intended length */
-    totalCompleteRecCount = 0;
-    /* Total number of recordings which could not be the intended length, so have been truncated */
-    truncatedRecCount = 0;
-    /* Total length of all truncated files in seconds */
-    truncatedRecTime = 0;
+    const recordingTimes = [];
 
-    for (i = 0; i < timePeriods.length; i += 1) {
+    let totalSleepTime = 0;
 
-        /* Calculate how many full recording periods fit in the allotted time */
+    let containsTruncatedRecording = false;
 
-        periodSecs = (timePeriods[i].endMins - timePeriods[i].startMins) * 60;
-        completeRecCount = Math.floor(periodSecs / (recSecs + sleepSecs));
+    for (let i = 0; i < timePeriods.length; i += 1) {
 
-        /* Check if a truncated recording will fit in the rest of the period */
-        totalRecLength = completeRecCount * (recSecs + sleepSecs);
-        timeRemaining = periodSecs - totalRecLength;
+        let periodSecs = (timePeriods[i].endMins - timePeriods[i].startMins) * 60;
 
-        if (timeRemaining > 0) {
+        /* First recording in a period has prep time scheduled for just before period */
 
-            if (timeRemaining >= recSecs) {
+        periodSecs += 1;
 
-                completeRecCount += 1;
+        while (periodSecs > 1) {
+
+            /* If there's enough time to open a new file and record */
+
+            if (periodSecs >= 1 + recSecs + sleepSecs) {
+
+                totalPrepTime += 1;
+                periodSecs -= 1;
+
+                if (sleepSecs === 0) {
+
+                    /* Prep time cuts into recording time */
+
+                    recordingTimes.push(recSecs - 1);
+                    periodSecs -= recSecs - 1;
+
+                } else {
+
+                    recordingTimes.push(recSecs);
+                    periodSecs -= recSecs;
+
+                    /* Prep time cuts into sleep time */
+
+                    totalSleepTime += sleepSecs - 1;
+                    periodSecs -= sleepSecs - 1;
+
+                }
 
             } else {
 
-                truncatedRecTime += timeRemaining;
-                truncatedRecCount += 1;
+                containsTruncatedRecording = true;
+
+                totalPrepTime += 1;
+                periodSecs -= 1;
+
+                const truncatedRecordingLength = Math.min(recSecs, periodSecs);
+                recordingTimes.push(truncatedRecordingLength);
+                periodSecs -= truncatedRecordingLength;
+
+                totalSleepTime += Math.min(periodSecs, sleepSecs);
+                periodSecs = 0;
 
             }
 
         }
 
-        totalCompleteRecCount += completeRecCount;
+        /* If there's an extra second left (not enough time to open a file and record anything), then just sleep */
+
+        if (periodSecs > 0) {
+
+            totalSleepTime += periodSecs;
+
+        }
 
     }
 
     return {
-        completeRecCount: totalCompleteRecCount,
-        truncatedRecCount: truncatedRecCount,
-        truncatedRecTime: truncatedRecTime
-    };
+        prepTime: totalPrepTime,
+        recordingTimes: recordingTimes,
+        sleepTime: totalSleepTime,
+        containsTruncatedRecording: containsTruncatedRecording
+    }
 
 }
 
@@ -109,14 +135,15 @@ function formatFileSize (fileSize) {
 
 }
 
+function getFileSize (sampleRate, sampleRateDivider, secs) {
+
+    return sampleRate / sampleRateDivider * 2 * secs;
+
+}
+
 /* Update storage and energy usage values in life display box */
 
-exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, dutyEnabled) {
-
-    var text, countResponse, completeRecCount, totalRecCount, recSize, truncatedRecordingSize, totalSize, energyUsed, energyPrecision, totalRecLength, truncatedRecCount, truncatedRecTime, upToFile, upToTotal, i, period, maxLength, length, upToSize, maxFileSize, recordingSize, prevPeriod, prevLength;
-
-    upToFile = amplitudeThresholdingEnabled ? 'up to ' : '';
-    upToTotal = amplitudeThresholdingEnabled ? 'up to ' : '';
+exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, dutyEnabled, energySaverChecked) => {
 
     /* If no recording periods exist, do not perform energy calculations */
 
@@ -128,89 +155,146 @@ exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepL
 
     }
 
+    const energySaverEnabled = energySaverChecked && (configuration.trueSampleRate <= 48);
+
+    const fileOpenTime = 0.5;
+    const fileOpenEnergy = energySaverEnabled ? 35.0 : 40.0;
+    const waitTime = 0.5;
+    const waitEnergy = energySaverEnabled ? 7.0 : 10.0;
+
+    const sleepCurrent = 0.16;
+    const recordingCurrent = energySaverEnabled ? configuration.energySaverRecordCurrent : configuration.recordCurrent;
+    const listenCurrent = energySaverEnabled ? configuration.energySaverListenCurrent : configuration.listenCurrent;
+
+    let preparationInstances = 0;
+
+    /* It's possible for file sizes to vary but overall storage consumption be known, so whether or not 'up to' is used in two locations in the information text varies */
+
+    let upToFile = amplitudeThresholdingEnabled;
+    const upToTotal = amplitudeThresholdingEnabled;
+
+    let totalSleepTime = 0;
+    let totalSize = 0;
+    let maxLength = 0;
+
+    let recordingTimes = [];
+
     /* Calculate the amount of time spent recording each day */
 
     if (dutyEnabled) {
 
-        countResponse = getDailyCounts(schedule, recLength, sleepLength);
-        completeRecCount = countResponse.completeRecCount;
-        truncatedRecCount = countResponse.truncatedRecCount;
-        truncatedRecTime = countResponse.truncatedRecTime;
-        totalRecLength = (completeRecCount * recLength) + truncatedRecTime;
+        const countResponse = getDailyCounts(schedule, recLength, sleepLength);
+
+        preparationInstances = countResponse.prepTime;
+
+        recordingTimes = countResponse.recordingTimes;
+        totalSleepTime = countResponse.sleepTime;
 
         /* Calculate the size of a days worth of recordings */
 
-        recSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * recLength;
-        truncatedRecordingSize = (truncatedRecTime * configuration.sampleRate / configuration.sampleRateDivider * 2);
+        for (let i = 0; i < recordingTimes.length; i++) {
 
-        totalSize = (recSize * completeRecCount) + truncatedRecordingSize;
+            totalSize += configuration.sampleRate / configuration.sampleRateDivider * 2 * recordingTimes[i];
+
+        }
+
+        /* If any files are truncated, file size can vary */
+
+        if (countResponse.containsTruncatedRecording) {
+
+            upToFile = true;
+
+        }
 
     } else {
 
-        completeRecCount = schedule.length;
-        truncatedRecCount = 0;
-        truncatedRecTime = 0;
-
-        totalRecLength = 0;
-
         maxLength = 0;
 
-        for (i = 0; i < schedule.length; i++) {
+        for (let i = 0; i < schedule.length; i++) {
 
-            period = schedule[i];
-            length = period.endMins - period.startMins;
+            const period = schedule[i];
+            const length = period.endMins - period.startMins;
+
+            preparationInstances += 1;
+
+            const recordingLength = (length * 60) - 1;
+            recordingTimes.push(recordingLength);
 
             /* If the periods differ in size, include 'up to' when describing the file size. If amplitude thresholding is enabled, it already will include this */
 
             if (i > 0 && !amplitudeThresholdingEnabled) {
 
-                prevPeriod = schedule[i - 1];
-                prevLength = prevPeriod.endMins - prevPeriod.startMins;
+                const prevPeriod = schedule[i - 1];
+                const prevLength = prevPeriod.endMins - prevPeriod.startMins;
 
                 if (length !== prevLength) {
 
-                    upToFile = 'up to ';
+                    upToFile = true;
 
                 }
 
             }
 
-            totalRecLength += length;
+            totalSize += getFileSize(configuration.sampleRate, configuration.sampleRateDivider, recordingLength);
 
-            maxLength = (length > maxLength) ? length : maxLength;
-
-        }
-
-        totalRecLength *= 60;
-
-        totalSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * totalRecLength;
-
-    }
-
-    totalRecCount = completeRecCount + truncatedRecCount;
-
-    if (completeRecCount > 1) {
-
-        if (dutyEnabled) {
-
-            upToSize = recSize;
-
-        } else {
-
-            maxFileSize = configuration.sampleRate / configuration.sampleRateDivider * 2 * maxLength * 60;
-            upToSize = maxFileSize;
+            maxLength = (recordingLength > maxLength) ? recordingLength : maxLength;
 
         }
 
     }
 
-    recordingSize = (completeRecCount > 1) ? upToSize : totalSize;
+    const longestRecording = Math.max(...recordingTimes);
+
+    let upToSize = getFileSize(configuration.sampleRate, configuration.sampleRateDivider, longestRecording);
+
+    let recordingsWillBeSplit = false;
+
+    const maxWavLength = Math.floor(MAX_WAV_SIZE / (configuration.sampleRate / configuration.sampleRateDivider * 2));
+
+    for (let i = 0; i < recordingTimes.length; i++) {
+
+        const recLength = recordingTimes[i];
+
+        const recSize = getFileSize(configuration.sampleRate, configuration.sampleRateDivider, recLength);
+
+        if (recSize > MAX_WAV_SIZE) {
+
+            upToFile = true;
+            upToSize = MAX_WAV_SIZE;
+
+            recordingsWillBeSplit = true;
+
+            /* Cap recording at max length */
+
+            recordingTimes[i] = maxWavLength;
+
+            const timeRemaining = recLength - maxWavLength;
+
+            /* If there's not enough remaining time to open a file and also record, don't bother */
+
+            if (timeRemaining > 1) {
+
+                preparationInstances += 1;
+
+                /* Order doesn't matter for storage/energy consumption, so just append recording period to the end */
+
+                recordingTimes.push(timeRemaining - 1);
+
+            }
+
+        }
+
+    }
+
+    const totalRecCount = recordingTimes.length;
+
+    const totalRecLength = recordingTimes.reduce((a, b) => a + b, 0);
 
     /* Generate life display message */
 
-    text = '';
+    let text = '';
 
-    if (recordingSize > MAX_WAV_LENGTH && displaySizeWarning) {
+    if (recordingsWillBeSplit && displaySizeWarning) {
 
         text += '<b>Recordings will exceed the 4.3 GB max size of a WAV file so will be split.</b><br/>';
 
@@ -222,35 +306,85 @@ exports.updateLifeDisplay = function (schedule, configuration, recLength, sleepL
 
         text += totalRecCount > 1 ? 's, ' : ' ';
 
-        if (completeRecCount > 1) {
+        if (totalRecCount > 1) {
 
-            text += 'each ' + upToFile + formatFileSize(upToSize) + ', ';
+            text += 'each ';
+            text += upToFile ? 'up to ' : '';
+            text += formatFileSize(upToSize) + ', ';
 
         }
 
-        text += 'totalling ' + upToTotal + formatFileSize(totalSize) + '.<br/>';
+        text += 'totalling ';
+        text += upToTotal ? 'up to ' : '';
+        text += formatFileSize(totalSize) + '.<br/>';
 
     }
 
-    /* Calculate amount of energy used both recording a sleeping over the course of a day */
+    /* Add all the time outside the schedule as sleep time */
 
-    energyUsed = Math.min(86400 - totalRecCount * START_UP_TIME, totalRecLength) * configuration.recordCurrent / 3600;
+    totalSleepTime += Math.max(0, 86400 - preparationInstances - totalRecLength - totalSleepTime);
 
-    energyUsed += totalRecCount * START_UP_TIME * configuration.startCurrent / 3600;
+    /* Preparation is split between opening the file and waiting. Each takes half a second */
 
-    energyUsed += Math.max(0, 86400 - totalRecCount * START_UP_TIME - totalRecLength) * SLEEP_ENERGY / 3600;
+    const fileOpenEnergyUsage = preparationInstances * fileOpenTime * fileOpenEnergy / 3600;
+    const waitEnergyUsage = preparationInstances * waitTime * waitEnergy / 3600;
 
-    energyPrecision = energyUsed > 100 ? 10 : energyUsed > 50 ? 5 : energyUsed > 20 ? 2 : 1;
+    const recordingEnergyUsage = totalRecLength * recordingCurrent / 3600;
+    const listeningEnergyUsage = totalRecLength * listenCurrent / 3600;
 
-    energyUsed = Math.round(energyUsed / energyPrecision) * energyPrecision;
+    const sleepEnergyUsage = totalSleepTime * sleepCurrent / 3600;
 
-    text += 'Daily energy consumption will be approximately ' + energyUsed + ' mAh.';
+    if (amplitudeThresholdingEnabled) {
+
+        let minEnergyUsed = 0;
+
+        minEnergyUsed += fileOpenEnergyUsage;
+        minEnergyUsed += waitEnergyUsage;
+
+        minEnergyUsed += listeningEnergyUsage;
+        minEnergyUsed += sleepEnergyUsage;
+
+        const minEnergyPrecision = minEnergyUsed > 100 ? 10 : minEnergyUsed > 50 ? 5 : minEnergyUsed > 20 ? 2 : 1;
+
+        minEnergyUsed = Math.round(minEnergyUsed / minEnergyPrecision) * minEnergyPrecision;
+
+        let maxEnergyUsed = 0;
+
+        maxEnergyUsed += fileOpenEnergyUsage;
+        maxEnergyUsed += waitEnergyUsage;
+
+        maxEnergyUsed += recordingEnergyUsage;
+        maxEnergyUsed += sleepEnergyUsage;
+
+        const maxEnergyPrecision = maxEnergyUsed > 100 ? 10 : maxEnergyUsed > 50 ? 5 : maxEnergyUsed > 20 ? 2 : 1;
+
+        maxEnergyUsed = Math.round(maxEnergyUsed / maxEnergyPrecision) * maxEnergyPrecision;
+
+        text += 'Daily energy consumption will be between ' + minEnergyUsed + ' and ' + maxEnergyUsed + ' mAh.';
+
+    } else {
+
+        let energyUsed = 0;
+
+        energyUsed += fileOpenEnergyUsage;
+        energyUsed += waitEnergyUsage;
+
+        energyUsed += recordingEnergyUsage;
+        energyUsed += sleepEnergyUsage;
+
+        const energyPrecision = energyUsed > 100 ? 10 : energyUsed > 50 ? 5 : energyUsed > 20 ? 2 : 1;
+
+        energyUsed = Math.round(energyUsed / energyPrecision) * energyPrecision;
+
+        text += 'Daily energy consumption will be approximately ' + energyUsed + ' mAh.';
+
+    }
 
     lifeDisplayPanel.innerHTML = text;
 
 };
 
-exports.toggleSizeWarning = function (updateFunction) {
+exports.toggleSizeWarning = (updateFunction) => {
 
     displaySizeWarning = !displaySizeWarning;
     updateFunction();

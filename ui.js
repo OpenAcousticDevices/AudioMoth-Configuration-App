@@ -20,11 +20,11 @@ const nightMode = require('./nightMode.js');
 
 /* UI components */
 
-var applicationMenu = menu.getApplicationMenu();
+const applicationMenu = menu.getApplicationMenu();
 
-var timezoneLabel = document.getElementById('timezone-label');
+const timezoneLabel = document.getElementById('timezone-label');
 
-var timeDisplay = document.getElementById('time-display');
+const timeDisplay = document.getElementById('time-display');
 
 var localTime = false;
 
@@ -49,9 +49,7 @@ function setLocalTime (lTime) {
 
 function showTime () {
 
-    var timezoneOffset, strftimeUTC;
-
-    timezoneOffset = 0;
+    let timezoneOffset = 0;
 
     if (isLocalTime()) {
 
@@ -59,7 +57,7 @@ function showTime () {
 
     }
 
-    strftimeUTC = strftime.timezone(timezoneOffset);
+    const strftimeUTC = strftime.timezone(timezoneOffset);
 
     if (timeDisplay) {
 
@@ -87,13 +85,13 @@ function update () {
 
 exports.update = update;
 
-exports.updateDate = function (date) {
+exports.updateDate = (date) => {
 
     deviceDate = date;
 
 };
 
-exports.disableTimeDisplay = function (blankValue) {
+exports.disableTimeDisplay = (blankValue) => {
 
     if (timeDisplay) {
 
@@ -111,9 +109,9 @@ exports.disableTimeDisplay = function (blankValue) {
 
 };
 
-exports.enableTimeDisplay = function () {
+exports.enableTimeDisplay = () => {
 
-    var textColor;
+    let textColor;
 
     if (timeDisplay) {
 
@@ -138,9 +136,7 @@ exports.enableTimeDisplay = function () {
 
 function setTimezoneStatus (local) {
 
-    var timezoneText;
-
-    timezoneText = 'UTC';
+    let timezoneText = 'UTC';
 
     setLocalTime(local);
 
@@ -194,9 +190,7 @@ exports.isNightMode = nightMode.isEnabled;
 
 function checkUtcToggleability () {
 
-    var timezoneOffset;
-
-    timezoneOffset = timeHandler.calculateTimezoneOffsetMins();
+    const timezoneOffset = timeHandler.calculateTimezoneOffsetMins();
 
     if (timezoneOffset === 0) {
 

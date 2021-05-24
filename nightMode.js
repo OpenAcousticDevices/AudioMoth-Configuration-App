@@ -10,7 +10,7 @@ const electron = require('electron');
 
 var nightMode = false;
 
-exports.isEnabled = function () {
+exports.isEnabled = () => {
 
     return nightMode;
 
@@ -18,13 +18,10 @@ exports.isEnabled = function () {
 
 function setNightMode (nm) {
 
-    var oldLink, newLink;
-
     nightMode = nm;
 
-    oldLink = document.getElementById('uiCSS');
-
-    newLink = document.createElement('link');
+    const oldLink = document.getElementById('uiCSS');
+    const newLink = document.createElement('link');
 
     newLink.setAttribute('id', 'uiCSS');
     newLink.setAttribute('rel', 'stylesheet');
@@ -46,7 +43,7 @@ function setNightMode (nm) {
 
 exports.setNightMode = setNightMode;
 
-exports.toggle = function () {
+exports.toggle = () => {
 
     setNightMode(!nightMode);
 

@@ -11,10 +11,10 @@
 const electron = require('electron');
 const audiomoth = require('audiomoth-hid');
 
-var versionDisplay = document.getElementById('version-display');
-var electronVersionDisplay = document.getElementById('electron-version-display');
-var audiomothHidVersionDisplay = document.getElementById('audiomoth-hid-version-display');
-var websiteLink = document.getElementById('website-link');
+const versionDisplay = document.getElementById('version-display');
+const electronVersionDisplay = document.getElementById('electron-version-display');
+const audiomothHidVersionDisplay = document.getElementById('audiomoth-hid-version-display');
+const websiteLink = document.getElementById('website-link');
 
 versionDisplay.textContent = 'Version ' + electron.remote.app.getVersion();
 electronVersionDisplay.textContent = 'Running on Electron version ' + electron.remote.process.versions.electron;

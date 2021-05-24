@@ -9,13 +9,13 @@ exports.MAX_PERIODS = MAX_PERIODS;
 
 var timePeriods = [];
 
-exports.getTimePeriodCount = function () {
+exports.getTimePeriodCount = () => {
 
     return timePeriods.length;
 
 };
 
-exports.clear = function () {
+exports.clear = () => {
 
     timePeriods = [];
 
@@ -23,13 +23,13 @@ exports.clear = function () {
 
 /* Recording period data structure getter and setter */
 
-exports.getTimePeriods = function () {
+exports.getTimePeriods = () => {
 
     return timePeriods;
 
 };
 
-exports.setTimePeriods = function (tp) {
+exports.setTimePeriods = (tp) => {
 
     timePeriods = tp;
 

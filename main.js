@@ -27,9 +27,9 @@ require('electron-debug')({
     devToolsMode: 'undocked'
 });
 
-var mainWindow, aboutWindow, expansionWindow;
+var mainWindow, aboutWindow, expansionWindow, splitWindow;
 
-var expandProgressBar;
+var expandProgressBar, splitProgressBar;
 
 function shrinkWindowHeight (windowHeight) {
 
@@ -47,9 +47,64 @@ function shrinkWindowHeight (windowHeight) {
 
 }
 
-function openExpansionWindow () {
+function openSplitWindow () {
 
-    var iconLocation;
+    if (splitWindow) {
+
+        return;
+
+    }
+
+    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+
+    splitWindow = new BrowserWindow({
+        width: 565,
+        height: shrinkWindowHeight(403),
+        title: 'Split AudioMoth Recordings',
+        useContentSize: true,
+        resizable: false,
+        fullscreenable: false,
+        icon: path.join(__dirname, iconLocation),
+        parent: mainWindow,
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+
+    splitWindow.setMenu(null);
+    splitWindow.loadURL(path.join('file://', __dirname, 'expansion/split.html'));
+
+    splitWindow.webContents.on('dom-ready', function () {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (splitWindow) {
+
+            splitWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+    splitWindow.on('close', function (e) {
+
+        if (splitProgressBar) {
+
+            e.preventDefault();
+
+        }
+
+        splitWindow = null;
+
+    });
+
+}
+
+function openExpansionWindow () {
 
     if (expansionWindow) {
 
@@ -57,18 +112,12 @@ function openExpansionWindow () {
 
     }
 
-    iconLocation = '/build/icon.ico';
-
-    if (process.platform === 'linux') {
-
-        iconLocation = '/build/icon.png';
-
-    }
+    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
 
     expansionWindow = new BrowserWindow({
         width: 565,
-        height: shrinkWindowHeight(263),
-        title: 'Expand AudioMoth Recordings',
+        height: shrinkWindowHeight(575),
+        title: 'Expand AudioMoth T.WAV Recordings',
         useContentSize: true,
         resizable: false,
         fullscreenable: false,
@@ -114,19 +163,13 @@ function openExpansionWindow () {
 
 function openAboutWindow () {
 
-    var iconLocation = '/build/icon.ico';
-
     if (aboutWindow) {
 
         return;
 
     }
 
-    if (process.platform === 'linux') {
-
-        iconLocation = '/build/icon.png';
-
-    }
+    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
 
     aboutWindow = new BrowserWindow({
         width: 400,
@@ -166,16 +209,8 @@ function toggleNightMode () {
 
 app.on('ready', function () {
 
-    var menu, menuTemplate, iconLocation, windowHeight;
-
-    iconLocation = '/build/icon.ico';
-    windowHeight = shrinkWindowHeight(665);
-
-    if (process.platform === 'linux') {
-
-        iconLocation = '/build/icon.png';
-
-    }
+    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+    const windowHeight = shrinkWindowHeight(665);
 
     mainWindow = new BrowserWindow({
         title: 'AudioMoth Configuration App',
@@ -202,7 +237,7 @@ app.on('ready', function () {
 
     });
 
-    menuTemplate = [{
+    const menuTemplate = [{
         label: 'File',
         submenu: [{
             label: 'Open Configuration',
@@ -256,7 +291,47 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
-            label: 'Expand AudioMoth Recordings',
+            type: 'radio',
+            id: 'scale1',
+            label: '16-Bit Amplitude Threshold Scale',
+            checked: false,
+            click: function () {
+
+                mainWindow.webContents.send('amplitude-threshold-scale', 1);
+
+            }
+        }, {
+            type: 'radio',
+            id: 'scale2',
+            label: 'Decibel Amplitude Threshold Scale',
+            checked: false,
+            click: function () {
+
+                mainWindow.webContents.send('amplitude-threshold-scale', 2);
+
+            }
+        }, {
+            type: 'radio',
+            id: 'scale0',
+            label: 'Percentage Amplitude Threshold Scale',
+            checked: true,
+            click: function () {
+
+                mainWindow.webContents.send('amplitude-threshold-scale', 0);
+
+            }
+        }, {
+            type: 'separator'
+        }, {
+            label: 'Split AudioMoth WAV Recordings',
+            accelerator: 'CommandOrControl+P',
+            click: function () {
+
+                openSplitWindow();
+
+            }
+        }, {
+            label: 'Expand AudioMoth T.WAV Recordings',
             accelerator: 'CommandOrControl+E',
             click: function () {
 
@@ -321,7 +396,7 @@ app.on('ready', function () {
         }]
     }];
 
-    menu = Menu.buildFromTemplate(menuTemplate);
+    const menu = Menu.buildFromTemplate(menuTemplate);
 
     Menu.setApplicationMenu(menu);
 
@@ -337,7 +412,9 @@ app.on('window-all-closed', function () {
 
 app.disableHardwareAcceleration();
 
-ipcMain.on('start-bar', (event, fileCount) => {
+/* Expansion progress bar functions */
+
+ipcMain.on('start-expansion-bar', (event, fileCount) => {
 
     if (expandProgressBar) {
 
@@ -345,7 +422,7 @@ ipcMain.on('start-bar', (event, fileCount) => {
 
     }
 
-    var detail = 'Starting to expand file';
+    let detail = 'Starting to expand file';
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
@@ -379,12 +456,10 @@ ipcMain.on('start-bar', (event, fileCount) => {
 
 });
 
-ipcMain.on('set-bar-progress', (event, fileNum, progress, name) => {
+ipcMain.on('set-expansion-bar-progress', (event, fileNum, progress, name) => {
 
-    var index, fileCount;
-
-    index = fileNum + 1;
-    fileCount = expandProgressBar.getOptions().maxValue / 100;
+    const index = fileNum + 1;
+    const fileCount = expandProgressBar.getOptions().maxValue / 100;
 
     if (expandProgressBar) {
 
@@ -395,7 +470,7 @@ ipcMain.on('set-bar-progress', (event, fileNum, progress, name) => {
 
 });
 
-ipcMain.on('set-bar-error', (event, name) => {
+ipcMain.on('set-expansion-bar-error', (event, name) => {
 
     if (expandProgressBar) {
 
@@ -405,11 +480,11 @@ ipcMain.on('set-bar-error', (event, name) => {
 
 });
 
-ipcMain.on('set-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
-
-    var messageText;
+ipcMain.on('set-expansion-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
     if (expandProgressBar) {
+
+        let messageText;
 
         expandProgressBar.setCompleted();
 
@@ -446,7 +521,7 @@ ipcMain.on('set-bar-completed', (event, successCount, errorCount, errorWritingLo
 
             if (expansionWindow) {
 
-                expansionWindow.send('summary-closed');
+                expansionWindow.send('expansion-summary-closed');
 
             }
 
@@ -456,7 +531,7 @@ ipcMain.on('set-bar-completed', (event, successCount, errorCount, errorWritingLo
 
 });
 
-ipcMain.on('poll-cancelled', (event) => {
+ipcMain.on('poll-expansion-cancelled', (event) => {
 
     if (expandProgressBar) {
 
@@ -467,5 +542,150 @@ ipcMain.on('poll-cancelled', (event) => {
         event.returnValue = true;
 
     }
+
+});
+
+/* Splitting progress bar functions */
+
+ipcMain.on('start-split-bar', (event, fileCount) => {
+
+    if (splitProgressBar) {
+
+        return;
+
+    }
+
+    let detail = 'Starting to split file';
+    detail += (fileCount > 1) ? 's' : '';
+    detail += '.';
+
+    splitProgressBar = new ProgressBar({
+        title: 'AudioMoth Configuration App',
+        text: 'Splitting files...',
+        detail: detail,
+        closeOnComplete: false,
+        indeterminate: false,
+        browserWindow: {
+            parent: splitWindow,
+            webPreferences: {
+                nodeIntegration: true
+            },
+            closable: true,
+            modal: false
+        },
+        maxValue: fileCount * 100
+    });
+
+    splitProgressBar.on('aborted', () => {
+
+        if (splitProgressBar) {
+
+            splitProgressBar.close();
+            splitProgressBar = null;
+
+        }
+
+    });
+
+});
+
+ipcMain.on('set-split-bar-progress', (event, fileNum, progress, name) => {
+
+    const index = fileNum + 1;
+    const fileCount = splitProgressBar.getOptions().maxValue / 100;
+
+    if (splitProgressBar) {
+
+        splitProgressBar.value = (fileNum * 100) + progress;
+        splitProgressBar.detail = 'Splitting ' + name + ' (' + index + ' of ' + fileCount + ').';
+
+    }
+
+});
+
+ipcMain.on('set-split-bar-error', (event, name) => {
+
+    if (splitProgressBar) {
+
+        splitProgressBar.detail = 'Error when splitting ' + name + '.';
+
+    }
+
+});
+
+ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
+
+    if (splitProgressBar) {
+
+        let messageText;
+
+        splitProgressBar.setCompleted();
+
+        if (errorCount > 0) {
+
+            messageText = 'Errors occurred in ' + errorCount + ' file';
+            messageText += (errorCount === 1 ? '' : 's');
+            messageText += '.<br>';
+
+            if (errorWritingLog) {
+
+                messageText += 'Failed to write ERRORS.TXT to destination.';
+
+            } else {
+
+                messageText += 'See ERRORS.TXT for details.';
+
+            }
+
+        } else {
+
+            messageText = 'Successfully split ' + successCount + ' file';
+            messageText += (successCount === 1 ? '' : 's');
+            messageText += '.';
+
+        }
+
+        splitProgressBar.detail = messageText;
+
+        setTimeout(function () {
+
+            splitProgressBar.close();
+            splitProgressBar = null;
+
+            if (splitWindow) {
+
+                splitWindow.send('split-summary-closed');
+
+            }
+
+        }, 5000);
+
+    }
+
+});
+
+ipcMain.on('poll-split-cancelled', (event) => {
+
+    if (splitProgressBar) {
+
+        event.returnValue = false;
+
+    } else {
+
+        event.returnValue = true;
+
+    }
+
+});
+
+/* Update which amplitude threshold scale option is checked in menu */
+
+ipcMain.on('set-amplitude-threshold-scale', (event, index) => {
+
+    const menu = Menu.getApplicationMenu();
+
+    const scaleMenuItems = [menu.getMenuItemById('scale0'), menu.getMenuItemById('scale1'), menu.getMenuItemById('scale2')];
+
+    scaleMenuItems[index].checked = true;
 
 });

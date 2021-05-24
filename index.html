@@ -7,7 +7,7 @@
         <link id="uiCSS" rel="stylesheet" href="ui.css">
     </head>
 
-    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
+    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;">
         <div class="container" style="padding: 11px;">
 
             <!-- Time -->
@@ -65,7 +65,7 @@
             <div class="row" style="margin-top: 8px;">
                 <ul class="nav nav-tabs nav-justified" style="width: 100%; font-size: 10pt; font-family: Helvetica, Arial, sans-serif;">                    
                     <li class="nav-item" style="margin-left: 10px; margin-right: 10px;">
-                        <a class="nav-link active" data-toggle="tab" href="#settings-tab" id="settings-tab-link">Recording Settings</a>
+                        <a class="nav-link active" data-toggle="tab" href="#settings-tab" id="settings-tab-link">Recording</a>
                     </li>
 
                     <li class="nav-item" style="margin-right: 10px;">
@@ -73,7 +73,11 @@
                     </li>
 
                     <li class="nav-item" style="margin-right: 10px;">
-                        <a class="nav-link" data-toggle="tab" href="#advanced-tab" id="device-tab-link">Advanced Settings</a>
+                        <a class="nav-link" data-toggle="tab" href="#filtering-tab" id="filter-tab-link">Filtering</a>
+                    </li>
+
+                    <li class="nav-item" style="margin-right: 10px;">
+                        <a class="nav-link" data-toggle="tab" href="#advanced-tab" id="device-tab-link">Advanced</a>
                     </li>
                 </ul>
             </div>
@@ -87,6 +91,10 @@
 
                 <div role="tabpanel" class="tab-pane fade in" id="schedule-tab" role="tabpanel">
                     <div id="schedule-content"></div> 
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade in" id="filtering-tab" role="tabpanel">
+                    <div id="filtering-content"></div> 
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade in" id="advanced-tab" role="tabpanel">
@@ -124,6 +132,7 @@
         window.jQuery = window.$ = require('jquery');
         $("#schedule-content").load('./schedule/schedule.html');
         $("#settings-content").load('./settings/settings.html');
+        $("#filtering-content").load('./settings/filtering.html');
         $("#advanced-content").load('./settings/advanced.html');
     </script>
     <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>

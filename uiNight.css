@@ -4,6 +4,13 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0; 
 }
 
+*, *::after, *::before {
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
+	-webkit-app-region: no-drag;
+	cursor: default;
+}
+
 .table>tbody>tr>td,
 .table>tbody>tr>th {
   border-top: none;
