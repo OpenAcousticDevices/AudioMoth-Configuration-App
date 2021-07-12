@@ -159,8 +159,6 @@ function updateFileMaxLengthUI (elementClass, checkbox) {
 
 function expandFiles () {
 
-    let successCount, errorCount, cancelled, response, filePath, fileContent, maxLength, outputPath, prefix, errorFileLocation;
-
     if (!files) {
 
         return;
@@ -172,16 +170,20 @@ function expandFiles () {
 
     const maxLengthRadioName = expansionType === 'DURATION' ? 'duration-max-length-radio' : 'event-max-length-radio';
 
-    successCount = 0;
-    errorCount = 0;
+    let successCount = 0;
+    let errorCount = 0;
     const errors = [];
     const errorFiles = [];
+
+    var errorFilePath;
+
+    let maxLength = null;
 
     for (let i = 0; i < files.length; i++) {
 
         /* If progress bar is closed, the expansion task is considered cancelled. This will contact the main thread and ask if that has happened */
 
-        cancelled = electron.ipcRenderer.sendSync('poll-expansion-cancelled');
+        const cancelled = electron.ipcRenderer.sendSync('poll-expansion-cancelled');
 
         if (cancelled) {
 
@@ -225,10 +227,10 @@ function expandFiles () {
 
         /* Check if the optional prefix/output directory setttings are being used. If left as null, expander will put expanded file(s) in the same directory as the input with no prefix */
 
-        outputPath = outputCheckbox.checked ? outputDir : null;
-        prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
+        const outputPath = outputCheckbox.checked ? outputDir : null;
+        const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
-        response = audiomothUtils.expand(files[i], outputPath, prefix, expansionType, maxLength, generateSilentFiles, alignToSecondTransitions, (progress) => {
+        const response = audiomothUtils.expand(files[i], outputPath, prefix, expansionType, maxLength, generateSilentFiles, alignToSecondTransitions, (progress) => {
 
             electron.ipcRenderer.send('set-expansion-bar-progress', i, progress, path.basename(files[i]));
 
@@ -240,7 +242,7 @@ function expandFiles () {
 
         } else {
 
-            /* Keep track of the errors to write to the log at the end */
+            /* Add error to log file */
 
             errorCount++;
             errors.push(response.error);
@@ -248,41 +250,39 @@ function expandFiles () {
 
             electron.ipcRenderer.send('set-expansion-bar-error', path.basename(files[i]));
 
+            if (errorCount === 1) {
+
+                const errorFileLocation = outputCheckbox.checked ? outputDir : path.dirname(errorFiles[0]);
+
+                errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
+
+            }
+
+            let fileContent = '';
+
+            for (let j = 0; j < errorCount; j++) {
+
+                fileContent += path.basename(errorFiles[j]) + ' - ' + errors[j] + '\n';
+
+            }
+
+            try {
+
+                fs.writeFileSync(errorFilePath, fileContent);
+
+                console.log('Error summary written to ' + errorFilePath);
+
+            } catch (err) {
+
+                console.error(err);
+                electron.ipcRenderer.send('set-expansion-bar-completed', successCount, errorCount, true);
+                return;
+
+            }
+
             ui.sleep(3000);
 
         }
-
-    }
-
-    /* Build error file */
-
-    if (errorCount > 0) {
-
-        errorFileLocation = outputCheckbox.checked ? outputDir : path.dirname(errorFiles[0]);
-
-        filePath = path.join(errorFileLocation, 'ERRORS.TXT');
-
-        fileContent = '';
-
-        for (let j = 0; j < errorCount; j++) {
-
-            fileContent += path.basename(errorFiles[j]) + ' - ' + errors[j] + '\n';
-
-        }
-
-        try {
-
-            fs.writeFileSync(filePath, fileContent);
-
-        } catch (err) {
-
-            console.error(err);
-            electron.ipcRenderer.send('set-expansion-bar-completed', successCount, errorCount, true);
-            return;
-
-        }
-
-        console.log('Error summary written to ' + filePath);
 
     }
 
@@ -300,7 +300,7 @@ electron.ipcRenderer.on('expansion-summary-closed', enableUI);
 
 function updateInputDirectoryDisplay (directoryArray) {
 
-    if (directoryArray.length === 0 || !directoryArray) {
+    if (!directoryArray || directoryArray.length === 0) {
 
         fileLabel.innerHTML = 'No AudioMoth T.WAV files selected.';
         expandButton.disabled = true;

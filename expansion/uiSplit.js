@@ -100,24 +100,24 @@ function enableUI () {
 
 function splitFiles () {
 
-    let successCount, errorCount, cancelled, response, filePath, fileContent, maxLength, outputPath, prefix, errorFileLocation;
-
     if (!files) {
 
         return;
 
     }
 
-    successCount = 0;
-    errorCount = 0;
+    let successCount = 0;
+    let errorCount = 0;
     const errors = [];
     const errorFiles = [];
+
+    let errorFilePath;
 
     for (let i = 0; i < files.length; i++) {
 
         /* If progress bar is closed, the split task is considered cancelled. This will contact the main thread and ask if that has happened */
 
-        cancelled = electron.ipcRenderer.sendSync('poll-split-cancelled');
+        const cancelled = electron.ipcRenderer.sendSync('poll-split-cancelled');
 
         if (cancelled) {
 
@@ -131,7 +131,7 @@ function splitFiles () {
 
         electron.ipcRenderer.send('set-split-bar-progress', i, 0, path.basename(files[i]));
 
-        maxLength = MAX_LENGTHS[ui.getSelectedRadioValue('max-length-radio')];
+        const maxLength = MAX_LENGTHS[ui.getSelectedRadioValue('max-length-radio')];
 
         console.log('Splitting:', files[i]);
         console.log('Maximum file length:', maxLength);
@@ -140,10 +140,10 @@ function splitFiles () {
 
         /* Check if the optional prefix/output directory setttings are being used. If left as null, splitter will put file(s) in the same directory as the input with no prefix */
 
-        outputPath = outputCheckbox.checked ? outputDir : null;
-        prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
+        const outputPath = outputCheckbox.checked ? outputDir : null;
+        const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
-        response = audiomothUtils.split(files[i], outputPath, prefix, maxLength, (progress) => {
+        const response = audiomothUtils.split(files[i], outputPath, prefix, maxLength, (progress) => {
 
             electron.ipcRenderer.send('set-split-bar-progress', i, progress, path.basename(files[i]));
 
@@ -155,7 +155,7 @@ function splitFiles () {
 
         } else {
 
-            /* Keep track of the errors to write to the log at the end */
+            /* Add error to log file */
 
             errorCount++;
             errors.push(response.error);
@@ -163,41 +163,39 @@ function splitFiles () {
 
             electron.ipcRenderer.send('set-split-bar-error', path.basename(files[i]));
 
+            if (errorCount === 1) {
+
+                const errorFileLocation = outputCheckbox.checked ? outputDir : path.dirname(errorFiles[0]);
+
+                errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
+
+            }
+
+            let fileContent = '';
+
+            for (let j = 0; j < errorCount; j++) {
+
+                fileContent += path.basename(errorFiles[j]) + ' - ' + errors[j] + '\n';
+
+            }
+
+            try {
+
+                fs.writeFileSync(errorFilePath, fileContent);
+
+                console.log('Error summary written to ' + errorFilePath);
+
+            } catch (err) {
+
+                console.error(err);
+                electron.ipcRenderer.send('set-split-bar-completed', successCount, errorCount, true);
+                return;
+
+            }
+
             ui.sleep(3000);
 
         }
-
-    }
-
-    /* Build error file */
-
-    if (errorCount > 0) {
-
-        errorFileLocation = outputCheckbox.checked ? outputDir : path.dirname(errorFiles[0]);
-
-        filePath = path.join(errorFileLocation, 'ERRORS.TXT');
-
-        fileContent = '';
-
-        for (let j = 0; j < errorCount; j++) {
-
-            fileContent += path.basename(errorFiles[j]) + ' - ' + errors[j] + '\n';
-
-        }
-
-        try {
-
-            fs.writeFileSync(filePath, fileContent);
-
-        } catch (err) {
-
-            console.error(err);
-            electron.ipcRenderer.send('set-split-bar-completed', successCount, errorCount, true);
-            return;
-
-        }
-
-        console.log('Error summary written to ' + filePath);
 
     }
 

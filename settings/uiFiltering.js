@@ -42,14 +42,17 @@ const amplitudeThresholdingMinLabel = document.getElementById('amplitude-thresho
 const amplitudeThresholdingCheckbox = document.getElementById('amplitude-thresholding-checkbox');
 const amplitudeThresholdingSlider = new Slider('#amplitude-thresholding-slider', {});
 const amplitudeThresholdingLabel = document.getElementById('amplitude-thresholding-label');
-const amplitudeThresholdingTimeTable = document.getElementById('trigger-time-table');
-const amplitudeThresholdingRadioButtons = document.getElementsByName('trigger-time-radio');
+const amplitudeThresholdingDurationTable = document.getElementById('amplitude-thresholding-duration-table');
+const amplitudeThresholdingRadioButtons = document.getElementsByName('amplitude-thresholding-duration-radio');
 
 const VALID_AMPLITUDE_VALUES = [0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 88, 96, 104, 112, 120, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 704, 768, 832, 896, 960, 1024, 1152, 1280, 1408, 1536, 1664, 1792, 1920, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096, 4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192, 9216, 10240, 11264, 12288, 13312, 14336, 15360, 16384, 18432, 20480, 22528, 24576, 26624, 28672, 30720, 32768];
 
 /* Whether or not to display a warning if minimum amplitude threshold is greater than recording length */
 
 var displayDurationWarning = true;
+
+/* Only scale filter sliders if the filter has been enabled this session */
+var filterHasBeenEnabled = false;
 
 const FILTER_LOW = 0;
 const FILTER_BAND = 1;
@@ -162,6 +165,12 @@ function updateFilterSliders () {
 /* Update the text on the label which describes the range of frequencies covered by the filter */
 
 function updateFilterLabel () {
+
+    if (!filterCheckbox.checked) {
+
+        return;
+
+    }
 
     let currentBandPassLower, currentBandPassHigher, currentHighPass, currentLowPass;
 
@@ -356,6 +365,8 @@ exports.setFilters = (enabled, lowerSliderValue, higherSliderValue, filterType) 
 
     filterCheckbox.checked = enabled;
 
+    filterHasBeenEnabled = enabled;
+
     if (enabled) {
 
         switch (filterType) {
@@ -527,7 +538,7 @@ exports.getAmplitudeThresholdScaleIndex = () => {
 
 function getMinimumAmplitudeThresholdDuration () {
 
-    return parseInt(getSelectedRadioValue('trigger-time-radio'));
+    return parseInt(getSelectedRadioValue('amplitude-thresholding-duration-radio'));
 
 }
 
@@ -546,7 +557,7 @@ function updateAmplitudeThresholdingUI () {
         amplitudeThresholdingLabel.style.color = '';
         updateAmplitudeThresholdingLabel();
 
-        amplitudeThresholdingTimeTable.style.color = '';
+        amplitudeThresholdingDurationTable.style.color = '';
 
         for (let i = 0; i < amplitudeThresholdingRadioButtons.length; i++) {
 
@@ -563,7 +574,7 @@ function updateAmplitudeThresholdingUI () {
         amplitudeThresholdingLabel.style.color = 'grey';
         amplitudeThresholdingLabel.textContent = 'All audio will be written to a .WAV file.';
 
-        amplitudeThresholdingTimeTable.style.color = 'grey';
+        amplitudeThresholdingDurationTable.style.color = 'grey';
 
         for (let i = 0; i < amplitudeThresholdingRadioButtons.length; i++) {
 
@@ -670,7 +681,7 @@ function roundToSliderStep (value, step) {
 
 /* Update UI according to new sample rate selection */
 
-exports.sampleRateChange = () => {
+function sampleRateChange () {
 
     const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
 
@@ -691,32 +702,57 @@ exports.sampleRateChange = () => {
     lowPassFilterSlider.setAttribute('step', FILTER_SLIDER_STEPS[sampleRateIndex]);
     bandPassFilterSlider.setAttribute('step', FILTER_SLIDER_STEPS[sampleRateIndex]);
 
-    /* Validate current band-pass filter values */
+    /* Get current slider values */
 
     const currentBandPassHigher = Math.max(...bandPassFilterSlider.getValue());
     const currentBandPassLower = Math.min(...bandPassFilterSlider.getValue());
-
-    const newBandPassLower = currentBandPassLower > maxFreq ? 0 : currentBandPassLower;
-
-    const newBandPassHigher = currentBandPassHigher > maxFreq ? maxFreq : currentBandPassHigher;
-
-    setBandPass(roundToSliderStep(Math.max(newBandPassHigher, newBandPassLower), FILTER_SLIDER_STEPS[sampleRateIndex]), roundToSliderStep(Math.min(newBandPassHigher, newBandPassLower), FILTER_SLIDER_STEPS[sampleRateIndex]));
-
-    /* Validate current low-pass filter value */
-
     const currentLowPass = lowPassFilterSlider.getValue();
-    const newLowPass = currentLowPass > maxFreq ? maxFreq : currentLowPass;
-    setLowPassSliderValue(roundToSliderStep(newLowPass, FILTER_SLIDER_STEPS[sampleRateIndex]));
-
-    /* Validate current high-pass filter value */
-
     const currentHighPass = highPassFilterSlider.getValue();
-    const newHighPass = currentHighPass > maxFreq ? maxFreq : currentHighPass;
-    setHighPassSliderValue(roundToSliderStep(newHighPass, FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+    if (filterHasBeenEnabled) {
+
+        /* Validate current band-pass filter values */
+
+        const newBandPassLower = currentBandPassLower > maxFreq ? 0 : currentBandPassLower;
+        const newBandPassHigher = currentBandPassHigher > maxFreq ? maxFreq : currentBandPassHigher;
+        setBandPass(roundToSliderStep(Math.max(newBandPassHigher, newBandPassLower), FILTER_SLIDER_STEPS[sampleRateIndex]), roundToSliderStep(Math.min(newBandPassHigher, newBandPassLower), FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+        /* Validate current low-pass filter value */
+
+        const newLowPass = currentLowPass > maxFreq ? maxFreq : currentLowPass;
+        setLowPassSliderValue(roundToSliderStep(newLowPass, FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+        /* Validate current high-pass filter value */
+
+        const newHighPass = currentHighPass > maxFreq ? maxFreq : currentHighPass;
+        setHighPassSliderValue(roundToSliderStep(newHighPass, FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+    } else {
+
+        /* Set high/low-pass sliders to 1/4 and 3/4 of the bar if filtering has not yet been enabled */
+
+        const newLowPassFreq = maxFreq / 4;
+        const newHighPassFreq = 3 * maxFreq / 4;
+
+        /* Set band-pass filter values */
+
+        setBandPass(roundToSliderStep(newHighPassFreq, FILTER_SLIDER_STEPS[sampleRateIndex]), roundToSliderStep(newLowPassFreq, FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+        /* Set low-pass filter value */
+
+        setLowPassSliderValue(roundToSliderStep(newHighPassFreq, FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+        /* Set high-pass filter value */
+
+        setHighPassSliderValue(roundToSliderStep(newLowPassFreq, FILTER_SLIDER_STEPS[sampleRateIndex]));
+
+    }
 
     updateFilterLabel();
 
-};
+}
+
+exports.sampleRateChange = sampleRateChange;
 
 /* Update the labels either side of the amplitude threshold scale */
 
@@ -815,6 +851,14 @@ exports.prepareUI = (changeFunction, checkRecordingDurationFunction) => {
     filterCheckbox.addEventListener('change', () => {
 
         updateFilterLabel();
+
+        if (filterCheckbox.checked) {
+
+            filterHasBeenEnabled = true;
+            sampleRateChange();
+
+        }
+
         updateFilterUI();
 
     });

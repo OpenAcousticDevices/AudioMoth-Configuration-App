@@ -133,6 +133,18 @@ function requestBatteryState () {
 
 }
 
+function getEquivalentVersion (desc) {
+
+    const foundEquivalence = desc.match(constants.EQUIVALENCE_REGEX)[0];
+
+    const regex1 = /[0-9]+/g;
+    const equivalentVersionStrArray = foundEquivalence.match(regex1);
+    const equivalentVersionArray = [parseInt(equivalentVersionStrArray[0]), parseInt(equivalentVersionStrArray[1]), parseInt(equivalentVersionStrArray[2])];
+
+    return equivalentVersionArray;
+
+}
+
 /* Request, receive and handle packet containing the current firmware version and check the version/description to see if a warning message should be shown */
 
 function requestFirmwareVersion () {
@@ -151,32 +163,6 @@ function requestFirmwareVersion () {
         } else {
 
             firmwareVersion = versionArr[0] + '.' + versionArr[1] + '.' + versionArr[2];
-
-            if (!versionWarningShown) {
-
-                if (!constants.isSupportedFirmwareDescription(firmwareDescription)) {
-
-                    versionWarningShown = true;
-
-                    dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
-                        type: 'warning',
-                        title: 'Unsupported firmware',
-                        message: 'The firmware installed on your AudioMoth may not be supported by this version of the AudioMoth Configuration App.'
-                    });
-
-                } else if (isOlderSemanticVersion(versionArr, constants.latestFirmwareVersionArray)) {
-
-                    versionWarningShown = true;
-
-                    dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
-                        type: 'warning',
-                        title: 'Firmware update recommended',
-                        message: 'Update to at least version ' + constants.latestFirmwareVersionString + ' of AudioMoth-Firmware-Basic to use all the features of this version of the AudioMoth Configuration App.'
-                    });
-
-                }
-
-            }
 
             requestBatteryState();
 
@@ -282,6 +268,70 @@ function getAudioMothPacket () {
 
 }
 
+/* Check the version and description to see if the firmware is compatible or equivalent to an equivalent version of firmware */
+
+function checkVersionCompatibilty () {
+
+    /* This version array may be replaced if the firmware is custom with an equivalent official version */
+
+    let trueVersionArr = firmwareVersion.split('.');
+
+    const classification = constants.getFirmwareClassification(firmwareDescription);
+
+    let versionWarningText, versionWarningTitle;
+
+    switch (classification) {
+
+    case constants.FIRMWARE_OFFICIAL_RELEASE:
+    case constants.FIRMWARE_OFFICIAL_RELEASE_CANDIDATE:
+        versionWarningTitle = 'Firmware update recommended';
+        versionWarningText = 'Update to at least version ' + constants.latestFirmwareVersionString + ' of AudioMoth-Firmware-Basic to use all the features of this version of the AudioMoth Configuration App.';
+        break;
+
+    case constants.FIRMWARE_CUSTOM_EQUIVALENT:
+        trueVersionArr = getEquivalentVersion(firmwareDescription);
+
+        versionWarningTitle = 'Unsupported features';
+        versionWarningText = 'This firmware does not allow you to use all the features of this version of the AudioMoth Configuration App.';
+        break;
+
+    case constants.FIRMWARE_UNSUPPORTED:
+        if (!versionWarningShown) {
+
+            versionWarningShown = true;
+
+            dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
+                type: 'warning',
+                title: 'Unsupported firmware',
+                message: 'The firmware installed on your AudioMoth may not be supported by this version of the AudioMoth Configuration App.'
+            });
+
+        }
+
+        return;
+
+    }
+
+    /* If OFFICIAL_RELEASE, OFFICIAL_RELEASE_CANDIDATE or CUSTOM_EQUIVALENT */
+
+    if (!versionWarningShown) {
+
+        if (isOlderSemanticVersion(trueVersionArr, constants.latestFirmwareVersionArray)) {
+
+            versionWarningShown = true;
+
+            dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
+                type: 'warning',
+                title: versionWarningTitle,
+                message: versionWarningText
+            });
+
+        }
+
+    }
+
+}
+
 /* Fill in time/date, ID, battery state, firmware version */
 
 function usePacketValues () {
@@ -310,6 +360,8 @@ function usePacketValues () {
 
         updateBatteryDisplay(batteryState);
 
+        setTimeout(checkVersionCompatibilty, 100);
+
     }
 
 }
@@ -323,6 +375,34 @@ function writeLittleEndianBytes (buffer, start, byteCount, value) {
         buffer[start + i] = (value >> (i * 8)) & 255;
 
     }
+
+}
+
+function getTrueFirmwareVersion () {
+
+    let trueFirmwareVersion = firmwareVersion.split('.');
+
+    /* Check for equivalent if using custom firmware */
+
+    const classification = constants.getFirmwareClassification(firmwareDescription);
+
+    if (classification === constants.FIRMWARE_CUSTOM_EQUIVALENT) {
+
+        trueFirmwareVersion = getEquivalentVersion(firmwareDescription);
+        console.log('Treating firmware as equivalent version: ' + trueFirmwareVersion[0] + '.' + trueFirmwareVersion[1] + '.' + trueFirmwareVersion[2]);
+
+    }
+
+    /* Use latest version if custom */
+
+    if (classification === constants.FIRMWARE_UNSUPPORTED) {
+
+        trueFirmwareVersion = constants.latestFirmwareVersionArray;
+        console.log('Unsupported firmware, treating firmware as latest version');
+
+    }
+
+    return trueFirmwareVersion;
 
 }
 
@@ -357,13 +437,14 @@ function sendPacket (packet) {
 
             let packetLength = Math.min(packet.length, data.length - 1);
 
+            const trueFirmwareVersion = getTrueFirmwareVersion();
+
             for (let k = 0; k < constants.packetLengthVersions.length; k++) {
 
                 const possibleFirmwareVersion = constants.packetLengthVersions[k].firmwareVersion;
 
-                if (isOlderSemanticVersion(firmwareVersion.split('.'), possibleFirmwareVersion.split('.'))) {
+                if (isOlderSemanticVersion(trueFirmwareVersion, possibleFirmwareVersion.split('.'))) {
 
-                    console.log('Using packet length', packetLength);
                     break;
 
                 }
@@ -371,6 +452,8 @@ function sendPacket (packet) {
                 packetLength = constants.packetLengthVersions[k].packetLength;
 
             }
+
+            console.log('Using packet length', packetLength);
 
             /* Verify the packet sent was read correctly by the device by comparing it to the returned packet */
 
@@ -451,7 +534,11 @@ function configureDevice () {
 
     packet[index++] = settings.gain;
 
-    const configurations = (isOlderSemanticVersion(firmwareVersion.split('.'), ['1', '4', '4']) && settings.sampleRateIndex < 3) ? constants.oldConfigurations : constants.configurations;
+    /* If equivalent firmware or unsupported firmware is present, use correct firmware version */
+
+    const trueFirmwareVersion = getTrueFirmwareVersion();
+
+    const configurations = (isOlderSemanticVersion(trueFirmwareVersion, ['1', '4', '4']) && settings.sampleRateIndex < 3) ? constants.oldConfigurations : constants.configurations;
 
     const sampleRateConfiguration = configurations[settings.sampleRateIndex];
 

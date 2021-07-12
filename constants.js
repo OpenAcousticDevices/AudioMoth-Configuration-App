@@ -147,13 +147,45 @@ exports.packetLengthVersions = [{
     packetLength: 62
 }];
 
+const FIRMWARE_OFFICIAL_RELEASE = 0;
+const FIRMWARE_OFFICIAL_RELEASE_CANDIDATE = 1;
+const FIRMWARE_CUSTOM_EQUIVALENT = 2;
+const FIRMWARE_UNSUPPORTED = 3;
+exports.FIRMWARE_OFFICIAL_RELEASE = FIRMWARE_OFFICIAL_RELEASE;
+exports.FIRMWARE_OFFICIAL_RELEASE_CANDIDATE = FIRMWARE_OFFICIAL_RELEASE_CANDIDATE;
+exports.FIRMWARE_CUSTOM_EQUIVALENT = FIRMWARE_CUSTOM_EQUIVALENT;
+exports.FIRMWARE_UNSUPPORTED = FIRMWARE_UNSUPPORTED;
+
+const EQUIVALENCE_REGEX = /E[0-9]+\.[0-9]+\.[0-9]+/g;
+exports.EQUIVALENCE_REGEX = EQUIVALENCE_REGEX;
+
 /* Remove trailing digit and check if description is in list of supported firmware descriptions */
 
-exports.isSupportedFirmwareDescription = (desc) => {
+exports.getFirmwareClassification = (desc) => {
 
-    const supportedFirmwareDescs = ['AudioMoth-Firmware-Basic', 'AudioMoth-Firmware-Basic-RC'];
+    /* If official firmware or a release candidate of the official firmware */
 
-    return supportedFirmwareDescs.includes(desc.replace(/\d+$/, ''));
+    if (desc === 'AudioMoth-Firmware-Basic') {
+
+        return FIRMWARE_OFFICIAL_RELEASE;
+
+    }
+
+    if (desc.replace(/-RC\d+$/, '-RC') === 'AudioMoth-Firmware-Basic-RC') {
+
+        return FIRMWARE_OFFICIAL_RELEASE_CANDIDATE;
+
+    }
+
+    const foundEquivalence = desc.match(EQUIVALENCE_REGEX);
+
+    if (foundEquivalence) {
+
+        return FIRMWARE_CUSTOM_EQUIVALENT;
+
+    }
+
+    return FIRMWARE_UNSUPPORTED;
 
 };
 
