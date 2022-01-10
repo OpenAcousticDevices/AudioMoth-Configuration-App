@@ -69,7 +69,7 @@ typedef struct {
 
 typedef struct {
     uint32_t time;
-    uint8_t gain;
+    AM_gainSetting_t gain;
     uint8_t clockDivider;
     uint8_t acquisitionCycles;
     uint8_t oversampleRate;
@@ -90,14 +90,19 @@ typedef struct {
     uint16_t lowerFilterFreq;
     uint16_t higherFilterFreq;
     uint16_t amplitudeThreshold;
-    uint8_t requireAcousticConfiguration;
-    AM_batteryLevelDisplayType_t batteryLevelDisplayType;
-    uint8_t minimumAmplitudeThresholdDuration;
+    uint8_t requireAcousticConfiguration : 1;
+    AM_batteryLevelDisplayType_t batteryLevelDisplayType : 1;
+    uint8_t minimumTriggerDuration : 6;
     uint8_t enableAmplitudeThresholdDecibelScale : 1;
-    uint8_t amplitudeThresholdDecibels : 7;
+    uint8_t amplitudeThresholdDecibels : 7; 
     uint8_t enableAmplitudeThresholdPercentageScale : 1;
-    uint8_t amplitudeThresholdPercentageMantissa : 4;
-    int8_t amplitudeThresholdPercentageExponent : 3;
+    uint8_t amplitudeThresholdPercentageMantissa : 4; 
+    int8_t amplitudeThresholdPercentageExponent : 3; 
+    uint8_t enableEnergySaverMode : 1; 
+    uint8_t disable48HzDCBlockingFilter : 1;
+    uint8_t enableTimeSettingFromGPS : 1;
+    uint8_t enableMagneticSwitch : 1;
+    uint8_t enableLowGainRange : 1;
 } configSettings_t;
 
 */
@@ -212,6 +217,12 @@ exports.read = (packet) => {
 
     const disable48DCFilter = (packedByte3 >> 1) & 1;
 
+    const timeSettingFromGPSEnabled = (packedByte3 >> 2) & 1;
+
+    const magneticSwitchEnabled = (packedByte3 >> 3) & 1;
+
+    const lowGainRangeEnabled = (packedByte3 >> 4) & 1;
+
     /* Display configuration */
 
     console.log('Current time: ', formatDate(time));
@@ -276,5 +287,11 @@ exports.read = (packet) => {
     console.log('Energy saver mode enabled:', energySaverModeEnabled === 1);
 
     console.log('48 Hz DC blocking filter disabled:', disable48DCFilter === 1);
+
+    console.log('GPS clock setting enabled:', timeSettingFromGPSEnabled === 1);
+
+    console.log('Magnetic switch delay enabled:', magneticSwitchEnabled === 1);
+
+    console.log('Low gain range enabled: ', lowGainRangeEnabled === 1);
 
 };

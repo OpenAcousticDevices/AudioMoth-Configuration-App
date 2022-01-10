@@ -56,8 +56,14 @@ function startlastRecordingDateError (input) {
 
     setTimeout(function () {
 
-        input.style.border = '';
+        if (!input.disabled) {
+
+            input.classList.remove('grey');
+
+        }
+
         input.style.color = '';
+        input.style.border = '';
 
     }, 1000);
 
@@ -89,14 +95,14 @@ function updateFirstRecordingDateUI () {
 
     if (firstRecordingDateCheckbox.checked) {
 
-        firstRecordingDateLabel.style.color = '';
-        firstRecordingDateInput.style.color = '';
+        firstRecordingDateLabel.classList.remove('grey');
+        firstRecordingDateInput.classList.remove('grey');
         firstRecordingDateInput.disabled = false;
 
     } else {
 
-        firstRecordingDateLabel.style.color = 'lightgrey';
-        firstRecordingDateInput.style.color = 'lightgrey';
+        firstRecordingDateLabel.classList.add('grey');
+        firstRecordingDateInput.classList.add('grey');
         firstRecordingDateInput.disabled = true;
 
     }
@@ -109,51 +115,59 @@ function updateLastRecordingDateUI () {
 
     if (lastRecordingDateCheckbox.checked) {
 
-        lastRecordingDateLabel.style.color = '';
-        lastRecordingDateInput.style.color = '';
+        lastRecordingDateLabel.classList.remove('grey');
+        lastRecordingDateInput.classList.remove('grey');
         lastRecordingDateInput.disabled = false;
 
     } else {
 
-        lastRecordingDateLabel.style.color = 'lightgrey';
-        lastRecordingDateInput.style.color = 'lightgrey';
+        lastRecordingDateLabel.classList.add('grey');
+        lastRecordingDateInput.classList.add('grey');
         lastRecordingDateInput.disabled = true;
 
     }
 
 }
 
+exports.isFirstRecordingDateEnabled = () => {
+
+    return firstRecordingDateCheckbox.checked;
+
+};
+
+exports.isLastRecordingDateEnabled = () => {
+
+    return lastRecordingDateCheckbox.checked;
+
+};
+
 exports.getFirstRecordingDate = () => {
 
-    return firstRecordingDateCheckbox.checked ? firstRecordingDateInput.value : '';
+    return firstRecordingDateInput.value;
 
 };
 
 exports.getLastRecordingDate = () => {
 
-    return lastRecordingDateCheckbox.checked ? lastRecordingDateInput.value : '';
+    return lastRecordingDateInput.value;
 
 };
 
-exports.setFirstRecordingDate = (firstRecordingDate) => {
+exports.setFirstRecordingDate = (firstRecordingDateEnabled, firstRecordingDate) => {
 
-    const today = new Date();
-
-    firstRecordingDateCheckbox.checked = (firstRecordingDate !== '');
+    firstRecordingDateCheckbox.checked = firstRecordingDateEnabled;
     updateFirstRecordingDateUI();
 
-    firstRecordingDateInput.value = (firstRecordingDate !== '') ? firstRecordingDate : dateToString(today);
+    firstRecordingDateInput.value = firstRecordingDate;
 
 };
 
-exports.setLastRecordingDate = (lastRecordingDate) => {
+exports.setLastRecordingDate = (lastRecordingDateEnabled, lastRecordingDate) => {
 
-    const today = new Date();
-
-    lastRecordingDateCheckbox.checked = (lastRecordingDate !== '');
+    lastRecordingDateCheckbox.checked = lastRecordingDateEnabled;
     updateLastRecordingDateUI();
 
-    lastRecordingDateInput.value = (lastRecordingDate !== '') ? lastRecordingDate : dateToString(today);
+    lastRecordingDateInput.value = lastRecordingDate;
 
 };
 

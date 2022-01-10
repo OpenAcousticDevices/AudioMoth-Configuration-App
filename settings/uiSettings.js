@@ -51,18 +51,18 @@ function updateDutyCycleUI () {
     if (dutyCheckBox.checked) {
 
         durationInput.setEnabled(recordingDurationInput, true);
-        recordingDurationLabel.style.color = '';
+        recordingDurationLabel.classList.remove('grey');
 
         durationInput.setEnabled(sleepDurationInput, true);
-        sleepDurationLabel.style.color = '';
+        sleepDurationLabel.classList.remove('grey');
 
     } else {
 
         durationInput.setEnabled(recordingDurationInput, false);
-        recordingDurationLabel.style.color = 'lightgrey';
+        recordingDurationLabel.classList.add('grey');
 
         durationInput.setEnabled(sleepDurationInput, false);
-        sleepDurationLabel.style.color = 'lightgrey';
+        sleepDurationLabel.classList.add('grey');
 
     }
 
@@ -158,7 +158,10 @@ exports.getSettings = () => {
         minimumAmplitudeThresholdDuration: uiFiltering.getMinimumAmplitudeThresholdDuration(),
         amplitudeThresholdingScaleIndex: uiFiltering.getAmplitudeThresholdScaleIndex(),
         energySaverModeEnabled: uiAdvanced.isEnergySaverModeEnabled(),
-        disable48DCFilter: uiAdvanced.is48DCFilterDisabled()
+        lowGainRangeEnabled: uiAdvanced.isLowGainRangeEnabled(),
+        disable48DCFilter: uiAdvanced.is48DCFilterDisabled(),
+        timeSettingFromGPSEnabled: uiAdvanced.istimeSettingFromGPSEnabled(),
+        magneticSwitchEnabled: uiAdvanced.ismagneticSwitchEnabled()
     };
 
     return settings;
@@ -190,6 +193,12 @@ exports.fillUI = (settings) => {
     durationInput.setValue(recordingDurationInput, settings.recordDuration);
 
     uiAdvanced.fillUI(settings);
+
+    if (settings.timeSettingFromGPSEnabled || settings.magneticSwitchEnabled) {
+
+        uiAdvanced.displayAdditionalHardwareWarning();
+
+    }
 
     uiFiltering.setMinimumAmplitudeThresholdDuration(settings.minimumAmplitudeThresholdDuration);
 

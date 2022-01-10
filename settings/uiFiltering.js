@@ -14,9 +14,8 @@ const Slider = require('bootstrap-slider');
 
 const FILTER_SLIDER_STEPS = [100, 100, 100, 100, 200, 500, 500, 1000];
 
-const filterTypeLabel = document.getElementById('filter-type-label');
-const filterRadioButtons = document.getElementsByName('filter-radio');
 const filterRadioLabels = document.getElementsByName('filter-radio-label');
+const filterRadioButtons = document.getElementsByName('filter-radio');
 
 const highPassRow = document.getElementById('high-pass-row');
 const lowPassRow = document.getElementById('low-pass-row');
@@ -42,8 +41,8 @@ const amplitudeThresholdingMinLabel = document.getElementById('amplitude-thresho
 const amplitudeThresholdingCheckbox = document.getElementById('amplitude-thresholding-checkbox');
 const amplitudeThresholdingSlider = new Slider('#amplitude-thresholding-slider', {});
 const amplitudeThresholdingLabel = document.getElementById('amplitude-thresholding-label');
-const amplitudeThresholdingDurationTable = document.getElementById('amplitude-thresholding-duration-table');
 const amplitudeThresholdingRadioButtons = document.getElementsByName('amplitude-thresholding-duration-radio');
+const amplitudeThresholdingRadioLabels = document.getElementsByName('amplitude-thresholding-duration-radio-label');
 
 const VALID_AMPLITUDE_VALUES = [0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 88, 96, 104, 112, 120, 128, 144, 160, 176, 192, 208, 224, 240, 256, 288, 320, 352, 384, 416, 448, 480, 512, 576, 640, 704, 768, 832, 896, 960, 1024, 1152, 1280, 1408, 1536, 1664, 1792, 1920, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096, 4608, 5120, 5632, 6144, 6656, 7168, 7680, 8192, 9216, 10240, 11264, 12288, 13312, 14336, 15360, 16384, 18432, 20480, 22528, 24576, 26624, 28672, 30720, 32768];
 
@@ -367,33 +366,29 @@ exports.setFilters = (enabled, lowerSliderValue, higherSliderValue, filterType) 
 
     filterHasBeenEnabled = enabled;
 
-    if (enabled) {
+    switch (filterType) {
 
-        switch (filterType) {
+    case FILTER_LOW:
+        setLowPassSliderValue(higherSliderValue);
+        break;
 
-        case FILTER_LOW:
-            setLowPassSliderValue(higherSliderValue);
-            break;
+    case FILTER_HIGH:
+        setHighPassSliderValue(lowerSliderValue);
+        break;
 
-        case FILTER_HIGH:
-            setHighPassSliderValue(lowerSliderValue);
-            break;
-
-        case FILTER_BAND:
-            setBandPass(lowerSliderValue, higherSliderValue);
-            break;
-
-        }
-
-        for (let i = 0; i < filterRadioButtons.length; i++) {
-
-            filterRadioButtons[i].checked = (i === filterType);
-
-        }
-
-        updateFilterLabel();
+    case FILTER_BAND:
+        setBandPass(lowerSliderValue, higherSliderValue);
+        break;
 
     }
+
+    for (let i = 0; i < filterRadioButtons.length; i++) {
+
+        filterRadioButtons[i].checked = (i === filterType);
+
+    }
+
+    updateFilterLabel();
 
 };
 
@@ -551,13 +546,17 @@ function updateAmplitudeThresholdingUI () {
     if (amplitudeThresholdingCheckbox.checked) {
 
         amplitudeThresholdingSlider.enable();
-        amplitudeThresholdingMaxLabel.style.color = '';
-        amplitudeThresholdingMinLabel.style.color = '';
+        amplitudeThresholdingMaxLabel.classList.remove('grey');
+        amplitudeThresholdingMinLabel.classList.remove('grey');
 
-        amplitudeThresholdingLabel.style.color = '';
+        amplitudeThresholdingLabel.classList.remove('grey');
         updateAmplitudeThresholdingLabel();
 
-        amplitudeThresholdingDurationTable.style.color = '';
+        for (let i = 0; i < amplitudeThresholdingRadioLabels.length; i++) {
+
+            amplitudeThresholdingRadioLabels[i].classList.remove('grey');
+
+        }
 
         for (let i = 0; i < amplitudeThresholdingRadioButtons.length; i++) {
 
@@ -568,13 +567,17 @@ function updateAmplitudeThresholdingUI () {
     } else {
 
         amplitudeThresholdingSlider.disable();
-        amplitudeThresholdingMaxLabel.style.color = 'grey';
-        amplitudeThresholdingMinLabel.style.color = 'grey';
+        amplitudeThresholdingMaxLabel.classList.add('grey');
+        amplitudeThresholdingMinLabel.classList.add('grey');
 
-        amplitudeThresholdingLabel.style.color = 'grey';
-        amplitudeThresholdingLabel.textContent = 'All audio will be written to a .WAV file.';
+        amplitudeThresholdingLabel.classList.add('grey');
+        amplitudeThresholdingLabel.textContent = 'All audio will be written to a WAV file.';
 
-        amplitudeThresholdingDurationTable.style.color = 'grey';
+        for (let i = 0; i < amplitudeThresholdingRadioLabels.length; i++) {
+
+            amplitudeThresholdingRadioLabels[i].classList.add('grey');
+
+        }
 
         for (let i = 0; i < amplitudeThresholdingRadioButtons.length; i++) {
 
@@ -618,52 +621,58 @@ function updateFilterUI () {
 
     if (filterCheckbox.checked) {
 
-        filterTypeLabel.style.color = '';
+        for (let i = 0; i < filterRadioLabels.length; i++) {
+
+            filterRadioLabels[i].classList.remove('grey');
+
+        }
 
         for (let i = 0; i < filterRadioButtons.length; i++) {
 
-            filterRadioButtons[i].style.color = '';
+            filterRadioButtons[i].classList.remove('grey');
             filterRadioButtons[i].disabled = false;
-            filterRadioLabels[i].style.color = '';
 
         }
 
         bandPassFilterSlider.enable();
         lowPassFilterSlider.enable();
         highPassFilterSlider.enable();
-        bandPassMaxLabel.style.color = '';
-        bandPassMinLabel.style.color = '';
-        lowPassMaxLabel.style.color = '';
-        lowPassMinLabel.style.color = '';
-        highPassMaxLabel.style.color = '';
-        highPassMinLabel.style.color = '';
+        bandPassMaxLabel.classList.remove('grey');
+        bandPassMinLabel.classList.remove('grey');
+        lowPassMaxLabel.classList.remove('grey');
+        lowPassMinLabel.classList.remove('grey');
+        highPassMaxLabel.classList.remove('grey');
+        highPassMinLabel.classList.remove('grey');
 
-        filterLabel.style.color = '';
+        filterLabel.classList.remove('grey');
 
     } else {
 
-        filterTypeLabel.style.color = 'grey';
+        for (let i = 0; i < filterRadioLabels.length; i++) {
+
+            filterRadioLabels[i].classList.add('grey');
+
+        }
 
         for (let i = 0; i < filterRadioButtons.length; i++) {
 
-            filterRadioButtons[i].style.color = 'grey';
+            filterRadioButtons[i].classList.add('grey');
             filterRadioButtons[i].disabled = true;
-            filterRadioLabels[i].style.color = 'grey';
 
         }
 
         bandPassFilterSlider.disable();
         lowPassFilterSlider.disable();
         highPassFilterSlider.disable();
-        bandPassMaxLabel.style.color = 'grey';
-        bandPassMinLabel.style.color = 'grey';
-        lowPassMaxLabel.style.color = 'grey';
-        lowPassMinLabel.style.color = 'grey';
-        highPassMaxLabel.style.color = 'grey';
-        highPassMinLabel.style.color = 'grey';
+        bandPassMaxLabel.classList.add('grey');
+        bandPassMinLabel.classList.add('grey');
+        lowPassMaxLabel.classList.add('grey');
+        lowPassMinLabel.classList.add('grey');
+        highPassMaxLabel.classList.add('grey');
+        highPassMinLabel.classList.add('grey');
 
         filterLabel.textContent = 'Recordings will not be filtered.';
-        filterLabel.style.color = 'grey';
+        filterLabel.classList.add('grey');
 
     }
 

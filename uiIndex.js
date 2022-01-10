@@ -420,7 +420,7 @@ function sendPacket (packet) {
                 message: 'The connected AudioMoth did not respond correctly and the configuration may not have been applied. Please try again.'
             });
 
-            configureButton.style.color = '';
+            configureButton.classList.remove('grey');
 
         };
 
@@ -612,12 +612,12 @@ function configureDevice () {
 
     const timezoneOffset = -60 * today.getTimezoneOffset();
 
-    const firstRecordingDateText = uiSchedule.getFirstRecordingDate();
+    const firstRecordingDateEnabled = uiSchedule.isFirstRecordingDateEnabled();
     const firstRecordingDate = new Date(uiSchedule.getFirstRecordingDate());
 
     let earliestRecordingTime;
 
-    if (firstRecordingDateText === '') {
+    if (!firstRecordingDateEnabled) {
 
         earliestRecordingTime = 0;
 
@@ -637,12 +637,12 @@ function configureDevice () {
 
     }
 
-    const lastRecordingDateText = uiSchedule.getLastRecordingDate();
+    const lastRecordingDateEnabled = uiSchedule.isLastRecordingDateEnabled();
     const lastRecordingDate = new Date(uiSchedule.getLastRecordingDate());
 
     let latestRecordingTime;
 
-    if (lastRecordingDateText === '') {
+    if (!lastRecordingDateEnabled) {
 
         latestRecordingTime = 0;
 
@@ -849,8 +849,20 @@ function configureDevice () {
     /* Whether to turn off the 48Hz DC blocking filter which is on by default */
     const disable48DCFilter = settings.disable48DCFilter ? 1 : 0;
 
+    /* Whether to enable the low gain range */
+    const lowGainRangeEnabled = settings.lowGainRangeEnabled ? 1 : 0;
+
+    /* Whether to allow the time to be updated via GPS */
+    const timeSettingFromGPSEnabled = settings.timeSettingFromGPSEnabled ? 1 : 0;
+
+    /* Whether to check the magnetic switch to start a delayed schedule */
+    const magneticSwitchEnabled = settings.magneticSwitchEnabled ? 1 : 0;
+
     let packedByte3 = energySaverModeEnabled & 1;
     packedByte3 |= (disable48DCFilter << 1);
+    packedByte3 |= (timeSettingFromGPSEnabled << 2);
+    packedByte3 |= (magneticSwitchEnabled << 3);
+    packedByte3 |= (lowGainRangeEnabled << 4);
 
     packet[index++] = packedByte3;
 
@@ -913,14 +925,14 @@ function disableDisplay () {
 
     ui.disableTimeDisplay(false);
 
-    idLabel.style.color = 'lightgrey';
-    idDisplay.style.color = 'lightgrey';
-    firmwareVersionLabel.style.color = 'lightgrey';
-    firmwareVersionDisplay.style.color = 'lightgrey';
-    firmwareDescriptionLabel.style.color = 'lightgrey';
-    firmwareDescriptionDisplay.style.color = 'lightgrey';
-    batteryLabel.style.color = 'lightgrey';
-    batteryDisplay.style.color = 'lightgrey';
+    idLabel.classList.add('grey');
+    idDisplay.classList.add('grey');
+    firmwareVersionLabel.classList.add('grey');
+    firmwareVersionDisplay.classList.add('grey');
+    firmwareDescriptionLabel.classList.add('grey');
+    firmwareDescriptionDisplay.classList.add('grey');
+    batteryLabel.classList.add('grey');
+    batteryDisplay.classList.add('grey');
 
     configureButton.disabled = true;
 
@@ -930,23 +942,14 @@ function disableDisplay () {
 
 function enableDisplay () {
 
-    const textColor = ui.isNightMode() ? 'white' : 'black';
-
-    idLabel.style.color = textColor;
-
-    idDisplay.style.color = textColor;
-
-    firmwareVersionLabel.style.color = textColor;
-
-    firmwareVersionDisplay.style.color = textColor;
-
-    firmwareDescriptionLabel.style.color = textColor;
-
-    firmwareDescriptionDisplay.style.color = textColor;
-
-    batteryLabel.style.color = textColor;
-
-    batteryDisplay.style.color = textColor;
+    idLabel.classList.remove('grey');
+    idDisplay.classList.remove('grey');
+    firmwareVersionLabel.classList.remove('grey');
+    firmwareVersionDisplay.classList.remove('grey');
+    firmwareDescriptionLabel.classList.remove('grey');
+    firmwareDescriptionDisplay.classList.remove('grey');
+    batteryLabel.classList.remove('grey');
+    batteryDisplay.classList.remove('grey');
 
     configureButton.disabled = false;
 
@@ -962,7 +965,7 @@ function updateIdDisplay (deviceId) {
 
     if (deviceId !== idDisplay.textContent) {
 
-        if (deviceId === null) {
+        if (deviceId === null || deviceId === undefined) {
 
             idDisplay.textContent = '-';
 
@@ -1010,7 +1013,7 @@ function updateFirmwareDisplay (version, description) {
 
 function updateBatteryDisplay (battery) {
 
-    if (battery === null) {
+    if (battery === null || battery === undefined) {
 
         batteryDisplay.textContent = '-';
 
@@ -1033,7 +1036,7 @@ function copyDeviceID () {
 
         setTimeout(function () {
 
-            idDisplay.style.color = '';
+            idDisplay.classList.remove('grey');
 
         }, 5000);
 
@@ -1068,7 +1071,7 @@ function updateLifeDisplayOnChange () {
 
     const settings = uiSettings.getSettings();
 
-    lifeDisplay.updateLifeDisplay(sortedPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.dutyEnabled, settings.energySaverModeEnabled);
+    lifeDisplay.updateLifeDisplay(sortedPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.dutyEnabled, settings.energySaverModeEnabled, settings.timeSettingFromGPSEnabled);
 
 }
 
@@ -1078,50 +1081,69 @@ lifeDisplay.getPanel().addEventListener('click', function () {
 
 });
 
+function getCurrentConfiguration () {
+
+    const config = {};
+
+    config.timePeriods = scheduleBar.getTimePeriods();
+
+    config.localTime = ui.isLocalTime();
+
+    config.ledEnabled = ledCheckbox.checked;
+    config.lowVoltageCutoffEnabled = lowVoltageCutoffCheckbox.checked;
+    config.batteryLevelCheckEnabled = batteryLevelCheckbox.checked;
+
+    const settings = uiSettings.getSettings();
+
+    config.sampleRateIndex = settings.sampleRateIndex;
+    config.gain = settings.gain;
+    config.recordDuration = settings.recordDuration;
+    config.sleepDuration = settings.sleepDuration;
+    config.dutyEnabled = settings.dutyEnabled;
+
+    config.passFiltersEnabled = settings.passFiltersEnabled;
+    config.filterTypeIndex = settings.filterTypeIndex;
+    config.lowerFilter = settings.lowerFilter;
+    config.higherFilter = settings.higherFilter;
+
+    config.amplitudeThresholdingEnabled = settings.amplitudeThresholdingEnabled;
+    config.amplitudeThreshold = settings.amplitudeThreshold;
+
+    config.firstRecordingDateEnabled = uiSchedule.isFirstRecordingDateEnabled();
+    config.lastRecordingDateEnabled = uiSchedule.isLastRecordingDateEnabled();
+
+    config.firstRecordingDate = uiSchedule.getFirstRecordingDate();
+    config.lastRecordingDate = uiSchedule.getLastRecordingDate();
+
+    config.requireAcousticConfig = settings.requireAcousticConfig;
+
+    config.displayVoltageRange = settings.displayVoltageRange;
+
+    config.minimumAmplitudeThresholdDuration = settings.minimumAmplitudeThresholdDuration;
+
+    config.amplitudeThresholdingScaleIndex = settings.amplitudeThresholdingScaleIndex;
+
+    config.energySaverModeEnabled = settings.energySaverModeEnabled;
+
+    config.disable48DCFilter = settings.disable48DCFilter;
+
+    config.lowGainRangeEnabled = settings.lowGainRangeEnabled;
+
+    config.timeSettingFromGPSEnabled = settings.timeSettingFromGPSEnabled;
+
+    config.magneticSwitchEnabled = settings.magneticSwitchEnabled;
+
+    return config;
+
+}
+
 /* Add listeners to save/load menu options */
 
 electron.ipcRenderer.on('save', function () {
 
-    const timePeriods = scheduleBar.getTimePeriods();
+    const currentConfig = getCurrentConfiguration();
 
-    const localTime = ui.isLocalTime();
-
-    const ledEnabled = ledCheckbox.checked;
-    const lowVoltageCutoffEnabled = lowVoltageCutoffCheckbox.checked;
-    const batteryLevelCheckEnabled = batteryLevelCheckbox.checked;
-
-    const settings = uiSettings.getSettings();
-
-    const sampleRateIndex = settings.sampleRateIndex;
-    const gain = settings.gain;
-    const recordDuration = settings.recordDuration;
-    const sleepDuration = settings.sleepDuration;
-    const dutyEnabled = settings.dutyEnabled;
-
-    const passFiltersEnabled = settings.passFiltersEnabled;
-    const filterTypeIndex = settings.filterTypeIndex;
-    const lowerFilter = settings.lowerFilter;
-    const higherFilter = settings.higherFilter;
-
-    const amplitudeThresholdingEnabled = settings.amplitudeThresholdingEnabled;
-    const amplitudeThreshold = settings.amplitudeThreshold;
-
-    const firstRecordingDate = uiSchedule.getFirstRecordingDate();
-    const lastRecordingDate = uiSchedule.getLastRecordingDate();
-
-    const requireAcousticConfig = settings.requireAcousticConfig;
-
-    const displayVoltageRange = settings.displayVoltageRange;
-
-    const minimumAmplitudeThresholdDuration = settings.minimumAmplitudeThresholdDuration;
-
-    const amplitudeThresholdingScaleIndex = settings.amplitudeThresholdingScaleIndex;
-
-    const energySaverModeEnabled = settings.energySaverModeEnabled;
-
-    const disable48DCFilter = settings.disable48DCFilter;
-
-    saveLoad.saveConfiguration(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, recordDuration, sleepDuration, localTime, firstRecordingDate, lastRecordingDate, dutyEnabled, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, function (err) {
+    saveLoad.saveConfiguration(currentConfig, function (err) {
 
         if (err) {
 
@@ -1139,7 +1161,9 @@ electron.ipcRenderer.on('save', function () {
 
 electron.ipcRenderer.on('load', function () {
 
-    saveLoad.loadConfiguration(function (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, start, end, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter) {
+    const currentConfig = getCurrentConfiguration();
+
+    saveLoad.loadConfiguration(currentConfig, function (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled) {
 
         let sortedPeriods = timePeriods;
         sortedPeriods = sortedPeriods.sort(function (a, b) {
@@ -1153,8 +1177,8 @@ electron.ipcRenderer.on('load', function () {
         scheduleBar.setSchedule(sortedPeriods);
         uiSchedule.updateTimeList();
 
-        uiSchedule.setFirstRecordingDate(start);
-        uiSchedule.setLastRecordingDate(end);
+        uiSchedule.setFirstRecordingDate(firstRecordingDateEnabled, firstRecordingDate);
+        uiSchedule.setLastRecordingDate(lastRecordingDateEnabled, lastRecordingDate);
 
         const settings = {
             sampleRateIndex: sampleRateIndex,
@@ -1173,7 +1197,10 @@ electron.ipcRenderer.on('load', function () {
             minimumAmplitudeThresholdDuration: minimumAmplitudeThresholdDuration,
             amplitudeThresholdingScaleIndex: amplitudeThresholdingScaleIndex,
             energySaverModeEnabled: energySaverModeEnabled,
-            disable48DCFilter: disable48DCFilter
+            disable48DCFilter: disable48DCFilter,
+            lowGainRangeEnabled: lowGainRangeEnabled,
+            timeSettingFromGPSEnabled: timeSettingFromGPSEnabled,
+            magneticSwitchEnabled: magneticSwitchEnabled
         };
 
         uiSettings.fillUI(settings);

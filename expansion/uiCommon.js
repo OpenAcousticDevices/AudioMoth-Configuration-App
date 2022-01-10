@@ -164,7 +164,7 @@ prefixInput.addEventListener('keydown', (e) => {
 
     }
 
-    var reg = /[^A-Za-z_0-9]{1}/g;
+    var reg = /[^A-Za-z-_0-9]{1}/g;
 
     if (reg.test(e.key)) {
 
@@ -206,14 +206,14 @@ prefixCheckbox.addEventListener('change', () => {
 
     if (prefixCheckbox.checked) {
 
-        prefixLabel.style.color = '';
-        prefixInput.style.color = '';
+        prefixLabel.classList.remove('grey');
+        prefixInput.classList.remove('grey');
         prefixInput.disabled = false;
 
     } else {
 
-        prefixLabel.style.color = 'lightgray';
-        prefixInput.style.color = 'lightgray';
+        prefixLabel.classList.add('grey');
+        prefixInput.classList.add('grey');
         prefixInput.disabled = true;
 
     }

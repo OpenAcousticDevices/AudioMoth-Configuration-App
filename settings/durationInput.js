@@ -71,7 +71,7 @@ exports.setEnabled = (div, setting) => {
 
         textInput.style.backgroundColor = '';
         textInput.style.border = '';
-        span.style.color = '';
+        span.classList.remove('grey');
         span.style.backgroundColor = '';
 
         textInput.tabIndex = 0;
@@ -84,12 +84,12 @@ exports.setEnabled = (div, setting) => {
         case 'win32':
             textInput.style.backgroundColor = '#EBEBE4';
             textInput.style.border = '1px solid #cccccc';
-            span.style.color = 'grey';
+            span.classList.add('grey');
             span.style.backgroundColor = '#EBEBE4';
             break;
 
         case 'darwin':
-            span.style.color = 'grey';
+            span.classList.add('grey');
             span.style.backgroundColor = 'white';
             break;
 
@@ -112,8 +112,9 @@ function highlightInput (node) {
 
     } else {
 
-        span.style.backgroundColor = '';
         span.style.color = '';
+        span.style.backgroundColor = '';
+        span.classList.remove('grey');
 
     }
 

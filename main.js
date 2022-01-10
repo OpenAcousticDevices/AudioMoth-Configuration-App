@@ -193,6 +193,22 @@ function openAboutWindow () {
 
     });
 
+    aboutWindow.webContents.on('dom-ready', function () {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (aboutWindow) {
+
+            aboutWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
 }
 
 function toggleNightMode () {
@@ -202,6 +218,18 @@ function toggleNightMode () {
     if (expansionWindow) {
 
         expansionWindow.webContents.send('night-mode');
+
+    }
+
+    if (aboutWindow) {
+
+        aboutWindow.webContents.send('night-mode');
+
+    }
+
+    if (splitWindow) {
+
+        splitWindow.webContents.send('night-mode');
 
     }
 
@@ -382,6 +410,15 @@ app.on('ready', function () {
             click: function () {
 
                 mainWindow.webContents.send('update-check');
+
+            }
+        }, {
+            type: 'separator'
+        }, {
+            label: 'AudioMoth Filter Playground',
+            click: function () {
+
+                shell.openExternal('https://playground.openacousticdevices.info/');
 
             }
         }, {

@@ -55,11 +55,11 @@ exports.setEnabled = (div, setting) => {
 
         textInput.style.backgroundColor = '';
         textInput.style.border = '';
-        hourSpan.style.color = '';
+        hourSpan.classList.remove('grey');
         hourSpan.style.backgroundColor = '';
-        colonSpan.style.color = '';
+        colonSpan.classList.remove('grey');
         colonSpan.style.backgroundColor = '';
-        minuteSpan.style.color = '';
+        minuteSpan.classList.remove('grey');
         minuteSpan.style.backgroundColor = '';
 
         textInput.tabIndex = 0;
@@ -72,20 +72,20 @@ exports.setEnabled = (div, setting) => {
         case 'win32':
             textInput.style.backgroundColor = '#EBEBE4';
             textInput.style.border = '1px solid #cccccc';
-            hourSpan.style.color = 'grey';
+            hourSpan.classList.add('grey');
             hourSpan.style.backgroundColor = '#EBEBE4';
-            colonSpan.style.color = 'grey';
+            colonSpan.classList.add('grey');
             colonSpan.style.backgroundColor = '#EBEBE4';
-            minuteSpan.style.color = 'grey';
+            minuteSpan.classList.add('grey');
             minuteSpan.style.backgroundColor = '#EBEBE4';
             break;
 
         case 'darwin':
-            hourSpan.style.color = 'grey';
+            hourSpan.classList.add('grey');
             hourSpan.style.backgroundColor = 'white';
-            colonSpan.style.color = 'grey';
+            colonSpan.classList.add('grey');
             colonSpan.style.backgroundColor = 'white';
-            minuteSpan.style.color = 'grey';
+            minuteSpan.classList.add('grey');
             minuteSpan.style.backgroundColor = 'white';
             break;
 
@@ -185,21 +185,25 @@ function highlightInput (node) {
         hourSpan.style.backgroundColor = 'Highlight';
         hourSpan.style.color = 'HighlightText';
         minuteSpan.style.backgroundColor = deselectedColor;
-        minuteSpan.style.color = '';
+        minuteSpan.classList.remove('grey');
 
     } else if (index === 1) {
 
-        hourSpan.style.backgroundColor = deselectedColor;
         hourSpan.style.color = '';
+        minuteSpan.style.color = '';
+        hourSpan.style.backgroundColor = deselectedColor;
+        hourSpan.classList.remove('grey');
         minuteSpan.style.backgroundColor = 'Highlight';
         minuteSpan.style.color = 'HighlightText';
 
     } else {
 
-        hourSpan.style.backgroundColor = deselectedColor;
         hourSpan.style.color = '';
-        minuteSpan.style.backgroundColor = deselectedColor;
         minuteSpan.style.color = '';
+        hourSpan.style.backgroundColor = deselectedColor;
+        hourSpan.classList.remove('grey');
+        minuteSpan.style.backgroundColor = deselectedColor;
+        minuteSpan.classList.remove('grey');
 
     }
 

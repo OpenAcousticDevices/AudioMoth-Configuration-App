@@ -114,10 +114,11 @@ function handleFocusOut (e) {
 
             if (!input.disabled) {
 
-                input.style.color = '';
+                input.classList.remove('grey');
 
             }
 
+            input.style.color = '';
             input.style.border = '';
 
         }, 1000);

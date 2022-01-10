@@ -40,6 +40,22 @@ select {
   border: #FFFFFF;
 }
 
-#filter-slider .slider-selection {
+#low-pass-filter-slider .slider-selection {
   background: rgb(64, 100, 216);
+}
+
+#high-pass-filter-slider .slider-track {
+  background: rgb(64, 100, 216);
+}
+
+#band-pass-filter-slider .slider-selection {
+  background: rgb(64, 100, 216);
+}
+
+#amplitude-thresholding-slider .slider-track {
+  background: rgb(64, 100, 216);
+}
+
+.grey {
+  color:#808080;
 }

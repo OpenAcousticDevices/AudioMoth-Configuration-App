@@ -250,12 +250,12 @@ outputCheckbox.addEventListener('change', () => {
 
     if (outputCheckbox.checked) {
 
-        outputLabel.style.color = '';
+        outputLabel.classList.remove('grey');
         outputButton.disabled = false;
 
     } else {
 
-        outputLabel.style.color = 'lightgray';
+        outputLabel.classList.add('grey');
         outputButton.disabled = true;
         outputDir = '';
         ui.updateOutputLabel(outputDir);

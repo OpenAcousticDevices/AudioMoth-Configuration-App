@@ -95,9 +95,9 @@ exports.disableTimeDisplay = (blankValue) => {
 
     if (timeDisplay) {
 
-        timeDisplay.style.color = 'lightgrey';
+        timeDisplay.classList.add('grey');
 
-        timezoneLabel.style.color = 'lightgrey';
+        timezoneLabel.classList.add('grey');
 
         if (blankValue) {
 
@@ -111,22 +111,11 @@ exports.disableTimeDisplay = (blankValue) => {
 
 exports.enableTimeDisplay = () => {
 
-    let textColor;
-
     if (timeDisplay) {
 
-        if (nightMode.isEnabled()) {
+        timeDisplay.classList.remove('grey');
 
-            textColor = 'white';
-
-        } else {
-
-            textColor = 'black';
-
-        }
-
-        timeDisplay.style.color = textColor;
-        timezoneLabel.style.color = textColor;
+        timezoneLabel.classList.remove('grey');
 
     }
 

@@ -149,7 +149,16 @@ function updateFileMaxLengthUI (elementClass, checkbox) {
     for (let i = 0; i < maxLengthElements.length; i++) {
 
         maxLengthElements[i].disabled = !maxLengthEnabled;
-        maxLengthElements[i].style.color = maxLengthEnabled ? '' : 'lightgrey';
+
+        if (maxLengthEnabled) {
+
+            maxLengthElements[i].classList.remove('grey');
+
+        } else {
+
+            maxLengthElements[i].classList.add('grey');
+
+        }
 
     }
 
@@ -473,12 +482,12 @@ outputCheckbox.addEventListener('change', () => {
 
     if (outputCheckbox.checked) {
 
-        outputLabel.style.color = '';
+        outputLabel.classList.remove('grey');
         outputButton.disabled = false;
 
     } else {
 
-        outputLabel.style.color = 'lightgray';
+        outputLabel.classList.add('grey');
         outputButton.disabled = true;
         outputDir = '';
         ui.updateOutputLabel(outputDir);
