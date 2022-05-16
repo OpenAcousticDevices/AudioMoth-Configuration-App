@@ -196,5 +196,5 @@ exports.getFirmwareClassification = (desc) => {
 
 /* Version number for the latest firmware */
 
-exports.latestFirmwareVersionArray = [1, 7, 0];
-exports.latestFirmwareVersionString = '1.7.0';
+exports.latestFirmwareVersionArray = [1, 8, 0];
+exports.latestFirmwareVersionString = '1.8.0';

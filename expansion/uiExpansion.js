@@ -22,7 +22,7 @@ const audiomothUtils = require('audiomoth-utils');
 const MAX_LENGTHS = [5, 10, 15, 30, 60, 300, 600, 3600];
 const MAX_LENGTH_STRINGS = ['5 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '5 minutes', '10 minutes', '1 hour'];
 
-const FILE_REGEX = /^\d\d\d\d\d\d\d\d_\d\d\d\d\d\dT.WAV$/;
+const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\dT.WAV$/;
 
 const durationTabButton = document.getElementById('duration-tab-link');
 const eventTabButton = document.getElementById('event-tab-link');

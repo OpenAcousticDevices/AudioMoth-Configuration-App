@@ -8,6 +8,7 @@ const electron = require('electron');
 const dialog = electron.remote.dialog;
 
 const acousticConfigCheckBox = document.getElementById('acoustic-config-checkbox');
+const dailyFolderCheckBox = document.getElementById('daily-folder-checkbox');
 const voltageRangeCheckBox = document.getElementById('voltage-range-checkbox');
 const energySaverModeCheckbox = document.getElementById('energy-saver-mode-checkbox');
 const lowGainRangeCheckbox = document.getElementById('low-gain-range-checkbox');
@@ -20,6 +21,12 @@ let hardwareWarningDisplayed = false;
 exports.isAcousticConfigRequired = () => {
 
     return acousticConfigCheckBox.checked;
+
+};
+
+exports.isDailyFolderEnabled = () => {
+
+    return dailyFolderCheckBox.checked;
 
 };
 
@@ -68,6 +75,7 @@ exports.fillUI = (settings) => {
     disable48DCFilterCheckbox.checked = settings.disable48DCFilter;
     gpsTimeCheckbox.checked = settings.timeSettingFromGPSEnabled;
     magneticDelayCheckbox.checked = settings.magneticSwitchEnabled;
+    dailyFolderCheckBox.checked = settings.dailyFolders;
 
 };
 
@@ -75,6 +83,7 @@ exports.prepareUI = (changeFunction) => {
 
     energySaverModeCheckbox.addEventListener('change', changeFunction);
     gpsTimeCheckbox.addEventListener('change', changeFunction);
+    dailyFolderCheckBox.addEventListener('change', changeFunction);
 
 };
 

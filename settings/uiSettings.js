@@ -6,6 +6,9 @@
 
 const electron = require('electron');
 const dialog = electron.remote.dialog;
+const BrowserWindow = electron.remote.BrowserWindow;
+
+const constants = require('../constants.js');
 
 const uiFiltering = require('./uiFiltering.js');
 const uiAdvanced = require('./uiAdvanced.js');
@@ -25,7 +28,12 @@ const recordingDurationLabel = document.getElementById('recording-duration-label
 const sleepDurationLabel = document.getElementById('sleep-duration-label');
 
 /* Whether or not the warning on sleep duration being set less than 5 has been displayed this app load */
+
 var sleepWarningDisplayed = false;
+
+/* Whether or not to display a warning if minimum amplitude threshold is greater than recording length */
+
+var displayDurationWarning = true;
 
 /* Add listeners to all radio buttons which update the life display */
 
@@ -35,7 +43,13 @@ function addRadioButtonListeners (changeFunction) {
 
         sampleRadioButtons[i].addEventListener('change', function () {
 
-            uiFiltering.sampleRateChange();
+            const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
+            const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+
+            // If a Goertzel value has been changed, don't rescale the values to defaults as sample rate changes
+            const passFiltersObserved = uiFiltering.getPassFiltersObserved();
+            const centreObserved = uiFiltering.getCentreObserved();
+            uiFiltering.sampleRateChange(!passFiltersObserved, !centreObserved, sampleRate);
             changeFunction();
 
         });
@@ -75,7 +89,7 @@ function checkRecordingDuration () {
     if (dutyCheckBox.checked) {
 
         const duration = durationInput.getValue(recordingDurationInput);
-        uiFiltering.checkMinimumTriggerTime(duration);
+        checkMinimumTriggerTime(duration);
 
     }
 
@@ -125,7 +139,18 @@ exports.prepareUI = (changeFunction) => {
 
     updateDutyCycleUI();
 
-    uiFiltering.prepareUI(changeFunction, checkRecordingDuration);
+    uiFiltering.prepareUI(changeFunction, checkRecordingDuration, () => {
+
+        const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
+        const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+
+        // If a Goertzel value has been changed, don't rescale the values to defaults as sample rate changes
+        const passFiltersObserved = uiFiltering.getPassFiltersObserved();
+        const centreObserved = uiFiltering.getCentreObserved();
+        uiFiltering.sampleRateChange(!passFiltersObserved, !centreObserved, sampleRate);
+
+    });
+
     uiAdvanced.prepareUI(changeFunction);
 
     durationInput.setValue(sleepDurationInput, 5);
@@ -148,15 +173,21 @@ exports.getSettings = () => {
         recordDuration: durationInput.getValue(recordingDurationInput),
         sleepDuration: durationInput.getValue(sleepDurationInput),
         passFiltersEnabled: uiFiltering.filteringIsEnabled(),
-        filterTypeIndex: uiFiltering.getFilterType(),
+        filterType: uiFiltering.getFilterType(),
         lowerFilter: uiFiltering.getLowerSliderValue(),
         higherFilter: uiFiltering.getHigherSliderValue(),
-        amplitudeThresholdingEnabled: uiFiltering.amplitudeThresholdingIsEnabled(),
+        amplitudeThresholdingEnabled: uiFiltering.amplitudeThresholdIsEnabled(),
         amplitudeThreshold: parseFloat(uiFiltering.getAmplitudeThreshold()),
+        frequencyTriggerEnabled: uiFiltering.frequencyTriggerIsEnabled(),
+        frequencyTriggerWindowLength: uiFiltering.getFrequencyTriggerWindowLength(),
+        frequencyTriggerCentreFrequency: uiFiltering.getFrequencyTriggerFilterFreq(),
+        minimumFrequencyTriggerDuration: uiFiltering.getMinimumFrequencyTriggerDuration(),
+        frequencyTriggerThreshold: uiFiltering.getFrequencyTrigger(),
         requireAcousticConfig: uiAdvanced.isAcousticConfigRequired(),
+        dailyFolders: uiAdvanced.isDailyFolderEnabled(),
         displayVoltageRange: uiAdvanced.displayVoltageRange(),
         minimumAmplitudeThresholdDuration: uiFiltering.getMinimumAmplitudeThresholdDuration(),
-        amplitudeThresholdingScaleIndex: uiFiltering.getAmplitudeThresholdScaleIndex(),
+        amplitudeThresholdScaleIndex: uiFiltering.getAmplitudeThresholdScaleIndex(),
         energySaverModeEnabled: uiAdvanced.isEnergySaverModeEnabled(),
         lowGainRangeEnabled: uiAdvanced.isLowGainRangeEnabled(),
         disable48DCFilter: uiAdvanced.is48DCFilterDisabled(),
@@ -173,6 +204,8 @@ exports.getPercentageAmplitudeThreshold = uiFiltering.getPercentageAmplitudeThre
 exports.getDecibelAmplitudeThreshold = uiFiltering.getDecibelAmplitudeThreshold;
 exports.getPercentageAmplitudeThresholdExponentMantissa = uiFiltering.getPercentageAmplitudeThresholdExponentMantissa;
 
+exports.getFrequencyFilterThresholdExponentMantissa = uiFiltering.getFrequencyFilterThresholdExponentMantissa;
+
 exports.fillUI = (settings) => {
 
     sampleRadioButtons[settings.sampleRateIndex].checked = true;
@@ -181,13 +214,37 @@ exports.fillUI = (settings) => {
     dutyCheckBox.checked = settings.dutyEnabled;
     updateDutyCycleUI();
 
-    uiFiltering.sampleRateChange();
+    const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
+    const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+
+    // If a Goertzel value has been changed, don't rescale the values to defaults as sample rate changes
+    const passFiltersObserved = uiFiltering.getPassFiltersObserved();
+    const centreObserved = uiFiltering.getCentreObserved();
+    uiFiltering.sampleRateChange(!passFiltersObserved, !centreObserved, sampleRate);
     uiFiltering.setFilters(settings.passFiltersEnabled, settings.lowerFilter, settings.higherFilter, settings.filterType);
     uiFiltering.updateFilterUI();
 
-    uiFiltering.setAmplitudeThresholdScaleIndex(settings.amplitudeThresholdingScaleIndex);
-    uiFiltering.setAmplitudeThreshold(settings.amplitudeThresholdingEnabled, settings.amplitudeThreshold);
-    uiFiltering.updateAmplitudeThresholdingUI();
+    let filteringType = 0;
+    filteringType = settings.amplitudeThresholdingEnabled ? 1 : filteringType;
+    filteringType = settings.frequencyTriggerEnabled ? 2 : filteringType;
+    uiFiltering.setThresholdType(filteringType);
+
+    uiFiltering.setAmplitudeThresholdScaleIndex(settings.amplitudeThresholdScaleIndex);
+    electron.ipcRenderer.send('set-amplitude-threshold-scale', settings.amplitudeThresholdScaleIndex);
+
+    uiFiltering.setAmplitudeThreshold(settings.amplitudeThreshold);
+
+    uiFiltering.setFrequencyTriggerWindowLength(settings.frequencyTriggerWindowLength);
+    uiFiltering.setFrequencyTriggerFilterFreq(settings.frequencyTriggerCentreFrequency);
+
+    // Treat all settings as "observed" when loading so sample rate changes affect it
+    uiFiltering.setCentreObserved(true);
+    uiFiltering.setPassFiltersObserved(true);
+
+    uiFiltering.setMinimumFrequencyTriggerDuration(settings.minimumFrequencyTriggerDuration);
+    uiFiltering.setFrequencyTrigger(settings.frequencyTriggerThreshold);
+
+    uiFiltering.updateThresholdUI();
 
     durationInput.setValue(sleepDurationInput, settings.sleepDuration);
     durationInput.setValue(recordingDurationInput, settings.recordDuration);
@@ -201,5 +258,50 @@ exports.fillUI = (settings) => {
     }
 
     uiFiltering.setMinimumAmplitudeThresholdDuration(settings.minimumAmplitudeThresholdDuration);
+
+};
+
+/* Receive message from the menu about which amplitude threshold scale to use */
+
+electron.ipcRenderer.on('amplitude-threshold-scale', (e, indexSelected) => {
+
+    uiFiltering.setAmplitudeThresholdScaleIndex(indexSelected);
+
+});
+
+/* Check whether recording time is less than minimum amplitude threshold duration and display warning if needed */
+
+function checkMinimumTriggerTime (recordingLength) {
+
+    const thresholdTypeIndex = uiFiltering.getThresholdTypeIndex();
+
+    if (thresholdTypeIndex === uiFiltering.THRESHOLD_TYPE_NONE || !displayDurationWarning) {
+
+        return;
+
+    }
+
+    let triggerDuration = uiFiltering.getMinimumTriggerDurationAmp();
+
+    if (thresholdTypeIndex === uiFiltering.THRESHOLD_TYPE_GOERTZEL) {
+
+        triggerDuration = uiFiltering.getMinimumTriggerDurationGoertzel();
+
+    }
+
+    if (triggerDuration > recordingLength) {
+
+        dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+            type: 'warning',
+            checkboxLabel: 'Don\'t warn me again',
+            title: 'Warning',
+            message: 'Note that the minimum threshold duration is currently longer than the scheduled recording duration.'
+        }).then(response => {
+
+            displayDurationWarning = !response.checkboxChecked;
+
+        });
+
+    }
 
 };

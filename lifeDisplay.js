@@ -107,7 +107,7 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
         recordingTimes: recordingTimes,
         sleepTime: totalSleepTime,
         containsTruncatedRecording: containsTruncatedRecording
-    }
+    };
 
 }
 
@@ -145,7 +145,9 @@ function getFileSize (sampleRate, sampleRateDivider, secs) {
 
 /* Update storage and energy usage values in life display box */
 
-exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, dutyEnabled, energySaverChecked, gpsEnabled) => {
+exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, frequencyTriggerEnabled, dutyEnabled, energySaverChecked, gpsEnabled) => {
+
+    const thresholdingEnabled = amplitudeThresholdingEnabled || frequencyTriggerEnabled;
 
     /* If no recording periods exist, do not perform energy calculations */
 
@@ -159,12 +161,11 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
     const energySaverEnabled = energySaverChecked && (configuration.trueSampleRate <= 48);
 
-    const fileOpenTime = 0.5;
     const fileOpenEnergy = energySaverEnabled ? 35.0 : 40.0;
-    const waitTime = 0.5;
+    const waitTime = 0.25;
     const waitEnergy = energySaverEnabled ? 7.0 : 10.0;
 
-    const sleepCurrent = 0.16;
+    const sleepCurrent = 0.1;
     const recordingCurrent = energySaverEnabled ? configuration.energySaverRecordCurrent : configuration.recordCurrent;
     const listenCurrent = energySaverEnabled ? configuration.energySaverListenCurrent : configuration.listenCurrent;
 
@@ -172,8 +173,8 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
     /* It's possible for file sizes to vary but overall storage consumption be known, so whether or not 'up to' is used in two locations in the information text varies */
 
-    let upToFile = amplitudeThresholdingEnabled;
-    const upToTotal = amplitudeThresholdingEnabled;
+    let upToFile = thresholdingEnabled;
+    const upToTotal = thresholdingEnabled;
 
     let totalSleepTime = 0;
     let totalSize = 0;
@@ -224,7 +225,7 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
             /* If the periods differ in size, include 'up to' when describing the file size. If amplitude thresholding is enabled, it already will include this */
 
-            if (i > 0 && !amplitudeThresholdingEnabled) {
+            if (i > 0 && !thresholdingEnabled) {
 
                 const prevPeriod = schedule[i - 1];
                 const prevLength = prevPeriod.endMins - prevPeriod.startMins;
@@ -322,6 +323,10 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
     }
 
+    /* Use the file count to work out the average file open time if daily folders are enabled */
+
+    const fileOpenTime = 0.5 + 3.5 * (totalRecCount / 10000) / 2;
+
     /* Add all the time outside the schedule as sleep time */
 
     totalSleepTime += Math.max(0, 86400 - preparationInstances - totalRecLength - totalSleepTime);
@@ -344,7 +349,7 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
     }
 
-    if (amplitudeThresholdingEnabled) {
+    if (thresholdingEnabled) {
 
         let minEnergyUsed = 0;
 

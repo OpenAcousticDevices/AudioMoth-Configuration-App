@@ -52,7 +52,11 @@ select {
   background: rgb(64, 100, 216);
 }
 
-#amplitude-thresholding-slider .slider-track {
+#amplitude-threshold-slider .slider-track {
+  background: rgb(64, 100, 216);
+}
+
+#goertzel-threshold-slider .slider-track {
   background: rgb(64, 100, 216);
 }
 

@@ -29,15 +29,20 @@ const DEFAULT_SETTINGS = {
     lastRecordingDateEnabled: false,
     dutyEnabled: true,
     passFiltersEnabled: false,
-    filterType: 'band',
     lowerFilter: 6000,
     higherFilter: 18000,
     amplitudeThresholdingEnabled: false,
     amplitudeThreshold: 0.001,
+    frequencyTriggerEnabled: false,
+    frequencyTriggerWindowLength: 16,
+    frequencyTriggerCentreFrequency: 0,
+    minimumFrequencyTriggerDuration: 0,
+    frequencyTriggerThreshold: 0.001,
     requireAcousticConfig: false,
+    dailyFolders: false,
     displayVoltageRange: false,
     minimumAmplitudeThresholdDuration: 0,
-    amplitudeThresholdingScale: 'percentage',
+    amplitudeThresholdScale: 'percentage',
     energySaverModeEnabled: false,
     lowGainRangeEnabled: false,
     disable48DCFilter: false,
@@ -51,34 +56,20 @@ function saveConfiguration (currentConfig, callback) {
 
     const sampleRate = constants.configurations[currentConfig.sampleRateIndex].trueSampleRate * 1000;
 
-    let filterType;
+    const filterType = currentConfig.filterType;
 
-    switch (currentConfig.filterTypeIndex) {
+    let amplitudeThresholdScale;
 
-    case 0:
-        filterType = 'low';
-        break;
-    case 1:
-        filterType = 'band';
-        break;
-    case 2:
-        filterType = 'high';
-        break;
-
-    }
-
-    let amplitudeThresholdingScale;
-
-    switch (currentConfig.amplitudeThresholdingScaleIndex) {
+    switch (currentConfig.amplitudeThresholdScaleIndex) {
 
     case 0:
-        amplitudeThresholdingScale = 'percentage';
+        amplitudeThresholdScale = 'percentage';
         break;
     case 1:
-        amplitudeThresholdingScale = '16bit';
+        amplitudeThresholdScale = '16bit';
         break;
     case 2:
-        amplitudeThresholdingScale = 'decibel';
+        amplitudeThresholdScale = 'decibel';
         break;
 
     }
@@ -104,15 +95,23 @@ function saveConfiguration (currentConfig, callback) {
 
     configuration += '"dutyEnabled": ' + currentConfig.dutyEnabled + ',\n';
     configuration += '"passFiltersEnabled": ' + currentConfig.passFiltersEnabled + ',\n';
+
     configuration += '"filterType": \"' + filterType + '\",\n';
+
     configuration += '"lowerFilter": ' + currentConfig.lowerFilter + ',\n';
     configuration += '"higherFilter": ' + currentConfig.higherFilter + ',\n';
     configuration += '"amplitudeThresholdingEnabled": ' + currentConfig.amplitudeThresholdingEnabled + ',\n';
     configuration += '"amplitudeThreshold": ' + currentConfig.amplitudeThreshold + ',\n';
-    configuration += '"requireAcousticConfig": ' + currentConfig.requireAcousticConfig + ',\n';
-    configuration += '"displayVoltageRange": ' + currentConfig.displayVoltageRange + ',\n';
     configuration += '"minimumAmplitudeThresholdDuration": ' + currentConfig.minimumAmplitudeThresholdDuration + ',\n';
-    configuration += '"amplitudeThresholdingScale": \"' + amplitudeThresholdingScale + '\",\n';
+    configuration += '"frequencyTriggerEnabled": ' + currentConfig.frequencyTriggerEnabled + ',\n';
+    configuration += '"frequencyTriggerWindowLength": ' + currentConfig.frequencyTriggerWindowLength + ',\n';
+    configuration += '"frequencyTriggerCentreFrequency": ' + currentConfig.frequencyTriggerCentreFrequency + ',\n';
+    configuration += '"minimumFrequencyTriggerDuration": ' + currentConfig.minimumFrequencyTriggerDuration + ',\n';
+    configuration += '"frequencyTriggerThreshold": ' + currentConfig.frequencyTriggerThreshold + ',\n';
+    configuration += '"requireAcousticConfig": ' + currentConfig.requireAcousticConfig + ',\n';
+    configuration += '"dailyFolders": ' + currentConfig.dailyFolders + ',\n';
+    configuration += '"displayVoltageRange": ' + currentConfig.displayVoltageRange + ',\n';
+    configuration += '"amplitudeThresholdScale": \"' + amplitudeThresholdScale + '\",\n';
     configuration += '"version": \"' + versionString + '\",\n';
     configuration += '"energySaverModeEnabled": ' + currentConfig.energySaverModeEnabled + ',\n';
     configuration += '"disable48DCFilter": ' + currentConfig.disable48DCFilter + ',\n';
@@ -292,7 +291,25 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     amplitudeThreshold: {
                         type: 'number'
                     },
+                    frequencyTriggerEnabled: {
+                        type: 'boolean'
+                    },
+                    frequencyTriggerWindowLength: {
+                        type: 'number'
+                    },
+                    frequencyTriggerCentreFrequency: {
+                        type: 'number'
+                    },
+                    minimumFrequencyTriggerDuration: {
+                        type: 'number'
+                    },
+                    frequencyTriggerThreshold: {
+                        type: 'number'
+                    },
                     requireAcousticConfig: {
+                        type: 'boolean'
+                    },
+                    dailyFolders: {
                         type: 'boolean'
                     },
                     displayVoltageRange: {
@@ -301,7 +318,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     minimumAmplitudeThresholdDuration: {
                         type: 'integer'
                     },
-                    amplitudeThresholdingScale: {
+                    amplitudeThresholdScale: {
                         type: 'string'
                     },
                     version: {
@@ -354,15 +371,19 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.recordDuration === 'undefined');
             isMissingValues |= (typeof jsonObj.localTime === 'undefined');
             isMissingValues |= (typeof jsonObj.passFiltersEnabled === 'undefined');
-            isMissingValues |= (typeof jsonObj.filterType === 'undefined');
             isMissingValues |= (typeof jsonObj.lowerFilter === 'undefined');
             isMissingValues |= (typeof jsonObj.higherFilter === 'undefined');
-            isMissingValues |= (typeof jsonObj.amplitudeThresholdingEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.amplitudeThreshold === 'undefined');
+            isMissingValues |= (typeof jsonObj.frequencyTriggerEnabled === 'undefined');
+            isMissingValues |= (typeof jsonObj.frequencyTriggerWindowLength === 'undefined');
+            isMissingValues |= (typeof jsonObj.frequencyTriggerCentreFrequency === 'undefined');
+            isMissingValues |= (typeof jsonObj.minimumFrequencyTriggerDuration === 'undefined');
+            isMissingValues |= (typeof jsonObj.frequencyTriggerThreshold === 'undefined');
             isMissingValues |= (typeof jsonObj.requireAcousticConfig === 'undefined');
+            isMissingValues |= (typeof jsonObj.dailyFolders === 'undefined');
             isMissingValues |= (typeof jsonObj.displayVoltageRange === 'undefined');
             isMissingValues |= (typeof jsonObj.minimumAmplitudeThresholdDuration === 'undefined');
-            isMissingValues |= (typeof jsonObj.amplitudeThresholdingScale === 'undefined');
+            isMissingValues |= (typeof jsonObj.amplitudeThresholdScale === 'undefined');
             isMissingValues |= (typeof jsonObj.energySaverModeEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.disable48DCFilter === 'undefined');
             isMissingValues |= (typeof jsonObj.lowGainRangeEnabled === 'undefined');
@@ -516,41 +537,48 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const filterType = (typeof jsonObj.filterType === 'undefined') ? replacementValues.filterType : jsonObj.filterType;
 
-            let filterTypeIndex;
-
-            switch (filterType) {
-
-            case 'low':
-                filterTypeIndex = 0;
-                break;
-            case 'band':
-                filterTypeIndex = 1;
-                break;
-            case 'high':
-                filterTypeIndex = 2;
-                break;
-
-            }
-
             const lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? replacementValues.lowerFilter : jsonObj.lowerFilter;
             const higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? replacementValues.higherFilter : jsonObj.higherFilter;
 
-            const amplitudeThresholdingEnabled = (typeof jsonObj.amplitudeThresholdingEnabled === 'undefined') ? replacementValues.amplitudeThresholdingEnabled : jsonObj.amplitudeThresholdingEnabled;
+            let amplitudeThresholdingEnabled;
+
+            if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
+
+                amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
+
+            } else if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
+
+                amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
+
+            } else {
+
+                amplitudeThresholdingEnabled = replacementValues.amplitudeThresholdingEnabled;
+
+            }
+
             const amplitudeThreshold = (typeof jsonObj.amplitudeThreshold === 'undefined') ? replacementValues.amplitudeThreshold : jsonObj.amplitudeThreshold;
 
+            const frequencyTriggerEnabled = (typeof jsonObj.frequencyTriggerEnabled === 'undefined') ? replacementValues.frequencyTriggerEnabled : jsonObj.frequencyTriggerEnabled;
+            const frequencyTriggerWindowLength = (typeof jsonObj.frequencyTriggerWindowLength === 'undefined') ? replacementValues.frequencyTriggerWindowLength : jsonObj.frequencyTriggerWindowLength;
+            const frequencyTriggerCentreFrequency = (typeof jsonObj.frequencyTriggerCentreFrequency === 'undefined') ? replacementValues.frequencyTriggerCentreFrequency : jsonObj.frequencyTriggerCentreFrequency;
+            const minimumFrequencyTriggerDuration = (typeof jsonObj.minimumFrequencyTriggerDuration === 'undefined') ? replacementValues.minimumFrequencyTriggerDuration : jsonObj.minimumFrequencyTriggerDuration;
+            const frequencyTriggerThreshold = (typeof jsonObj.frequencyTriggerThreshold === 'undefined') ? replacementValues.frequencyTriggerThreshold : jsonObj.frequencyTriggerThreshold;
+
             const requireAcousticConfig = (typeof jsonObj.requireAcousticConfig === 'undefined') ? replacementValues.requireAcousticConfig : jsonObj.requireAcousticConfig;
+
+            const dailyFolders = (typeof jsonObj.dailyFolders === 'undefined') ? replacementValues.dailyFolders : jsonObj.dailyFolders;
 
             const displayVoltageRange = (typeof jsonObj.displayVoltageRange === 'undefined') ? replacementValues.displayVoltageRange : jsonObj.displayVoltageRange;
 
             const minimumAmplitudeThresholdDuration = (typeof jsonObj.minimumAmplitudeThresholdDuration === 'undefined') ? replacementValues.minimumAmplitudeThresholdDuration : jsonObj.minimumAmplitudeThresholdDuration;
 
-            const amplitudeThresholdingScale = (typeof jsonObj.amplitudeThresholdingScale === 'undefined') ? replacementValues.amplitudeThresholdingScale : jsonObj.amplitudeThresholdingScale;
+            const amplitudeThresholdScale = (typeof jsonObj.amplitudeThresholdScale === 'undefined') ? replacementValues.amplitudeThresholdScale : jsonObj.amplitudeThresholdScale;
 
             let amplitudeThresholdingScaleIndex;
 
             /* Previous versions of the app used 0 - 32768 as the amplitude threshold scale. If the scale index isn't in the save file, assume it's from an older app version and match threshold and scale to old range */
 
-            switch (amplitudeThresholdingScale) {
+            switch (amplitudeThresholdScale) {
 
             case 'percentage':
                 amplitudeThresholdingScaleIndex = 0;
@@ -579,7 +607,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const version = (typeof jsonObj.version === 'undefined') ? '< 1.5.0' : jsonObj.version;
 
-            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterTypeIndex, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled);
+            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
 
             console.log('Loaded configuration file');
 

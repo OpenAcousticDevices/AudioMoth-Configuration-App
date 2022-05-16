@@ -1,171 +1,365 @@
-<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-8" style="text-align: left;">
-            <span class="settings-text" style="margin-left: 17px;">Enable filtering:</span>
-        </div>
-        <div class="col-4" style="text-align: right;">
-            <input class="settings-inputs" id="filter-checkbox" type="checkbox" style="margin-right: 16px;">
-        </div>
-    </div>
+<div class="row" style="margin-top: 8px;">
+    <div class="col-12">
+        <div style="border: #cdcdcd thin solid; width: 100%; margin-top: 0px;">
 
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-12">
-            <div style="margin-left: 5px; margin-right: 4px">
-                <table class="table" style="margin-bottom: 4px;" title="Type of filter.">
-                    <tr class="settings-text" style="font-size: 12px;">
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px"></td>
-                        <td align="center" style="padding: 0px" name="filter-radio-label"><span name="filter-radio-label" style="padding: 0px;">Low</span></td>                     
-                        <td align="center" style="padding: 0px" name="filter-radio-label"><span name="filter-radio-label" style="padding: 0px;">Band</span></td>
-                        <td align="center" style="padding: 0px" name="filter-radio-label"><span name="filter-radio-label" style="padding: 0px;">High</span></td>
-                    </tr>
-                    <tr class="settings-text">
-                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;"><span name="filter-radio-label">Filter type:</span></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="0" name="filter-radio">
-                        </td>                        
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="1" name="filter-radio" checked>
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="2" name="filter-radio">
-                        </td>
-                    </tr>
-                </table>
+            <!-- Threshold selection -->
+        
+            <div class="row" style="margin-top: 8px; margin-bottom: 4px;">
+                <div class="col-12">
+                    <div style="margin-left: 5px; margin-right: 4px">
+                        <table class="table" style="margin-bottom: 4px;" title="Type of threshold." id="threshold-type-table">
+                            <tr class="settings-text" style="font-size: 12px;">
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px" name="threshold-radio-label">None</td>                     
+                                <td align="center" style="padding: 0px" name="threshold-radio-label">Amplitude</td>
+                                <td align="center" style="padding: 0px" name="threshold-radio-label">Frequency</td>
+                            </tr>
+                            <tr class="settings-text">
+                                <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="threshold-type-label">Trigger type:</td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="0" name="threshold-type-radio" checked>
+                                </td>                        
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="1" name="threshold-type-radio">
+                                </td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="2" name="threshold-type-radio">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
-
-    <!-- High-pass filter -->
-    <div class="row" id="high-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="high-pass-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
-        </div>
-        <div class="col-8" title="The cut-off frequency of the high-pass filter." style="padding-left: 0px; padding-right: 0px;">
-            <input class="settings-inputs" id="high-pass-filter-slider" data-slider-id="high-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="18000" data-slider-selection="after" style="width: 370px;">
-        </div>
-        <div class="col-2" style="text-align: right;">
-            <span class="settings-text" id="high-pass-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
-        </div>
-    </div>
-
-    <!-- Low-pass filter -->
-    <div class="row" id="low-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: flex; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="low-pass-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
-        </div>
-        <div class="col-8" title="The cut-off frequency of the low-pass filter." style="padding-left: 0px; padding-right: 0px;">
-            <input class="settings-inputs" id="low-pass-filter-slider" data-slider-id="low-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="6000" data-slider-selection="before" style="width: 370px;">
-        </div>
-        <div class="col-2" style="text-align: right;">
-            <span class="settings-text" id="low-pass-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
-        </div>
-    </div>
-
-    <!-- Band-pass filter -->
-    <div class="row" id="band-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="band-pass-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
-        </div>
-        <div class="col-8" title="The low and high cut-off frequencies of the band-pass filter." style="padding-left: 0px; padding-right: 0px;">
-            <input class="settings-inputs" id="band-pass-filter-slider" data-slider-id="band-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="[6000,18000]" data-slider-selection="before" style="width: 370px;">
-        </div>
-        <div class="col-2" style="text-align: right;">
-            <span class="settings-text" id="band-pass-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
-        </div>
-    </div>
-
-
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-12" style="margin-left: 16px;">
-            <label class="settings-text" id="filter-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;">Recordings will be filtered to frequencies above 0.0 kHz.</label>
-        </div>
-    </div>
-
 </div>
 
-<div style="border: #cdcdcd thin solid; width: 100%; margin-top: 8px;">
-    <div class="row" style="margin-top: 8px;">
-        <div class="col-6" style="text-align: left;">
-            <span class="settings-text" style="margin-left: 17px;">Enable amplitude threshold:</span>
-        </div>
-        <div class="col-6" style="text-align: right;">
-            <input class="settings-inputs" id="amplitude-thresholding-checkbox" type="checkbox" style="margin-right: 16px;">
-        </div>
-    </div>
+<!-- Filtering -->
 
-    <div class="row" style="margin-top: 14px; margin-bottom: 8px;">
-        <div class="col-12">
-            <div style="margin-left: 5px; margin-right: 4px">
-                <table class="table" style="margin-bottom: 4px;" id="amplitude-thresholding-duration-table">
-                    <tr class="settings-text" style="font-size: 12px;" title="Minimum trigger length.">
-                        <td align="center" style="padding: 0px; padding-left: 0px;"></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">0</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">1</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">2</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">5</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">10</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">15</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">30</span></td>
-                        <td align="center" style="padding: 0px; padding-left: 0px;"><span name="amplitude-thresholding-duration-radio-label">60</span></td>
-                    </tr>
-                    <tr class="settings-text" title="Minimum trigger length.">
-                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;"><span name="amplitude-thresholding-duration-radio-label">Minimum trigger duration (s):</span></td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="0" name="amplitude-thresholding-duration-radio" checked>
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="1" name="amplitude-thresholding-duration-radio">
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="2" name="amplitude-thresholding-duration-radio">
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="3" name="amplitude-thresholding-duration-radio">
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="4" name="amplitude-thresholding-duration-radio">
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="5" name="amplitude-thresholding-duration-radio">
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="6" name="amplitude-thresholding-duration-radio">
-                        </td>
-                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                            <input class="settings-inputs" type="radio" value="7" name="amplitude-thresholding-duration-radio">
-                        </td>
-                    </tr>
-                </table>
+<div id="filter-holder" class="row">
+    <div class="col-12" style="margin-top: 8px;">
+        <div style="border: #cdcdcd thin solid; width: 100%;">
+        
+            <div class="row" style="margin-top: 8px;">
+                <div class="col-12">
+                    <div style="margin-left: 5px; margin-right: 4px">
+                        <table class="table" style="margin-bottom: 4px;" title="Type of filter." id="filter-type-table">
+                            <tr class="settings-text" style="font-size: 12px;">
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px"></td>
+                                <td align="center" style="padding: 0px" name="filter-radio-label">None</td>                
+                                <td align="center" style="padding: 0px" name="filter-radio-label">Low</td>                
+                                <td align="center" style="padding: 0px" name="filter-radio-label">Band</td>
+                                <td align="center" style="padding: 0px" name="filter-radio-label">High</td>
+                            </tr>
+                            <tr class="settings-text">
+                                <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="filter-type-label">Filter type:</td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="3" name="filter-radio" checked>
+                                </td>                        
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="0" name="filter-radio">
+                                </td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="1" name="filter-radio">
+                                </td>
+                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                    <input type="radio" value="2" name="filter-radio">
+                                </td>   
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
+
+            <!-- Disabled filter -->
+            <div class="row grey" id="disabled-row" style="margin-top: 8px; margin-bottom: 8px; display: flex; align-items: center;">
+                <div class="col-2" style="text-align: left; padding-right: 0px;">
+                    <span class="settings-text" id="disabled-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
+                </div>
+                <div id="disabled-filter-slider-holder" class="col-8 config-slider" title="The low and high cut-off frequencies of the disabled filter." style="padding-left: 0px; padding-right: 0px;">
+                    <input id="disabled-filter-slider" data-slider-id="disabled-filter-slider" type="text" class="span2" data-slider-value="0" style="width: 370px; ">
+                </div>
+                <div class="col-2" style="text-align: right;">
+                    <span class="settings-text" id="disabled-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
+                </div>
+            </div>
+        
+            <!-- High-pass filter -->
+            <div class="row" id="high-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
+                <div class="col-2" style="text-align: left; padding-right: 0px;">
+                    <span class="settings-text" id="high-pass-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
+                </div>
+                <div id="high-pass-filter-slider-holder" class="col-8 config-slider" title="The cut-off frequency of the high-pass filter." style="padding-left: 0px; padding-right: 0px;">
+                    <input id="high-pass-filter-slider" data-slider-id="high-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="18000" data-slider-selection="after" style="width: 370px;">
+                </div>
+                <div class="col-2" style="text-align: right;">
+                    <span class="settings-text" id="high-pass-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
+                </div>
+            </div>
+        
+            <!-- Low-pass filter -->
+            <div class="row" id="low-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
+                <div class="col-2" style="text-align: left; padding-right: 0px;">
+                    <span class="settings-text" id="low-pass-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
+                </div>
+                <div id="low-pass-filter-slider-holder" class="col-8 config-slider" title="The cut-off frequency of the low-pass filter." style="padding-left: 0px; padding-right: 0px;">
+                    <input id="low-pass-filter-slider" data-slider-id="low-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="6000" data-slider-selection="before" style="width: 370px;">
+                </div>
+                <div class="col-2" style="text-align: right;">
+                    <span class="settings-text" id="low-pass-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
+                </div>
+            </div>
+        
+            <!-- Band-pass filter -->
+            <div class="row" id="band-pass-row" style="margin-top: 8px; margin-bottom: 8px; display: none; align-items: center;">
+                <div class="col-2" style="text-align: left; padding-right: 0px;">
+                    <span class="settings-text" id="band-pass-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
+                </div>
+                <div id="band-pass-filter-slider-holder" class="col-8 config-slider" title="The low and high cut-off frequencies of the band-pass filter." style="padding-left: 0px; padding-right: 0px;">
+                    <input id="band-pass-filter-slider" data-slider-id="band-pass-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="[6000,18000]" data-slider-selection="before" style="width: 370px;">
+                </div>
+                <div class="col-2" style="text-align: right;">
+                    <span class="settings-text" id="band-pass-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
+                </div>
+            </div>
+        
+            <div class="row" style="margin-top: 8px;">
+                <div class="col-12" style="margin-left: 16px;">
+                    <label class="settings-text" id="filter-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;">Recordings will not be filtered.</label>
+                </div>
+            </div>
+        
         </div>
     </div>
+</div>
 
-    <div class="row" style="margin-top: 16px; margin-bottom: 8px; display: flex; align-items: center;">
-        <div class="col-2" style="text-align: left; padding-right: 0px;">
-            <span class="settings-text" id="amplitude-thresholding-min-label" style="margin-left: 16px; font-weight: bold;">0.001%</span>
-        </div>
-        <div class="col-8" style="padding-left: 0%; padding-right: 0%;" title="The amplitude threshold below which audio is not written to the SD card.">
-            <input class="settings-inputs" id="amplitude-thresholding-slider" data-slider-id="amplitude-thresholding-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="10000" data-slider-step="1" data-slider-value="0" data-slider-selection="after" style="width: 370px;">
-        </div>
-        <div class="col-2" style="text-align: right;">
-            <span class="settings-text" id="amplitude-thresholding-max-label" style="font-weight: bold; text-align: right; padding-right: 18px;">100%</span>
+<div id="threshold-holder" class="row" style="margin-top: 8px;">
+    <div class="col-12">
+        <div style="border: #cdcdcd thin solid; width: 100%;">
+
+            <!-- Amplitude threshold -->
+
+            <div id="amplitude-threshold-holder" style="margin-bottom: 8px;">
+        
+                <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                    <div class="col-12">
+                        <div style="margin-left: 5px; margin-right: 4px">
+                            <table class="table" style="margin-bottom: 4px;" id="amplitude-threshold-duration-table">
+                                <tr class="settings-text" style="font-size: 12px;" title="Minimum trigger length.">
+                                    <td align="center" style="padding: 0px; padding-left: 0px;"></td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">0</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">1</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">2</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">5</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">10</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">15</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">30</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="amplitude-threshold-duration-radio-label">60</td>
+                                </tr>
+                                <tr class="settings-text" title="Minimum trigger length.">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Minimum trigger duration (s):</td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio0" value="0" name="amplitude-threshold-duration-radio" checked>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio1" value="1" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio2" value="2" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio3" value="3" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio4" value="4" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio5" value="5" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio6" value="6" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="amplitude-threshold-duration-radio6" value="7" name="amplitude-threshold-duration-radio">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="row" style="margin-top: 8px; margin-bottom: 12px; display: flex; align-items: center;">
+                    <div class="col-2" style="text-align: left; padding-right: 0px;">
+                        <span class="settings-text" id="amplitude-threshold-min-label" style="margin-left: 16px; font-weight: bold;">0.001%</span>
+                    </div>
+                    <div id="amplitude-threshold-slider-holder" class="col-8 config-slider" style="padding-left: 0%; padding-right: 0%;" title="The amplitude threshold below which audio is not written to the SD card.">
+                        <input class="settings-inputs" id="amplitude-threshold-slider" data-slider-id="amplitude-threshold-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="10000" data-slider-step="1" data-slider-value="0" data-slider-selection="after" style="width: 370px;">
+                    </div>
+                    <div class="col-2" style="text-align: right;">
+                        <span class="settings-text" id="amplitude-threshold-max-label" style="font-weight: bold; text-align: right; padding-right: 18px;">100%</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Goertzel filter -->
+
+            <div id="goertzel-filter-threshold-holder" style="margin-bottom: 8px;">
+
+                <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                    <div class="col-12">
+                        <div style="margin-left: 5px; margin-right: 4px">
+                            <table class="table" style="margin-bottom: 4px;" id="goertzel-filter-window-table">
+                                <tr class="settings-text" style="font-size: 12px;" title="Window length of the Goertzel filter.">
+                                    <td align="center" style="padding: 0px; padding-left: 0px;"></td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px; width: 50px;"></td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">16</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">32</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">64</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">128</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">256</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">512</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-filter-window-radio-label">1024</td>
+                                </tr>
+                                <tr class="settings-text" title="Window length of the Goertzel filter.">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px; width: 204px;">Window length (samples):</td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px; width: 13px;">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio1" value="0" name="goertzel-filter-window-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio2" value="1" name="goertzel-filter-window-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio3" value="2" name="goertzel-filter-window-radio" checked>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio4" value="3" name="goertzel-filter-window-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio5" value="4" name="goertzel-filter-window-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio6" value="5" name="goertzel-filter-window-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-filter-window-radio6" value="6" name="goertzel-filter-window-radio">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" id="goertzel-filter-row" style="margin-top: 8px; margin-bottom: 8px; display: flex; align-items: center;">
+                    <div class="col-2" style="text-align: left; padding-right: 0px;">
+                        <span class="settings-text" id="goertzel-filter-min-label" style="margin-left: 16px; font-weight: bold;">0kHz</span>
+                    </div>
+                    <div id="goertzel-filter-slider-holder" class="col-8 config-slider" title="The centre frequency of the Goertzel filter." style="padding-left: 0px; padding-right: 0px;">
+                        <input id="goertzel-filter-slider" data-slider-id="goertzel-filter-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="24000" data-slider-step="100" data-slider-value="12000" data-slider-selection="none" style="width: 370px;">
+                    </div>
+                    <div class="col-2" style="text-align: right;">
+                        <span class="settings-text" id="goertzel-filter-max-label" style="font-weight: bold; padding-right: 18px;">24kHz</span>
+                    </div>
+                </div>
+
+                <!-- Filter status -->
+
+                <div class="row" style="margin-top: 8px;">
+                    <div class="col-12" style="margin-left: 16px;">
+                        <label class="settings-text" id="goertzel-filter-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;">A centre frequency of XXXkHz will be used by the frequency trigger.</label>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 18px; margin-bottom: 8px;">
+                    <div class="col-12">
+                        <div style="margin-left: 5px; margin-right: 4px">
+                            <table class="table" style="margin-bottom: 4px;" id="goertzel-duration-table">
+                                <tr class="settings-text" style="font-size: 12px;" title="Minimum length of time of a triggered period.">
+                                    <td align="center" style="padding: 0px; padding-left: 0px;"></td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">0</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">1</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">2</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">5</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">10</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">15</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">30</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="goertzel-duration-radio-label">60</td>
+                                </tr>
+                                <tr class="settings-text" title="Minimum length of time of a triggered period.">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Minimum trigger duration (s):</td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio0" value="0" name="goertzel-duration-radio" checked>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio1" value="1" name="goertzel-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio2" value="2" name="goertzel-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio3" value="3" name="goertzel-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio4" value="4" name="goertzel-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio5" value="5" name="goertzel-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio6" value="6" name="goertzel-duration-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" id="goertzel-duration-radio6" value="7" name="goertzel-duration-radio">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 8px; margin-bottom: 12px; display: flex; align-items: center;">
+                    <div class="col-2" style="text-align: left; padding-right: 0px;">
+                        <span class="settings-text" id="goertzel-threshold-min-label" style="margin-left: 16px; font-weight: bold;">0.001%</span>
+                    </div>
+                    <div id="goertzel-threshold-slider-holder" class="col-8 config-slider" title="The threshold value of the frequency trigger." style="padding-left: 0%; padding-right: 0%;">
+                        <input class="settings-inputs" id="goertzel-threshold-slider" data-slider-id="goertzel-threshold-slider" type="text" class="span2" value="" data-slider-min="0" data-slider-max="10000" data-slider-step="1" data-slider-value="0" data-slider-selection="after" style="width: 370px;">
+                    </div>
+                    <div class="col-2" style="text-align: right;">
+                        <span class="settings-text" id="goertzel-threshold-max-label" style="font-weight: bold; text-align: right; padding-right: 18px;">100%</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Threshold status -->
+
+            <div class="row">
+                <div class="col-12" style="margin-left: 16px;">
+                    <label class="settings-text" id="threshold-label" style="width: 100%; resize:none; text-align: left; font-weight: normal;">All audio will be written to a WAV file.</label>
+                </div>
+            </div>
+
         </div>
     </div>
-
-    <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
-        <div class="col-12" style="margin-left: 16px;">
-            <label class="settings-text" id="amplitude-thresholding-label" style="width: 100%; resize:none; text-align: left; font-weight: normal; margin-bottom: 0px;"></label>
-        </div>
-    </div>
-
 </div>

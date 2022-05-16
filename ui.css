@@ -24,6 +24,10 @@ body {
   background: rgb(173, 189, 241);
 }
 
+#disabled-filter-slider .slider-handle {
+  display: none;
+}
+
 .grey {
   color: #D3D3D3;
 }

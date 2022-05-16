@@ -23,7 +23,7 @@ var currentWindow = electron.remote.getCurrentWindow();
 
 const MAX_LENGTHS = [5, 10, 15, 30, 60, 300, 600, 3600];
 
-const FILE_REGEX = /^\d\d\d\d\d\d\d\d_\d\d\d\d\d\d.WAV$/;
+const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\d.WAV$/;
 
 const maxLengthRadios = document.getElementsByName('max-length-radio');
 

@@ -11,20 +11,6 @@ argTarget = process.argv[2];
 switch (argTarget) {
 
 case 'win':
-case 'win64':
-    console.log('Using build configuration to Windows (64-bit).');
-    target = Platform.WINDOWS.createTarget();
-    config = {
-        win: {
-            target: [
-                {
-                    target: 'nsis',
-                    arch: 'x64'
-                }
-            ]
-        }
-    };
-    break;
 case 'win32':
     console.log('Using build configuration to Windows (32-bit).');
     target = Platform.WINDOWS.createTarget();
@@ -34,6 +20,20 @@ case 'win32':
                 {
                     target: 'nsis',
                     arch: 'ia32'
+                }
+            ]
+        }
+    };
+    break;
+case 'win64':
+    console.log('Using build configuration to Windows (64-bit).');
+    target = Platform.WINDOWS.createTarget();
+    config = {
+        win: {
+            target: [
+                {
+                    target: 'nsis',
+                    arch: 'x64'
                 }
             ]
         }
