@@ -11,8 +11,9 @@
 const electron = require('electron');
 const dialog = electron.remote.dialog;
 
-/* Get functions which control elements common to the expansion and split windows */
+/* Get functions which control elements common to the expansion, split, and downsample windows */
 const ui = require('./uiCommon.js');
+const uiOutput = require('./uiOutput.js');
 
 const path = require('path');
 const fs = require('fs');
@@ -21,7 +22,7 @@ const audiomothUtils = require('audiomoth-utils');
 
 var currentWindow = electron.remote.getCurrentWindow();
 
-const MAX_LENGTHS = [5, 10, 15, 30, 60, 300, 600, 3600];
+const MAX_LENGTHS = [1, 5, 10, 15, 30, 60, 300, 600, 3600];
 
 const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\d.WAV$/;
 
@@ -31,12 +32,6 @@ const selectionRadios = document.getElementsByName('selection-radio');
 
 const prefixCheckbox = document.getElementById('prefix-checkbox');
 const prefixInput = document.getElementById('prefix-input');
-
-const outputCheckbox = document.getElementById('output-checkbox');
-const outputButton = document.getElementById('output-button');
-const outputLabel = document.getElementById('output-label');
-
-var outputDir = '';
 
 const fileLabel = document.getElementById('file-label');
 const fileButton = document.getElementById('file-button');
@@ -60,8 +55,8 @@ function disableUI () {
 
     }
 
-    outputCheckbox.disabled = true;
-    outputButton.disabled = true;
+    uiOutput.disableOutputCheckbox();
+    uiOutput.disableOutputButton();
 
     prefixCheckbox.disabled = true;
     prefixInput.disabled = true;
@@ -81,8 +76,8 @@ function enableUI () {
 
     }
 
-    outputCheckbox.disabled = false;
-    outputButton.disabled = false;
+    uiOutput.enableOutputCheckbox();
+    uiOutput.enableOutputButton();
 
     prefixCheckbox.disabled = false;
 
@@ -140,7 +135,7 @@ function splitFiles () {
 
         /* Check if the optional prefix/output directory setttings are being used. If left as null, splitter will put file(s) in the same directory as the input with no prefix */
 
-        const outputPath = outputCheckbox.checked ? outputDir : null;
+        const outputPath = uiOutput.isChecked() ? uiOutput.getOutputDir() : null;
         const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
         const response = audiomothUtils.split(files[i], outputPath, prefix, maxLength, (progress) => {
@@ -165,7 +160,7 @@ function splitFiles () {
 
             if (errorCount === 1) {
 
-                const errorFileLocation = outputCheckbox.checked ? outputDir : path.dirname(errorFiles[0]);
+                const errorFileLocation = uiOutput.isChecked() ? uiOutput.getOutputDir() : path.dirname(errorFiles[0]);
 
                 errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
 
@@ -244,44 +239,7 @@ function resetUI () {
 
 }
 
-/* Add listener which handles enabling/disabling custom output directory UI */
-
-outputCheckbox.addEventListener('change', () => {
-
-    if (outputCheckbox.checked) {
-
-        outputLabel.classList.remove('grey');
-        outputButton.disabled = false;
-
-    } else {
-
-        outputLabel.classList.add('grey');
-        outputButton.disabled = true;
-        outputDir = '';
-        ui.updateOutputLabel(outputDir);
-
-    }
-
-});
-
-/* Select a custom output directory. If Cancel is pressed, assume no custom direcotry is wantted */
-
-outputButton.addEventListener('click', () => {
-
-    const destinationName = dialog.showOpenDialogSync({
-        title: 'Select Destination',
-        nameFieldLabel: 'Destination',
-        multiSelections: false,
-        properties: ['openDirectory']
-    });
-
-    outputDir = (destinationName !== undefined) ? destinationName[0] : '';
-
-    ui.updateOutputLabel(outputDir);
-
-});
-
-/* Whenever tthe file/folder radio button changes, reset the UI */
+/* Whenever the file/folder radio button changes, reset the UI */
 
 selectionRadios[0].addEventListener('change', resetUI);
 selectionRadios[1].addEventListener('change', resetUI);
@@ -306,7 +264,7 @@ splitButton.addEventListener('click', () => {
 
     }
 
-    if ((!prefixCheckbox.checked || prefixInput.value === '') && (!outputCheckbox.checked || outputDir === '')) {
+    if ((!prefixCheckbox.checked || prefixInput.value === '') && (!uiOutput.isChecked() || uiOutput.getOutputDir() === '')) {
 
         dialog.showMessageBox(currentWindow, {
             type: 'error',

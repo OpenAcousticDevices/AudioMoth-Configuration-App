@@ -27,9 +27,9 @@ require('electron-debug')({
     devToolsMode: 'undocked'
 });
 
-var mainWindow, aboutWindow, expansionWindow, splitWindow;
+var mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow;
 
-var expandProgressBar, splitProgressBar;
+var expandProgressBar, splitProgressBar, downsampleProgressBar;
 
 function shrinkWindowHeight (windowHeight) {
 
@@ -60,7 +60,7 @@ function openSplitWindow () {
     splitWindow = new BrowserWindow({
         width: 565,
         height: shrinkWindowHeight(403),
-        title: 'Split AudioMoth Recordings',
+        title: 'Split AudioMoth WAV Files',
         useContentSize: true,
         resizable: false,
         fullscreenable: false,
@@ -72,7 +72,7 @@ function openSplitWindow () {
     });
 
     splitWindow.setMenu(null);
-    splitWindow.loadURL(path.join('file://', __dirname, 'expansion/split.html'));
+    splitWindow.loadURL(path.join('file://', __dirname, 'processing/split.html'));
 
     splitWindow.webContents.on('dom-ready', function () {
 
@@ -117,7 +117,7 @@ function openExpansionWindow () {
     expansionWindow = new BrowserWindow({
         width: 565,
         height: shrinkWindowHeight(575),
-        title: 'Expand AudioMoth T.WAV Recordings',
+        title: 'Expand AudioMoth T.WAV Files',
         useContentSize: true,
         resizable: false,
         fullscreenable: false,
@@ -129,7 +129,7 @@ function openExpansionWindow () {
     });
 
     expansionWindow.setMenu(null);
-    expansionWindow.loadURL(path.join('file://', __dirname, 'expansion/expansion.html'));
+    expansionWindow.loadURL(path.join('file://', __dirname, 'processing/expansion.html'));
 
     expansionWindow.webContents.on('dom-ready', function () {
 
@@ -156,6 +156,63 @@ function openExpansionWindow () {
         }
 
         expansionWindow = null;
+
+    });
+
+}
+
+function openDownsamplingWindow () {
+
+    if (downsampleWindow) {
+
+        return;
+
+    }
+
+    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+
+    downsampleWindow = new BrowserWindow({
+        width: 565,
+        height: shrinkWindowHeight(380),
+        title: 'Downsample AudioMoth WAV Files',
+        useContentSize: true,
+        resizable: false,
+        fullscreenable: false,
+        icon: path.join(__dirname, iconLocation),
+        parent: mainWindow,
+        webPreferences: {
+            nodeIntegration: true
+        }
+    });
+
+    downsampleWindow.setMenu(null);
+    downsampleWindow.loadURL(path.join('file://', __dirname, 'processing/downsampling.html'));
+
+    downsampleWindow.webContents.on('dom-ready', function () {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (downsampleWindow) {
+
+            downsampleWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+    downsampleWindow.on('close', function (e) {
+
+        if (downsampleProgressBar) {
+
+            e.preventDefault();
+
+        }
+
+        downsampleWindow = null;
 
     });
 
@@ -351,7 +408,7 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
-            label: 'Split AudioMoth WAV Recordings',
+            label: 'Split AudioMoth WAV Files',
             accelerator: 'CommandOrControl+P',
             click: function () {
 
@@ -359,11 +416,19 @@ app.on('ready', function () {
 
             }
         }, {
-            label: 'Expand AudioMoth T.WAV Recordings',
+            label: 'Expand AudioMoth T.WAV Files',
             accelerator: 'CommandOrControl+E',
             click: function () {
 
                 openExpansionWindow();
+
+            }
+        }, {
+            label: 'Downsample AudioMoth WAV Files',
+            accelerator: 'CommandOrControl+D',
+            click: function () {
+
+                openDownsamplingWindow();
 
             }
         }, {
@@ -704,6 +769,139 @@ ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWri
 ipcMain.on('poll-split-cancelled', (event) => {
 
     if (splitProgressBar) {
+
+        event.returnValue = false;
+
+    } else {
+
+        event.returnValue = true;
+
+    }
+
+});
+
+/* Downsampling progress bar functions */
+
+ipcMain.on('start-downsample-bar', (event, fileCount) => {
+
+    if (downsampleProgressBar) {
+
+        return;
+
+    }
+
+    let detail = 'Starting to downsample file';
+    detail += (fileCount > 1) ? 's' : '';
+    detail += '.';
+
+    downsampleProgressBar = new ProgressBar({
+        title: 'AudioMoth Configuration App',
+        text: 'Downsampling files...',
+        detail: detail,
+        closeOnComplete: false,
+        indeterminate: false,
+        browserWindow: {
+            parent: splitWindow,
+            webPreferences: {
+                nodeIntegration: true
+            },
+            closable: true,
+            modal: false
+        },
+        maxValue: fileCount * 100
+    });
+
+    downsampleProgressBar.on('aborted', () => {
+
+        if (downsampleProgressBar) {
+
+            downsampleProgressBar.close();
+            downsampleProgressBar = null;
+
+        }
+
+    });
+
+});
+
+ipcMain.on('set-downsample-bar-progress', (event, fileNum, progress, name) => {
+
+    const index = fileNum + 1;
+    const fileCount = downsampleProgressBar.getOptions().maxValue / 100;
+
+    if (downsampleProgressBar) {
+
+        downsampleProgressBar.value = (fileNum * 100) + progress;
+        downsampleProgressBar.detail = 'Downsampling ' + name + ' (' + index + ' of ' + fileCount + ').';
+
+    }
+
+});
+
+ipcMain.on('set-downsample-bar-error', (event, name) => {
+
+    if (downsampleProgressBar) {
+
+        downsampleProgressBar.detail = 'Error when downsampling ' + name + '.';
+
+    }
+
+});
+
+ipcMain.on('set-downsample-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
+
+    if (downsampleProgressBar) {
+
+        let messageText;
+
+        downsampleProgressBar.setCompleted();
+
+        if (errorCount > 0) {
+
+            messageText = 'Errors occurred in ' + errorCount + ' file';
+            messageText += (errorCount === 1 ? '' : 's');
+            messageText += '.<br>';
+
+            if (errorWritingLog) {
+
+                messageText += 'Failed to write ERRORS.TXT to destination.';
+
+            } else {
+
+                messageText += 'See ERRORS.TXT for details.';
+
+            }
+
+        } else {
+
+            messageText = 'Successfully downsampled ' + successCount + ' file';
+            messageText += (successCount === 1 ? '' : 's');
+            messageText += '.';
+
+        }
+
+        downsampleProgressBar.detail = messageText;
+
+        setTimeout(function () {
+
+            downsampleProgressBar.close();
+            downsampleProgressBar = null;
+
+            if (downsampleWindow) {
+
+                downsampleWindow.send('downsample-summary-closed');
+
+            }
+
+        }, 5000);
+
+    }
+
+});
+
+ipcMain.on('poll-downsample-cancelled', (event) => {
+
+    if (downsampleProgressBar) {
 
         event.returnValue = false;
 

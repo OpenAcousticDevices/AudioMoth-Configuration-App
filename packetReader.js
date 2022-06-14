@@ -296,7 +296,7 @@ exports.read = (packet) => {
 
     console.log('Active recording periods:', activeStartStopPeriods);
 
-    for (let j = 0; j < activeStartStopPeriods.length; j++) {
+    for (let j = 0; j < activeStartStopPeriods; j++) {
 
         console.log('Start: ' + formatTime(startStopPeriods[j].startMinutes) + ' - Stop: ' + formatTime(startStopPeriods[j].stopMinutes));
 

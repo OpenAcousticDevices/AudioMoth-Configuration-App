@@ -4,7 +4,7 @@
     <head>
         <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link id="uiCSS" rel="stylesheet" href="../ui.css">
-        <title>Expand AudioMoth T.WAV Recordings</title>
+        <title>Expand AudioMoth T.WAV Files</title>
     </head>
 
     <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
@@ -48,7 +48,7 @@
                                         <table class="table" style="margin-bottom: 8px;">
                                             <tr style="font-size: 12px;" title="Max length of a file when expanded.">
                                                 <td align="center" style="padding: 0px"></td>
-                                                <td align="center" style="padding: 0px"></td>
+                                                <td align="center" style="padding: 0px"><label class="duration-max-length-ui" for="duration-max-length-radio0">1 s</label></td>
                                                 <td align="center" style="padding: 0px"><label class="duration-max-length-ui" for="duration-max-length-radio0">5 s</label></td>
                                                 <td align="center" style="padding: 0px"><label class="duration-max-length-ui" for="duration-max-length-radio1">10 s</label></td>
                                                 <td align="center" style="padding: 0px"><label class="duration-max-length-ui" for="duration-max-length-radio2">15 s</label></td>
@@ -60,7 +60,6 @@
                                             </tr>
                                             <tr title="Select the max length of an expanded file.">
                                                 <td align="left" style="padding-top: 0px; padding-bottom: 0px;"><span id="max-length-type-label" class="duration-max-length-ui">Maximum file length:</span></td>
-                                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
                                                 <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                                     <input class="duration-max-length-ui" type="radio" value="0" name="duration-max-length-radio" id="duration-max-length-radio0">
                                                 </td>
@@ -83,7 +82,10 @@
                                                     <input class="duration-max-length-ui" type="radio" value="6" name="duration-max-length-radio" id="duration-max-length-radio6">
                                                 </td>
                                                 <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                                    <input class="duration-max-length-ui" type="radio" value="7" name="duration-max-length-radio" id="duration-max-length-radio7" checked>
+                                                    <input class="duration-max-length-ui" type="radio" value="7" name="duration-max-length-radio" id="duration-max-length-radio7">
+                                                </td>
+                                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                                    <input class="duration-max-length-ui" type="radio" value="8" name="duration-max-length-radio" id="duration-max-length-radio8" checked>
                                                 </td>
                                             </tr>
                                         </table>
@@ -126,7 +128,7 @@
                                         <table class="table" style="margin-bottom: 8px;">
                                             <tr style="font-size: 12px;" title="Max length of a file when expanded.">
                                                 <td align="center" style="padding: 0px"></td>
-                                                <td align="center" style="padding: 0px"></td>
+                                                <td align="center" style="padding: 0px"><label class="event-max-length-ui" for="event-max-length-radio0">1 s</label></td>
                                                 <td align="center" style="padding: 0px"><label class="event-max-length-ui" for="event-max-length-radio0">5 s</label></td>
                                                 <td align="center" style="padding: 0px"><label class="event-max-length-ui" for="event-max-length-radio1">10 s</label></td>
                                                 <td align="center" style="padding: 0px"><label class="event-max-length-ui" for="event-max-length-radio2">15 s</label></td>
@@ -138,7 +140,6 @@
                                             </tr>
                                             <tr title="Select the max length of an expanded file.">
                                                 <td align="left" style="padding-top: 0px; padding-bottom: 0px;"><span id="max-length-type-label" class="event-max-length-ui">Maximum file length:</span></td>
-                                                <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
                                                 <td align="center" style="padding-top: 0px; padding-bottom: 0px">
                                                     <input class="event-max-length-ui" type="radio" value="0" name="event-max-length-radio" id="event-max-length-radio0">
                                                 </td>
@@ -161,7 +162,10 @@
                                                     <input class="event-max-length-ui" type="radio" value="6" name="event-max-length-radio" id="event-max-length-radio6">
                                                 </td>
                                                 <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                                    <input class="event-max-length-ui" type="radio" value="7" name="event-max-length-radio" id="event-max-length-radio7" checked>
+                                                    <input class="event-max-length-ui" type="radio" value="7" name="event-max-length-radio" id="event-max-length-radio7">
+                                                </td>
+                                                <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                                    <input class="event-max-length-ui" type="radio" value="8" name="event-max-length-radio" id="event-max-length-radio8" checked>
                                                 </td>
                                             </tr>
                                         </table>
@@ -284,7 +288,7 @@
                             </div>
                             <div class="col-8">
                                 <div style="margin-top: 11px; text-align: right; margin-right: 16px;">
-                                    <span id="file-label" title="Amplitude thresholded recordings will have a file name ending in 'T.WAV'.">No AudioMoth T.WAV files selected.</span>
+                                    <span id="file-label" title="AudioMoth triggered recordings will have a file name ending in 'T.WAV'.">No AudioMoth T.WAV files selected.</span>
                                 </div>
                             </div>
                         </div>

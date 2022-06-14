@@ -9,18 +9,18 @@
 /* global document */
 
 const electron = require('electron');
-const dialog = electron.remote.dialog;
 
-/* Get functions which control elements common to the expansion and split windows */
+/* Get functions which control elements common to the expansion, split, and downsample windows */
 const ui = require('./uiCommon.js');
+const uiOutput = require('./uiOutput.js');
 
 const path = require('path');
 const fs = require('fs');
 
 const audiomothUtils = require('audiomoth-utils');
 
-const MAX_LENGTHS = [5, 10, 15, 30, 60, 300, 600, 3600];
-const MAX_LENGTH_STRINGS = ['5 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '5 minutes', '10 minutes', '1 hour'];
+const MAX_LENGTHS = [1, 5, 10, 15, 30, 60, 300, 600, 3600];
+const MAX_LENGTH_STRINGS = ['1 second', '5 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '5 minutes', '10 minutes', '1 hour'];
 
 const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\dT.WAV$/;
 
@@ -42,12 +42,6 @@ const overviewPanel = document.getElementById('overview-panel');
 
 const prefixCheckbox = document.getElementById('prefix-checkbox');
 const prefixInput = document.getElementById('prefix-input');
-
-const outputCheckbox = document.getElementById('output-checkbox');
-const outputButton = document.getElementById('output-button');
-const outputLabel = document.getElementById('output-label');
-
-var outputDir = '';
 
 const fileLabel = document.getElementById('file-label');
 const fileButton = document.getElementById('file-button');
@@ -83,8 +77,8 @@ function disableUI () {
     silentFilesCheckbox.disabled = true;
     alignmentCheckbox.disabled = true;
 
-    outputCheckbox.disabled = true;
-    outputButton.disabled = true;
+    uiOutput.disableOutputCheckbox();
+    uiOutput.disableOutputButton();
 
     prefixCheckbox.disabled = true;
     prefixInput.disabled = true;
@@ -123,8 +117,8 @@ function enableUI () {
     silentFilesCheckbox.disabled = !durationMaxLengthCheckbox.checked;
     alignmentCheckbox.disabled = false;
 
-    outputCheckbox.disabled = false;
-    outputButton.disabled = false;
+    uiOutput.enableOutputCheckbox();
+    uiOutput.enableOutputButton();
 
     prefixCheckbox.disabled = false;
 
@@ -236,7 +230,7 @@ function expandFiles () {
 
         /* Check if the optional prefix/output directory setttings are being used. If left as null, expander will put expanded file(s) in the same directory as the input with no prefix */
 
-        const outputPath = outputCheckbox.checked ? outputDir : null;
+        const outputPath = uiOutput.isChecked() ? uiOutput.getOutputDir() : null;
         const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
         const response = audiomothUtils.expand(files[i], outputPath, prefix, expansionType, maxLength, generateSilentFiles, alignToSecondTransitions, (progress) => {
@@ -261,7 +255,7 @@ function expandFiles () {
 
             if (errorCount === 1) {
 
-                const errorFileLocation = outputCheckbox.checked ? outputDir : path.dirname(errorFiles[0]);
+                const errorFileLocation = uiOutput.isChecked() ? uiOutput.getOutputDir() : path.dirname(errorFiles[0]);
 
                 errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
 
@@ -475,43 +469,6 @@ updateOverviewPanel();
 
 updateFileMaxLengthUI('duration-max-length-ui', durationMaxLengthCheckbox);
 updateFileMaxLengthUI('event-max-length-ui', eventMaxLengthCheckbox);
-
-/* Add listener which handles enabling/disabling custom output directory UI */
-
-outputCheckbox.addEventListener('change', () => {
-
-    if (outputCheckbox.checked) {
-
-        outputLabel.classList.remove('grey');
-        outputButton.disabled = false;
-
-    } else {
-
-        outputLabel.classList.add('grey');
-        outputButton.disabled = true;
-        outputDir = '';
-        ui.updateOutputLabel(outputDir);
-
-    }
-
-});
-
-/* Select a custom output directory. If Cancel is pressed, assume no custom direcotry is wantted */
-
-outputButton.addEventListener('click', () => {
-
-    const destinationName = dialog.showOpenDialogSync({
-        title: 'Select Destination',
-        nameFieldLabel: 'Destination',
-        multiSelections: false,
-        properties: ['openDirectory']
-    });
-
-    outputDir = (destinationName !== undefined) ? destinationName[0] : '';
-
-    ui.updateOutputLabel(outputDir);
-
-});
 
 /* Whenever tthe file/folder radio button changes, reset the UI */
 

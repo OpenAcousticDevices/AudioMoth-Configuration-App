@@ -219,19 +219,3 @@ prefixCheckbox.addEventListener('change', () => {
     }
 
 });
-
-/* Update label to notify user if a custom output directtory is being used */
-
-exports.updateOutputLabel = (outputDir) => {
-
-    if (outputDir === '') {
-
-        outputLabel.textContent = 'Writing WAV files to source folder.';
-
-    } else {
-
-        outputLabel.textContent = 'Writing WAV files to custom folder.';
-
-    }
-
-};

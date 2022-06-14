@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link id="uiCSS" rel="stylesheet" href="../ui.css">
+        <title>Downsample AudioMoth WAV Files</title>
+    </head>
+
+    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
+
+        <div class="container" style="text-align: center; padding: 11px;">
+
+            <div id="sample-rate-holder" style="border: #cdcdcd thin solid; width: 100%;">
+                <div class="row" style="margin-top: 8px;">
+                    <div class="col-12">
+                        <div style="margin-left: 5px; margin-right: 4px">
+                            <table class="table" style="margin-bottom: 8px;">
+                                <tr class="settings-text" style="font-size: 12px;" title="Sample rate used when making recordings.">
+                                    <td align="center" style="padding: 0px; padding-left: 0px;"></td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">8</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">16</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">32</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">48</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">96</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">192</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">250</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;" name="sample-rate-label">384</td>
+                                </tr>
+                                <tr class="settings-text" title="Sample rate used when making recordings.">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Sample rate (kHz):</td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="0" name="sample-rate-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="1" name="sample-rate-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="2" name="sample-rate-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="3" name="sample-rate-radio" checked>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="4" name="sample-rate-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="5" name="sample-rate-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="6" name="sample-rate-radio">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="7" name="sample-rate-radio">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="disabled-sample-rate-holder" style="border: #cdcdcd thin solid; width: 100%; display: none;">
+                <div class="row" style="margin-top: 8px;">
+                    <div class="col-12">
+                        <div style="margin-left: 5px; margin-right: 4px">
+                            <table class="table" style="margin-bottom: 8px;">
+                                <tr class="settings-text grey" style="font-size: 12px;" title="Sample rate used when making recordings.">
+                                    <td align="center" style="padding: 0px; padding-left: 0px;"></td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">8</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">16</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">32</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">48</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">96</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">192</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">250</td>
+                                    <td align="center" style="padding: 0px; padding-left: 0px;">384</td>
+                                </tr>
+                                <tr class="settings-text grey" title="Sample rate used when making recordings.">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Sample rate (kHz):</td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="0" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="1" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="2" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="3" name="disabled-sample-rate-radio" disabled checked>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="4" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="5" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="6" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="settings-inputs" type="radio" value="7" name="disabled-sample-rate-radio" disabled>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fixed-bottom" style="width: 100%; padding: 11px; padding-top: 8px;">
+
+                <div class="row" style="margin-top: 8px;">
+                    <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+    
+                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                            <div class="col-1">
+                                <input id="prefix-checkbox" type="checkbox" style="margin-left: 16px; margin-top: 9px;">
+                            </div>
+                            <div class="col-5" style="padding-left: 0px;">
+                                <div style="margin-top: 6px; margin-bottom: 0px; text-align: left;">
+                                    <label id="prefix-label" for="prefix-checkbox" title="Prefix which will be added to WAV file to differentiate it from the original file" style="margin-left: 20px;" class="grey">Add WAV file prefix:</label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div style="text-align: right; margin-top: 2px; margin-bottom: 0px; margin-right: 16px;">
+                                    <input id="prefix-input" maxlength="20" disabled style="text-align: right;" class="grey">
+                                </div>
+                            </div>
+                        </div>
+    
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 8px;">
+                    <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+    
+                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                            <div class="col-1">
+                                <input id="output-checkbox" type="checkbox" style="margin-left: 16px; margin-top: 12px;">
+                            </div>
+                            <div class="col-4" style="padding-left: 0px;">
+                                <button id="output-button" class="btn btn-primary" style="width: 100%; margin-left: 16px;" disabled>Select Destination</button>
+                            </div>
+                            <div class="col-7">
+                                <div style="margin-top: 11px; text-align: right; margin-right: 16px;">
+                                    <span id="output-label" title="'." class="grey">Writing WAV files to source folder.</span>
+                                </div>
+                            </div>
+                        </div>
+    
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 8px;">
+                    <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+    
+                        <div class="row" style="margin-top: 1%; margin-bottom: 8px;">
+                            <div class="col-12">
+                                <div style="margin-left: 8px; margin-right: 8px">
+                                    <table class="table" style="margin-bottom: 8px;">
+                                        <tr class="settings-text" style="font-size: 12px;" title="Select multiple files or a folder of recordings.">
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;"></td>
+                                            <td align="center" style="padding: 0px;" name="selection-radio-label">File</td>
+                                            <td align="center" style="padding: 0px; width: 45px;" name="selection-radio-label">Folder</td>
+                                        </tr>
+                                        <tr class="settings-text" title="Select multiple files or a folder of recordings.">
+                                            <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="selection-type-label">Selection type:</td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                                <input class="settings-inputs" type="radio" value="0" name="selection-radio" checked>
+                                            </td>
+                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                                <input class="settings-inputs" type="radio" value="1" name="selection-radio">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                            <div class="col-4">
+                                <button id="file-button" class="btn btn-primary" style="width: 100%; margin-left: 16px;">Select Files</button>
+                            </div>
+                            <div class="col-8">
+                                <div style="margin-top: 11px; text-align: right; margin-right: 16px;">
+                                    <span id="file-label" title="AudioMoth recordings will have a file name ending in '.WAV'.">No AudioMoth WAV files selected.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top: 8px;">
+                    <div class="col-12">
+                        <button id="downsample-button" class="btn btn-success" disabled style="width: 100%;">Downsample Recordings</button>
+                    </div>
+                </div>
+            </div>
+
+    </body>
+
+    <script>
+        window.jQuery = window.$ = require('jquery');
+    </script>
+    <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script src="uiDownsampling.js" charset="utf-8"></script>
+
+</html>
