@@ -73,7 +73,7 @@ exports.updateButtonText = () => {
 
     } else {
 
-        fileButton.innerText = 'Select Folder';
+        fileButton.innerText = 'Select Folders';
 
     }
 
