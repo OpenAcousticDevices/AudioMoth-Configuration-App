@@ -40,6 +40,8 @@ const splitButton = document.getElementById('split-button');
 var files = [];
 var splitting = false;
 
+const DEFAULT_SLEEP_AMOUNT = 3000;
+
 /* Disable UI elements in main window while progress bar is open and split is in progress */
 
 function disableUI () {
@@ -108,6 +110,9 @@ function splitFiles () {
 
     let errorFilePath;
 
+    let sleepAmount = DEFAULT_SLEEP_AMOUNT;
+    let successesWithoutError = 0;
+
     for (let i = 0; i < files.length; i++) {
 
         /* If progress bar is closed, the split task is considered cancelled. This will contact the main thread and ask if that has happened */
@@ -147,11 +152,19 @@ function splitFiles () {
         if (response.success) {
 
             successCount++;
+            successesWithoutError++;
+
+            if (successesWithoutError >= 10) {
+
+                sleepAmount = DEFAULT_SLEEP_AMOUNT;
+
+            }
 
         } else {
 
             /* Add error to log file */
 
+            successesWithoutError = 0;
             errorCount++;
             errors.push(response.error);
             errorFiles.push(files[i]);
@@ -188,7 +201,8 @@ function splitFiles () {
 
             }
 
-            ui.sleep(3000);
+            ui.sleep(sleepAmount);
+            sleepAmount = sleepAmount / 2;
 
         }
 

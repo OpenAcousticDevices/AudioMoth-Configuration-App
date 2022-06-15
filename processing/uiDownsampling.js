@@ -44,6 +44,8 @@ const downsampleButton = document.getElementById('downsample-button');
 var files = [];
 var downsampling = false;
 
+const DEFAULT_SLEEP_AMOUNT = 3000;
+
 /* Disable UI elements in main window while progress bar is open and downsample is in progress */
 
 function disableUI () {
@@ -106,6 +108,9 @@ function downsampleFiles () {
 
     let errorFilePath;
 
+    let sleepAmount = DEFAULT_SLEEP_AMOUNT;
+    let successesWithoutError = 0;
+
     for (let i = 0; i < files.length; i++) {
 
         /* If progress bar is closed, the downsample task is considered cancelled. This will contact the main thread and ask if that has happened */
@@ -145,11 +150,19 @@ function downsampleFiles () {
         if (response.success) {
 
             successCount++;
+            successesWithoutError++;
+
+            if (successesWithoutError >= 10) {
+
+                sleepAmount = DEFAULT_SLEEP_AMOUNT;
+
+            }
 
         } else {
 
             /* Add error to log file */
 
+            successesWithoutError = 0;
             errorCount++;
             errors.push(response.error);
             errorFiles.push(files[i]);
@@ -186,7 +199,8 @@ function downsampleFiles () {
 
             }
 
-            ui.sleep(3000);
+            ui.sleep(sleepAmount);
+            sleepAmount = sleepAmount / 2;
 
         }
 
