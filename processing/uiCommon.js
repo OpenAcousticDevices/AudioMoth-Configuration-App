@@ -83,11 +83,11 @@ exports.updateButtonText = () => {
 
 exports.selectRecordings = (fileRegex) => {
 
-    let folderContents, i, filePath, fileName, recordings;
+    let folderContents, filePath, fileName, recordings;
 
     const selectionTypes = ['openFile', 'openDirectory'];
     const selectionType = getSelectedRadioValue('selection-radio');
-    const properties = [selectionTypes[selectionType]];
+    const properties = [selectionTypes[selectionType], 'multiSelections'];
 
     /* If files are being selected, allow users to selectt more than one item. Only a single folder can be selected */
 
@@ -114,7 +114,7 @@ exports.selectRecordings = (fileRegex) => {
 
         if (selectionType === 0) {
 
-            for (i = 0; i < selection.length; i++) {
+            for (let i = 0; i < selection.length; i++) {
 
                 filePath = selection[i];
                 fileName = path.basename(filePath);
@@ -131,15 +131,19 @@ exports.selectRecordings = (fileRegex) => {
 
         } else {
 
-            folderContents = fs.readdirSync(selection[0]);
+            for (let i = 0; i < selection.length; i++) {
 
-            for (i = 0; i < folderContents.length; i++) {
+                folderContents = fs.readdirSync(selection[i]);
 
-                filePath = folderContents[i];
+                for (let j = 0; j < folderContents.length; j++) {
 
-                if (filePath.charAt(0) !== '.' && fileRegex.test(filePath.toUpperCase())) {
+                    filePath = folderContents[j];
 
-                    recordings.push(path.join(selection[0], filePath));
+                    if (filePath.charAt(0) !== '.' && fileRegex.test(filePath.toUpperCase())) {
+
+                        recordings.push(path.join(selection[i], filePath));
+
+                    }
 
                 }
 
