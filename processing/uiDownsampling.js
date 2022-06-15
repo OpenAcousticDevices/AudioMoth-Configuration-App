@@ -233,9 +233,6 @@ function resetUI () {
 
     downsampleButton.disabled = true;
 
-    sampleRateRadioHolder.style.display = 'none';
-    disabledSampleRateRadioHolder.style.display = '';
-
     ui.updateButtonText();
 
 }
