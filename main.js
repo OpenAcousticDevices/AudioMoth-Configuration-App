@@ -59,7 +59,7 @@ function openSplitWindow () {
 
     splitWindow = new BrowserWindow({
         width: 565,
-        height: shrinkWindowHeight(403),
+        height: shrinkWindowHeight(468),
         title: 'Split AudioMoth WAV Files',
         useContentSize: true,
         resizable: false,
@@ -116,7 +116,7 @@ function openExpansionWindow () {
 
     expansionWindow = new BrowserWindow({
         width: 565,
-        height: shrinkWindowHeight(575),
+        height: shrinkWindowHeight(643),
         title: 'Expand AudioMoth T.WAV Files',
         useContentSize: true,
         resizable: false,
@@ -173,7 +173,7 @@ function openDownsamplingWindow () {
 
     downsampleWindow = new BrowserWindow({
         width: 565,
-        height: shrinkWindowHeight(380),
+        height: shrinkWindowHeight(448),
         title: 'Downsample AudioMoth WAV Files',
         useContentSize: true,
         resizable: false,
@@ -558,14 +558,23 @@ ipcMain.on('start-expansion-bar', (event, fileCount) => {
 
 });
 
-ipcMain.on('set-expansion-bar-progress', (event, fileNum, progress, name) => {
+ipcMain.on('set-expansion-bar-progress', (event, fileNum, progress) => {
+
+    if (expandProgressBar) {
+
+        expandProgressBar.value = (fileNum * 100) + progress;
+
+    }
+
+});
+
+ipcMain.on('set-expansion-bar-file', (event, fileNum, name) => {
 
     const index = fileNum + 1;
     const fileCount = expandProgressBar.getOptions().maxValue / 100;
 
     if (expandProgressBar) {
 
-        expandProgressBar.value = (fileNum * 100) + progress;
         expandProgressBar.detail = 'Expanding ' + name + ' (' + index + ' of ' + fileCount + ').';
 
     }
@@ -691,14 +700,23 @@ ipcMain.on('start-split-bar', (event, fileCount) => {
 
 });
 
-ipcMain.on('set-split-bar-progress', (event, fileNum, progress, name) => {
+ipcMain.on('set-split-bar-progress', (event, fileNum, progress) => {
+
+    if (splitProgressBar) {
+
+        splitProgressBar.value = (fileNum * 100) + progress;
+
+    }
+
+});
+
+ipcMain.on('set-split-bar-file', (event, fileNum, name) => {
 
     const index = fileNum + 1;
     const fileCount = splitProgressBar.getOptions().maxValue / 100;
 
     if (splitProgressBar) {
 
-        splitProgressBar.value = (fileNum * 100) + progress;
         splitProgressBar.detail = 'Splitting ' + name + ' (' + index + ' of ' + fileCount + ').';
 
     }
@@ -824,14 +842,23 @@ ipcMain.on('start-downsample-bar', (event, fileCount) => {
 
 });
 
-ipcMain.on('set-downsample-bar-progress', (event, fileNum, progress, name) => {
+ipcMain.on('set-downsample-bar-progress', (event, fileNum, progress) => {
+
+    if (downsampleProgressBar) {
+
+        downsampleProgressBar.value = (fileNum * 100) + progress;
+
+    }
+
+});
+
+ipcMain.on('set-downsample-bar-file', (event, fileNum, name) => {
 
     const index = fileNum + 1;
     const fileCount = downsampleProgressBar.getOptions().maxValue / 100;
 
     if (downsampleProgressBar) {
 
-        downsampleProgressBar.value = (fileNum * 100) + progress;
         downsampleProgressBar.detail = 'Downsampling ' + name + ' (' + index + ' of ' + fileCount + ').';
 
     }

@@ -9,6 +9,7 @@
 /* global document */
 
 const electron = require('electron');
+const dialog = electron.remote.dialog;
 
 /* Get functions which control elements common to the expansion, split, and downsample windows */
 const ui = require('./uiCommon.js');
@@ -18,6 +19,8 @@ const path = require('path');
 const fs = require('fs');
 
 const audiomothUtils = require('audiomoth-utils');
+
+var currentWindow = electron.remote.getCurrentWindow();
 
 const MAX_LENGTHS = [1, 5, 10, 15, 30, 60, 300, 600, 3600];
 const MAX_LENGTH_STRINGS = ['1 second', '5 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '5 minutes', '10 minutes', '1 hour'];
@@ -52,7 +55,7 @@ var expanding = false;
 
 var expansionType = 'DURATION';
 
-const DEFAULT_SLEEP_AMOUNT = 3000;
+const DEFAULT_SLEEP_AMOUNT = 2000;
 
 /* Disable UI elements in main window while progress bar is open and expansion is in progress */
 
@@ -187,6 +190,11 @@ function expandFiles () {
     let sleepAmount = DEFAULT_SLEEP_AMOUNT;
     let successesWithoutError = 0;
 
+    const unwrittenErrors = [];
+    let lastErrorWrite = -1;
+
+    let errorFileStream;
+
     for (let i = 0; i < files.length; i++) {
 
         /* If progress bar is closed, the expansion task is considered cancelled. This will contact the main thread and ask if that has happened */
@@ -203,7 +211,7 @@ function expandFiles () {
 
         /* Let the main thread know what value to set the progress bar to */
 
-        electron.ipcRenderer.send('set-expansion-bar-progress', i, 0, path.basename(files[i]));
+        electron.ipcRenderer.send('set-expansion-bar-progress', i, 0);
 
         /* If max length is enabled for the current expansion mode (there is separate UI for each and only the relevant one is shown) */
 
@@ -235,12 +243,36 @@ function expandFiles () {
 
         /* Check if the optional prefix/output directory setttings are being used. If left as null, expander will put expanded file(s) in the same directory as the input with no prefix */
 
-        const outputPath = uiOutput.isChecked() ? uiOutput.getOutputDir() : null;
+        let outputPath = null;
+
+        if (uiOutput.isCustomDestinationEnabled()) {
+
+            outputPath = uiOutput.getOutputDir();
+
+            if (uiOutput.isCreateSubdirectoriesEnabled() && selectionRadios[1].checked) {
+
+                const dirnames = path.dirname(files[i]).replace(/\\/g, '/').split('/');
+
+                const folderName = dirnames[dirnames.length - 1];
+
+                outputPath = path.join(outputPath, folderName);
+
+                if (!fs.existsSync(outputPath)) {
+
+                    fs.mkdirSync(outputPath);
+
+                }
+
+            }
+
+        }
+
         const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
         const response = audiomothUtils.expand(files[i], outputPath, prefix, expansionType, maxLength, generateSilentFiles, alignToSecondTransitions, (progress) => {
 
-            electron.ipcRenderer.send('set-expansion-bar-progress', i, progress, path.basename(files[i]));
+            electron.ipcRenderer.send('set-expansion-bar-progress', i, progress);
+            electron.ipcRenderer.send('set-expansion-bar-file', i, path.basename(files[i]));
 
         });
 
@@ -259,6 +291,7 @@ function expandFiles () {
 
             /* Add error to log file */
 
+            unwrittenErrors.push(errorCount);
             successesWithoutError = 0;
             errorCount++;
             errors.push(response.error);
@@ -268,36 +301,87 @@ function expandFiles () {
 
             if (errorCount === 1) {
 
-                const errorFileLocation = uiOutput.isChecked() ? uiOutput.getOutputDir() : path.dirname(errorFiles[0]);
-
+                const errorFileLocation = uiOutput.isCustomDestinationEnabled() ? uiOutput.getOutputDir() : path.dirname(errorFiles[0]);
                 errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
+                errorFileStream = fs.createWriteStream(errorFilePath, {flags: 'a'});
+
+                errorFileStream.write('-- Expansion --\n');
 
             }
 
-            let fileContent = '';
+            const currentTime = new Date();
+            const timeSinceLastErrorWrite = currentTime - lastErrorWrite;
 
-            for (let j = 0; j < errorCount; j++) {
+            if (timeSinceLastErrorWrite > 1000 || lastErrorWrite === -1) {
 
-                fileContent += path.basename(errorFiles[j]) + ' - ' + errors[j] + '\n';
+                lastErrorWrite = new Date();
 
-            }
+                const unwrittenErrorCount = unwrittenErrors.length;
 
-            try {
+                console.log('Writing', unwrittenErrorCount, 'errors');
 
-                fs.writeFileSync(errorFilePath, fileContent);
+                let fileContent = '';
 
-                console.log('Error summary written to ' + errorFilePath);
+                for (let e = 0; e < unwrittenErrorCount; e++) {
 
-            } catch (err) {
+                    const unwrittenErrorIndex = unwrittenErrors.pop();
+                    fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\n';
 
-                console.error(err);
-                electron.ipcRenderer.send('set-expansion-bar-completed', successCount, errorCount, true);
-                return;
+                }
+
+                try {
+
+                    errorFileStream.write(fileContent);
+
+                    console.log('Error summary written to ' + errorFilePath);
+
+                } catch (err) {
+
+                    console.error(err);
+                    electron.ipcRenderer.send('set-expansion-bar-completed', successCount, errorCount, true);
+                    return;
+
+                }
 
             }
 
             ui.sleep(sleepAmount);
             sleepAmount = sleepAmount / 2;
+
+        }
+
+    }
+
+    /* If any errors occurred, do a final error write */
+
+    const unwrittenErrorCount = unwrittenErrors.length;
+
+    if (unwrittenErrorCount > 0) {
+
+        console.log('Writing remaining', unwrittenErrorCount, 'errors');
+
+        let fileContent = '';
+
+        for (let e = 0; e < unwrittenErrorCount; e++) {
+
+            const unwrittenErrorIndex = unwrittenErrors.pop();
+            fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\n';
+
+        }
+
+        try {
+
+            errorFileStream.write(fileContent);
+
+            console.log('Error summary written to ' + errorFilePath);
+
+            errorFileStream.end();
+
+        } catch (err) {
+
+            console.error(err);
+            electron.ipcRenderer.send('set-expansion-bar-completed', successCount, errorCount, true);
+            return;
 
         }
 
@@ -493,7 +577,7 @@ selectionRadios[1].addEventListener('change', resetUI);
 
 fileButton.addEventListener('click', () => {
 
-    files = ui.selectRecordings(FILE_REGEX);
+    files = uiOutput.selectRecordings(FILE_REGEX);
 
     updateInputDirectoryDisplay(files);
 
@@ -506,6 +590,50 @@ expandButton.addEventListener('click', () => {
     if (expanding) {
 
         return;
+
+    }
+
+    /* Check if output location is the same as input */
+
+    for (let i = 0; i < files.length; i++) {
+
+        if (!prefixCheckbox.checked || prefixInput.value === '') {
+
+            /* If folder mode is enabled, the input folder is the same as the output and subdirectories are enabled, files will be overwritten as the paths will match */
+
+            if (selectionRadios[1].checked && uiOutput.isCustomDestinationEnabled() && uiOutput.isCreateSubdirectoriesEnabled()) {
+
+                /* Get the parent folder of the selected file and compare that to the output directory */
+
+                const fileFolderPath = path.dirname(path.dirname(files[i]));
+
+                if (uiOutput.getOutputDir() === fileFolderPath) {
+
+                    dialog.showMessageBox(currentWindow, {
+                        type: 'error',
+                        title: 'Cannot downsample with current settings',
+                        message: 'Output destination is the same as input destination and no prefix is selected.'
+                    });
+
+                    return;
+
+                }
+
+            }
+
+            if (uiOutput.getOutputDir() === path.dirname(files[i])) {
+
+                dialog.showMessageBox(currentWindow, {
+                    type: 'error',
+                    title: 'Cannot downsample with current settings',
+                    message: 'Output destination is the same as input destination and no prefix is selected.'
+                });
+
+                return;
+
+            }
+
+        }
 
     }
 

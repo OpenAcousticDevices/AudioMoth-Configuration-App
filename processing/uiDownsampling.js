@@ -44,7 +44,7 @@ const downsampleButton = document.getElementById('downsample-button');
 var files = [];
 var downsampling = false;
 
-const DEFAULT_SLEEP_AMOUNT = 3000;
+const DEFAULT_SLEEP_AMOUNT = 2000;
 
 /* Disable UI elements in main window while progress bar is open and downsample is in progress */
 
@@ -91,8 +91,6 @@ function enableUI () {
 
 }
 
-/* Split selected files */
-
 function downsampleFiles () {
 
     if (!files) {
@@ -111,6 +109,11 @@ function downsampleFiles () {
     let sleepAmount = DEFAULT_SLEEP_AMOUNT;
     let successesWithoutError = 0;
 
+    const unwrittenErrors = [];
+    let lastErrorWrite = -1;
+
+    let errorFileStream;
+
     for (let i = 0; i < files.length; i++) {
 
         /* If progress bar is closed, the downsample task is considered cancelled. This will contact the main thread and ask if that has happened */
@@ -127,7 +130,7 @@ function downsampleFiles () {
 
         /* Let the main thread know what value to set the progress bar to */
 
-        electron.ipcRenderer.send('set-downsample-bar-progress', i, 0, path.basename(files[i]));
+        electron.ipcRenderer.send('set-downsample-bar-progress', i, 0);
 
         const sampleRate = SAMPLE_RATES[ui.getSelectedRadioValue('sample-rate-radio')];
 
@@ -138,12 +141,36 @@ function downsampleFiles () {
 
         /* Check if the optional prefix/output directory setttings are being used. If left as null, splitter will put file(s) in the same directory as the input with no prefix */
 
-        const outputPath = uiOutput.isChecked() ? uiOutput.getOutputDir() : null;
+        let outputPath = null;
+
+        if (uiOutput.isCustomDestinationEnabled()) {
+
+            outputPath = uiOutput.getOutputDir();
+
+            if (uiOutput.isCreateSubdirectoriesEnabled() && selectionRadios[1].checked) {
+
+                const dirnames = path.dirname(files[i]).replace(/\\/g, '/').split('/');
+
+                const folderName = dirnames[dirnames.length - 1];
+
+                outputPath = path.join(outputPath, folderName);
+
+                if (!fs.existsSync(outputPath)) {
+
+                    fs.mkdirSync(outputPath);
+
+                }
+
+            }
+
+        }
+
         const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
         const response = audiomothUtils.downsample(files[i], outputPath, prefix, sampleRate, (progress) => {
 
-            electron.ipcRenderer.send('set-downsample-bar-progress', i, progress, path.basename(files[i]));
+            electron.ipcRenderer.send('set-downsample-bar-progress', i, progress);
+            electron.ipcRenderer.send('set-downsample-bar-file', i, path.basename(files[i]));
 
         });
 
@@ -162,6 +189,7 @@ function downsampleFiles () {
 
             /* Add error to log file */
 
+            unwrittenErrors.push(errorCount);
             successesWithoutError = 0;
             errorCount++;
             errors.push(response.error);
@@ -171,36 +199,87 @@ function downsampleFiles () {
 
             if (errorCount === 1) {
 
-                const errorFileLocation = uiOutput.isChecked() ? uiOutput.getOutputDir() : path.dirname(errorFiles[0]);
-
+                const errorFileLocation = uiOutput.isCustomDestinationEnabled() ? uiOutput.getOutputDir() : path.dirname(errorFiles[0]);
                 errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
+                errorFileStream = fs.createWriteStream(errorFilePath, {flags: 'a'});
+
+                errorFileStream.write('-- Downsample --\n');
 
             }
 
-            let fileContent = '';
+            const currentTime = new Date();
+            const timeSinceLastErrorWrite = currentTime - lastErrorWrite;
 
-            for (let j = 0; j < errorCount; j++) {
+            if (timeSinceLastErrorWrite > 1000 || lastErrorWrite === -1) {
 
-                fileContent += path.basename(errorFiles[j]) + ' - ' + errors[j] + '\n';
+                lastErrorWrite = new Date();
 
-            }
+                const unwrittenErrorCount = unwrittenErrors.length;
 
-            try {
+                console.log('Writing', unwrittenErrorCount, 'errors');
 
-                fs.writeFileSync(errorFilePath, fileContent);
+                let fileContent = '';
 
-                console.log('Error summary written to ' + errorFilePath);
+                for (let e = 0; e < unwrittenErrorCount; e++) {
 
-            } catch (err) {
+                    const unwrittenErrorIndex = unwrittenErrors.pop();
+                    fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\n';
 
-                console.error(err);
-                electron.ipcRenderer.send('set-downsample-bar-completed', successCount, errorCount, true);
-                return;
+                }
+
+                try {
+
+                    errorFileStream.write(fileContent);
+
+                    console.log('Error summary written to ' + errorFilePath);
+
+                } catch (err) {
+
+                    console.error(err);
+                    electron.ipcRenderer.send('set-downsample-bar-completed', successCount, errorCount, true);
+                    return;
+
+                }
 
             }
 
             ui.sleep(sleepAmount);
             sleepAmount = sleepAmount / 2;
+
+        }
+
+    }
+
+    /* If any errors occurred, do a final error write */
+
+    const unwrittenErrorCount = unwrittenErrors.length;
+
+    if (unwrittenErrorCount > 0) {
+
+        console.log('Writing remaining', unwrittenErrorCount, 'errors');
+
+        let fileContent = '';
+
+        for (let e = 0; e < unwrittenErrorCount; e++) {
+
+            const unwrittenErrorIndex = unwrittenErrors.pop();
+            fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\n';
+
+        }
+
+        try {
+
+            errorFileStream.write(fileContent);
+
+            console.log('Error summary written to ' + errorFilePath);
+
+            errorFileStream.end();
+
+        } catch (err) {
+
+            console.error(err);
+            electron.ipcRenderer.send('set-downsample-bar-completed', successCount, errorCount, true);
+            return;
 
         }
 
@@ -260,7 +339,7 @@ selectionRadios[1].addEventListener('change', resetUI);
 
 fileButton.addEventListener('click', () => {
 
-    files = ui.selectRecordings(FILE_REGEX);
+    files = uiOutput.selectRecordings(FILE_REGEX);
 
     updateInputDirectoryDisplay(files);
 
@@ -276,7 +355,7 @@ downsampleButton.addEventListener('click', () => {
 
     }
 
-    if ((!prefixCheckbox.checked || prefixInput.value === '') && (!uiOutput.isChecked() || uiOutput.getOutputDir() === '')) {
+    if ((!prefixCheckbox.checked || prefixInput.value === '') && (!uiOutput.isCustomDestinationEnabled() || uiOutput.getOutputDir() === '')) {
 
         dialog.showMessageBox(currentWindow, {
             type: 'error',
@@ -285,6 +364,50 @@ downsampleButton.addEventListener('click', () => {
         });
 
         return;
+
+    }
+
+    /* Check if output location is the same as input */
+
+    for (let i = 0; i < files.length; i++) {
+
+        if (!prefixCheckbox.checked || prefixInput.value === '') {
+
+            /* If folder mode is enabled, the input folder is the same as the output and subdirectories are enabled, files will be overwritten as the paths will match */
+
+            if (selectionRadios[1].checked && uiOutput.isCustomDestinationEnabled() && uiOutput.isCreateSubdirectoriesEnabled()) {
+
+                /* Get the parent folder of the selected file and compare that to the output directory */
+
+                const fileFolderPath = path.dirname(path.dirname(files[i]));
+
+                if (uiOutput.getOutputDir() === fileFolderPath) {
+
+                    dialog.showMessageBox(currentWindow, {
+                        type: 'error',
+                        title: 'Cannot downsample with current settings',
+                        message: 'Output destination is the same as input destination and no prefix is selected.'
+                    });
+
+                    return;
+
+                }
+
+            }
+
+            if (uiOutput.getOutputDir() === path.dirname(files[i])) {
+
+                dialog.showMessageBox(currentWindow, {
+                    type: 'error',
+                    title: 'Cannot downsample with current settings',
+                    message: 'Output destination is the same as input destination and no prefix is selected.'
+                });
+
+                return;
+
+            }
+
+        }
 
     }
 

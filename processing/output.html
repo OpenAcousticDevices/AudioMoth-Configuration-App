@@ -1,0 +1,56 @@
+<div class="row" style="margin-top: 8px;">
+    <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+
+        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+            <div class="col-1">
+                <input id="prefix-checkbox" type="checkbox" style="margin-left: 16px; margin-top: 9px;">
+            </div>
+            <div class="col-5" style="padding-left: 0px;">
+                <div style="margin-top: 6px; margin-bottom: 0px; text-align: left;">
+                    <label id="prefix-label" for="prefix-checkbox" title="Prefix which will be added to WAV file to differentiate it from the original file" style="margin-left: 20px;" class="grey">Add WAV file prefix:</label>
+                </div>
+            </div>
+            <div class="col-6">
+                <div style="text-align: right; margin-top: 2px; margin-bottom: 0px; margin-right: 16px;">
+                    <input id="prefix-input" maxlength="20" disabled style="text-align: right;" class="grey">
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="row" style="margin-top: 8px;">
+    <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+
+        <div class="row" style="margin-top: 12px; margin-bottom: 8px;">
+            <div class="col-9" style="text-align: left;">
+                <span style="margin-left: 17px;">Enable destination folder:</span>
+            </div>
+            <div class="col-3" style="text-align: right;">
+                <input id="output-checkbox" type="checkbox" style="margin-right: 21px;">
+            </div>
+        </div>
+
+        <div class="row" style="margin-bottom: 16px;">
+            <div class="col-9" style="text-align: left;">
+                <span class="grey" id="subdirectories-label" style="margin-left: 17px;">Generate subfolders in destination:</span>
+            </div>
+            <div class="col-3" style="text-align: right;">
+                <input id="subdirectories-checkbox" type="checkbox" style="margin-right: 21px;" disabled>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+            <div class="col-4">
+                <button id="output-button" class="btn btn-primary" style="width: 100%; margin-left: 16px;" disabled>Select Destination</button>
+            </div>
+            <div class="col-8">
+                <div style="margin-top: 11px; text-align: right; margin-right: 16px;">
+                    <span id="output-label">Writing WAV files to source folder.</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
