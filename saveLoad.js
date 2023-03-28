@@ -535,7 +535,10 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const passFiltersEnabled = (typeof jsonObj.passFiltersEnabled === 'undefined') ? replacementValues.passFiltersEnabled : jsonObj.passFiltersEnabled;
 
-            const filterType = (typeof jsonObj.filterType === 'undefined') ? replacementValues.filterType : jsonObj.filterType;
+            let filterType = (typeof jsonObj.filterType === 'undefined') ? replacementValues.filterType : jsonObj.filterType;
+
+            // With older versions of the config app, filter type didn't exist
+            filterType = !passFiltersEnabled ? 'none' : filterType;
 
             const lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? replacementValues.lowerFilter : jsonObj.lowerFilter;
             const higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? replacementValues.higherFilter : jsonObj.higherFilter;
