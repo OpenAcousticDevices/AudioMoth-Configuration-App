@@ -57,7 +57,7 @@
     }
   },
   "devDependencies": {
-    "electron": "8.5.2",
+    "electron": "22.3.21",
     "electron-builder": "^23.0.2",
     "eslint": "^7.27.0",
     "eslint-config-standard": "^14.1.0",
