@@ -34,6 +34,7 @@ const versionChecker = require('./versionChecker.js');
 const UINT32_MAX = 0xFFFFFFFF;
 const UINT16_MAX = 0xFFFF;
 const SECONDS_IN_DAY = 86400;
+const MILLISECONDS_IN_SECOND = 1000;
 
 const THRESHOLD_SCALE_PERCENTAGE = 0;
 const THRESHOLD_SCALE_16BIT = 1;
@@ -114,6 +115,8 @@ function requestBatteryState () {
 
     audiomoth.getBatteryState(function (err, battery) {
 
+        if (communicating) return;
+
         if (err) {
 
             console.error(err);
@@ -153,6 +156,8 @@ function requestFirmwareVersion () {
 
     audiomoth.getFirmwareVersion(function (err, versionArr) {
 
+        if (communicating) return;
+
         if (err) {
 
             console.error(err);
@@ -179,6 +184,8 @@ function requestFirmwareVersion () {
 function requestFirmwareDescription () {
 
     audiomoth.getFirmwareDescription(function (err, description) {
+
+        if (communicating) return;
 
         if (err || description === null || description === '') {
 
@@ -207,6 +214,8 @@ function requestFirmwareDescription () {
 function requestID () {
 
     audiomoth.getID(function (err, deviceId) {
+
+        if (communicating) return;
 
         if (err || deviceId === null) {
 
@@ -244,13 +253,11 @@ function requestID () {
 
 function getAudioMothPacket () {
 
-    if (communicating) {
-
-        return;
-
-    }
+    if (communicating) return;
 
     audiomoth.getTime(function (err, currentDate) {
+
+        if (communicating) return;
 
         if (err || currentDate === null) {
 
@@ -264,15 +271,21 @@ function getAudioMothPacket () {
 
         requestID();
 
-        setTimeout(getAudioMothPacket, 200);
-
     });
+
+    const milliseconds = Date.now() % MILLISECONDS_IN_SECOND;
+
+    var delay = MILLISECONDS_IN_SECOND / 2 - milliseconds;
+    
+    if (delay < 0) delay += MILLISECONDS_IN_SECOND;
+    
+    setTimeout(getAudioMothPacket, delay);
 
 }
 
 /* Check the version and description to see if the firmware is compatible or equivalent to an equivalent version of firmware */
 
-function checkVersionCompatibilty () {
+function checkVersionCompatibility () {
 
     /* This version array may be replaced if the firmware is custom with an equivalent official version */
 
@@ -344,12 +357,6 @@ function checkVersionCompatibilty () {
 
 function usePacketValues () {
 
-    if (communicating) {
-
-        return;
-
-    }
-
     if (date === null) {
 
         disableDisplay();
@@ -368,7 +375,7 @@ function usePacketValues () {
 
         updateBatteryDisplay(batteryState);
 
-        setTimeout(checkVersionCompatibilty, 100);
+        setTimeout(checkVersionCompatibility, 100);
 
     }
 

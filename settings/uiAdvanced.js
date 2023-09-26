@@ -54,13 +54,13 @@ exports.is48DCFilterDisabled = () => {
 
 };
 
-exports.istimeSettingFromGPSEnabled = () => {
+exports.isTimeSettingFromGPSEnabled = () => {
 
     return gpsTimeCheckbox.checked;
 
 };
 
-exports.ismagneticSwitchEnabled = () => {
+exports.isMagneticSwitchEnabled = () => {
 
     return magneticDelayCheckbox.checked;
 

@@ -272,21 +272,27 @@ function toggleNightMode () {
 
     mainWindow.webContents.send('night-mode');
 
+    if (splitWindow) {
+
+        splitWindow.webContents.send('night-mode');
+
+    }
+
     if (expansionWindow) {
 
         expansionWindow.webContents.send('night-mode');
 
     }
 
-    if (aboutWindow) {
+    if (downsampleWindow) {
 
-        aboutWindow.webContents.send('night-mode');
+        downsampleWindow.webContents.send('night-mode');
 
     }
 
-    if (splitWindow) {
+    if (aboutWindow) {
 
-        splitWindow.webContents.send('night-mode');
+        aboutWindow.webContents.send('night-mode');
 
     }
 
@@ -441,25 +447,6 @@ app.on('ready', function () {
                 app.quit();
 
             }
-        }]
-    }, {
-        label: 'Edit',
-        submenu: [{
-            label: 'Cut',
-            accelerator: 'CommandOrControl+X',
-            selector: 'cut:'
-        }, {
-            label: 'Copy',
-            accelerator: 'CommandOrControl+C',
-            selector: 'copy:'
-        }, {
-            label: 'Paste',
-            accelerator: 'CommandOrControl+V',
-            selector: 'paste:'
-        }, {
-            label: 'Select All',
-            accelerator: 'CommandOrControl+A',
-            selector: 'selectAll:'
         }]
     }, {
         label: 'Help',

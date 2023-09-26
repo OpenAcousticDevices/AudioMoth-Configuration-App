@@ -327,7 +327,7 @@ class DurationInput extends HTMLElement {
 
         const holderNode = document.createElement('div');
         holderNode.className = 'duration-holder';
-        holderNode.style = 'position: absolute; top: 0px; margin-left: 5%; margin-top: 2px; width: 90%;';
+        holderNode.style = 'position: absolute; top: 0px; margin-left: 5%; margin-top: 3px; width: 90%;';
 
         const spanNode = document.createElement('span');
         spanNode.className = 'duration-span';

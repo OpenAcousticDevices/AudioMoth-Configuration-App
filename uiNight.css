@@ -1,19 +1,5 @@
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-}
-
-*, *::after, *::before {
-	-webkit-user-select: none;
-	-webkit-user-drag: none;
-	-webkit-app-region: no-drag;
-	cursor: default;
-}
-
 .table>tbody>tr>td,
 .table>tbody>tr>th {
-  border-top: none;
   color: #FFFFFF;
 }
 
@@ -25,6 +11,7 @@ body {
 input {
   background: #000000;
   color: #FFFFFF;
+  border: thin solid #FFFFFF;
 }
 
 select {
@@ -58,8 +45,4 @@ select {
 
 #goertzel-threshold-slider .slider-track {
   background: rgb(64, 100, 216);
-}
-
-.grey {
-  color:#808080;
 }

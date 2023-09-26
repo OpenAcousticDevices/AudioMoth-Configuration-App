@@ -291,7 +291,7 @@ function downsampleFiles () {
 
 }
 
-/* When the progress bar is complete and the summary window at the end has been displayed for a fixed amount of ttime, it will close and this re-enables the UI */
+/* When the progress bar is complete and the summary window at the end has been displayed for a fixed amount of time, it will close and this re-enables the UI */
 
 electron.ipcRenderer.on('downsample-summary-closed', enableUI);
 

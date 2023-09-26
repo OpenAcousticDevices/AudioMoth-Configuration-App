@@ -191,8 +191,8 @@ exports.getSettings = () => {
         energySaverModeEnabled: uiAdvanced.isEnergySaverModeEnabled(),
         lowGainRangeEnabled: uiAdvanced.isLowGainRangeEnabled(),
         disable48DCFilter: uiAdvanced.is48DCFilterDisabled(),
-        timeSettingFromGPSEnabled: uiAdvanced.istimeSettingFromGPSEnabled(),
-        magneticSwitchEnabled: uiAdvanced.ismagneticSwitchEnabled()
+        timeSettingFromGPSEnabled: uiAdvanced.isTimeSettingFromGPSEnabled(),
+        magneticSwitchEnabled: uiAdvanced.isMagneticSwitchEnabled()
     };
 
     return settings;

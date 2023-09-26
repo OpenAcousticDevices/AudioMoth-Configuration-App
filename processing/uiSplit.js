@@ -295,7 +295,7 @@ function splitFiles () {
 
 }
 
-/* When the progress bar is complete and the summary window at the end has been displayed for a fixed amount of ttime, it will close and this re-enables the UI */
+/* When the progress bar is complete and the summary window at the end has been displayed for a fixed amount of time, it will close and this re-enables the UI */
 
 electron.ipcRenderer.on('split-summary-closed', enableUI);
 
@@ -389,7 +389,7 @@ splitButton.addEventListener('click', () => {
 
                     dialog.showMessageBox(currentWindow, {
                         type: 'error',
-                        title: 'Cannot downsample with current settings',
+                        title: 'Cannot split with current settings',
                         message: 'Output destination is the same as input destination and no prefix is selected.'
                     });
 
@@ -403,7 +403,7 @@ splitButton.addEventListener('click', () => {
 
                 dialog.showMessageBox(currentWindow, {
                     type: 'error',
-                    title: 'Cannot downsample with current settings',
+                    title: 'Cannot split with current settings',
                     message: 'Output destination is the same as input destination and no prefix is selected.'
                 });
 
