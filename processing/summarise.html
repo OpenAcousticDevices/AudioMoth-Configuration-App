@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="../index.css">
+        <link id="uiCSS" rel="stylesheet" href="../ui.css">
+        <style>
+            ::-webkit-scrollbar {
+                display: none;
+            }
+        </style>
+        <title>Summarise AudioMoth Files</title>
+    </head>
+
+    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
+
+        <div class="container" style="text-align: center; padding: 8px;">
+
+            <div class="row">
+
+                <div class="col-12" style="padding-top: 0px; padding-bottom: 8px; padding-left: 12px; padding-right: 12px;">
+
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div class="row" style="margin-top: 12px; margin-bottom: 12px;">
+                            <div class="col-5" style="padding-left: 12px;">
+                                <button id="file-button" class="btn btn-primary" style="width: 100%; margin-left: 20px;">Select Files</button>
+                            </div>
+                            <div class="col-7" style="padding-right: 12px;">
+                                <div style="margin-top: 11px; text-align: right; margin-right: 20px;">
+                                    <span id="file-label" title="AudioMoth recordings will have a file name ending in '.WAV'.">No AudioMoth WAV files selected.</span>
+                                </div>
+                            </div>
+                        </div>
+                    
+                    </div>
+                
+                </div>
+            
+            </div>
+            
+            <div class="row">
+            
+                <div class="col-12" style="padding-top: 0px; padding-left: 12px; padding-right: 12px;">
+
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div class="row" style="margin-top: 12px; margin-bottom: 16px;">
+                            <div class="col-9" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <label for="output-checkbox" style="margin-left: 20px; margin-bottom: 0px;">Enable destination folder:</label>
+                            </div>
+                            <div class="col-3" style="text-align: right; padding: 0px; padding-right: 12px;">
+                                <input id="output-checkbox" name="EnableDestinationFolder" type="checkbox" style="margin-right: 20px;">
+                            </div>
+                        </div>
+                
+                        <div class="row" style="margin-top: 8px; margin-bottom: 12px;">
+                            <div class="col-4" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <button id="output-button" class="btn btn-primary" style="width: 100%; margin-left: 20px;" disabled>Select Destination</button>
+                            </div>
+                            <div class="col-8" style="padding: 0px; padding-right: 12px;">
+                                <div style="margin-top: 11px; text-align: right; margin-right: 20px;">
+                                    <span id="output-label">Writing summary file to source folder.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="fixed-bottom" style="padding: 8px;">
+
+                <div style="width: 100%;">
+                    <div class="row">
+                        <div class="col-12">
+                        <button id="summarise-button" class="btn btn-success" disabled style="width: 100%;">Summarise Files</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+    </body>
+
+    <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script src="uiSummarise.js" charset="utf-8"></script>
+
+</html>

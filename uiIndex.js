@@ -1,4 +1,3 @@
-
 /****************************************************************************
  * uiIndex.js
  * openacousticdevices.info
@@ -9,14 +8,13 @@
 
 /* global document */
 
+const {ipcRenderer} = require('electron');
+
 const audiomoth = require('audiomoth-hid');
 const packetReader = require('./packetReader.js');
 
 const electron = require('electron');
-const dialog = electron.remote.dialog;
-const Menu = electron.remote.Menu;
-const clipboard = electron.remote.clipboard;
-const BrowserWindow = electron.remote.BrowserWindow;
+const {dialog, Menu, clipboard, BrowserWindow} = require('@electron/remote');
 
 const ui = require('./ui.js');
 const scheduleBar = require('./scheduleBar.js');
@@ -30,11 +28,6 @@ const uiSchedule = require('./schedule/uiSchedule.js');
 const uiSettings = require('./settings/uiSettings.js');
 
 const versionChecker = require('./versionChecker.js');
-
-const UINT32_MAX = 0xFFFFFFFF;
-const UINT16_MAX = 0xFFFF;
-const SECONDS_IN_DAY = 86400;
-const MILLISECONDS_IN_SECOND = 1000;
 
 const THRESHOLD_SCALE_PERCENTAGE = 0;
 const THRESHOLD_SCALE_16BIT = 1;
@@ -63,26 +56,26 @@ const configureButton = document.getElementById('configure-button');
 
 /* Store version number for packet size checks and description for compatibility check */
 
-var firmwareVersion = '0.0.0';
-var firmwareDescription = '-';
+let firmwareVersion = '0.0.0';
+let firmwareDescription = '-';
 
-var updateRecommended = false;
+let updateRecommended = false;
 
 /* Values read from AudioMoth */
 
-var date, id, batteryState;
+let date, id, batteryState;
 
 /* If the ID of the current device differs from the previous one, then warning messages can be reset */
 
-var previousId = '';
+let previousId = '';
 
 /* Whether or not a warning about the version number has been displayed for this device */
 
-var versionWarningShown = false;
+let versionWarningShown = false;
 
 /* Whether or not communication with device is currently happening */
 
-var communicating = false;
+let communicating = false;
 
 /* Compare two semantic versions and return true if older */
 
@@ -273,12 +266,12 @@ function getAudioMothPacket () {
 
     });
 
-    const milliseconds = Date.now() % MILLISECONDS_IN_SECOND;
+    const milliseconds = Date.now() % constants.MILLISECONDS_IN_SECOND;
 
-    var delay = MILLISECONDS_IN_SECOND / 2 - milliseconds;
-    
-    if (delay < 0) delay += MILLISECONDS_IN_SECOND;
-    
+    let delay = constants.MILLISECONDS_IN_SECOND / 2 - milliseconds;
+
+    if (delay < 0) delay += constants.MILLISECONDS_IN_SECOND;
+
     setTimeout(getAudioMothPacket, delay);
 
 }
@@ -425,7 +418,7 @@ function getTrueFirmwareVersion () {
 
 function sendPacket (packet) {
 
-    audiomoth.setPacket(packet, function (err, data) {
+    audiomoth.setPacket(packet, (err, data) => {
 
         const showError = () => {
 
@@ -501,14 +494,12 @@ function configureDevice () {
 
     communicating = true;
 
-    ui.disableTimeDisplay(false);
+    ui.disableTimeDisplay();
     configureButton.disabled = true;
 
     const USB_LAG = 20;
 
     const MINIMUM_DELAY = 100;
-
-    const MILLISECONDS_IN_SECOND = 1000;
 
     setTimeout(function () {
 
@@ -536,9 +527,9 @@ function configureDevice () {
 
     const sendTime = new Date();
 
-    let delay = MILLISECONDS_IN_SECOND - sendTime.getMilliseconds() - USB_LAG;
+    let delay = constants.MILLISECONDS_IN_SECOND - sendTime.getMilliseconds() - USB_LAG;
 
-    if (delay < MINIMUM_DELAY) delay += MILLISECONDS_IN_SECOND;
+    if (delay < MINIMUM_DELAY) delay += constants.MILLISECONDS_IN_SECOND;
 
     sendTime.setMilliseconds(sendTime.getMilliseconds() + delay);
 
@@ -576,13 +567,21 @@ function configureDevice () {
 
     packet[index++] = ledCheckbox.checked ? 1 : 0;
 
-    let timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
+    let timePeriods;
 
-    timePeriods = timePeriods.sort(function (a, b) {
+    if (isOlderSemanticVersion(trueFirmwareVersion, ['1', '9', '0'])) {
 
-        return a.startMins - b.startMins;
+        /* If AudioMoth is using a firmware version older than 1.9.0, split any periods which wrap around */
 
-    });
+        timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriodsNoWrap()));
+
+    } else {
+
+        timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
+
+    }
+
+    timePeriods = timeHandler.sortPeriods(timePeriods);
 
     packet[index++] = timePeriods.length;
 
@@ -591,7 +590,8 @@ function configureDevice () {
         writeLittleEndianBytes(packet, index, 2, timePeriods[i].startMins);
         index += 2;
 
-        writeLittleEndianBytes(packet, index, 2, timePeriods[i].endMins);
+        const endMins = timePeriods[i].endMins === 0 ? 1440 : timePeriods[i].endMins;
+        writeLittleEndianBytes(packet, index, 2, endMins);
         index += 2;
 
     }
@@ -606,15 +606,21 @@ function configureDevice () {
 
     }
 
-    packet[index++] = ui.isLocalTime() ? timeHandler.calculateTimezoneOffsetHours() : 0;
+    const timeZoneOffset = timeHandler.getTimeZoneOffset();
+
+    const offsetHours = timeZoneOffset < 0 ? Math.ceil(timeZoneOffset / constants.MINUTES_IN_HOUR) : Math.floor(timeZoneOffset / constants.MINUTES_IN_HOUR);
+
+    const offsetMins = timeZoneOffset % constants.MINUTES_IN_HOUR;
+
+    packet[index++] = offsetHours;
 
     packet[index++] = lowVoltageCutoffCheckbox.checked ? 1 : 0;
 
     packet[index++] = batteryLevelCheckbox.checked ? 0 : 1;
 
-    /* For non-integer timezones */
+    /* For non-integer timeZones */
 
-    packet[index++] = ui.isLocalTime() ? (ui.calculateTimezoneOffsetMins() % 60) : 0;
+    packet[index++] = offsetMins;
 
     /* Duty cycle disabled (default value = 0) */
 
@@ -622,66 +628,42 @@ function configureDevice () {
 
     /* Start/stop dates */
 
-    const today = new Date();
-    const dayDiff = today.getDate() - today.getUTCDate();
-
-    const timezoneOffset = -60 * today.getTimezoneOffset();
-
     const firstRecordingDateEnabled = uiSchedule.isFirstRecordingDateEnabled();
-    const firstRecordingDate = new Date(uiSchedule.getFirstRecordingDate());
 
-    let earliestRecordingTime;
+    let earliestRecordingTime = 0;
 
-    if (!firstRecordingDateEnabled) {
+    if (firstRecordingDateEnabled) {
 
-        earliestRecordingTime = 0;
+        const dateComponents = ui.extractDateComponents(uiSchedule.getFirstRecordingDate());
 
-    } else {
+        const firstRecordingTimestamp = Date.UTC(dateComponents.year, dateComponents.month - 1, dateComponents.day, 0, 0, 0, 0).valueOf() / 1000;
 
-        /* If the timezone difference has caused the day to differ from the day as a UTC time, undo the offset */
+        const firstRecordingOffsetTimestamp = firstRecordingTimestamp - timeZoneOffset * constants.SECONDS_IN_MINUTE;
 
-        if (ui.isLocalTime()) {
-
-            firstRecordingDate.setDate(firstRecordingDate.getDate() - dayDiff);
-
-            firstRecordingDate.setSeconds(firstRecordingDate.getSeconds() - timezoneOffset);
-
-        }
-
-        earliestRecordingTime = (firstRecordingDate === -1) ? 0 : new Date(firstRecordingDate).valueOf() / 1000;
+        earliestRecordingTime = firstRecordingOffsetTimestamp;
 
     }
 
     const lastRecordingDateEnabled = uiSchedule.isLastRecordingDateEnabled();
-    const lastRecordingDate = new Date(uiSchedule.getLastRecordingDate());
 
-    let latestRecordingTime;
+    let latestRecordingTime = 0;
 
-    if (!lastRecordingDateEnabled) {
+    if (lastRecordingDateEnabled) {
 
-        latestRecordingTime = 0;
+        const dateComponents = ui.extractDateComponents(uiSchedule.getLastRecordingDate());
 
-    } else {
+        const lastRecordingTimestamp = Date.UTC(dateComponents.year, dateComponents.month - 1, dateComponents.day, 0, 0, 0, 0).valueOf() / 1000;
 
-        if (ui.isLocalTime()) {
+        const lastRecordingOffsetTimestamp = lastRecordingTimestamp + constants.SECONDS_IN_DAY - timeZoneOffset * constants.SECONDS_IN_MINUTE;
 
-            lastRecordingDate.setDate(lastRecordingDate.getDate() - dayDiff);
-
-            lastRecordingDate.setSeconds(lastRecordingDate.getSeconds() - timezoneOffset);
-
-        }
-
-        const lastRecordingDateTimestamp = (lastRecordingDate === -1) ? 0 : new Date(lastRecordingDate).valueOf() / 1000;
-
-        /* Make latestRecordingTime timestamp inclusive by setting it to the end of the chosen day */
-        latestRecordingTime = lastRecordingDateTimestamp + SECONDS_IN_DAY;
+        latestRecordingTime = lastRecordingOffsetTimestamp;
 
     }
 
     /* Check ranges of values before sending */
 
-    earliestRecordingTime = Math.min(UINT32_MAX, earliestRecordingTime);
-    latestRecordingTime = Math.min(UINT32_MAX, latestRecordingTime);
+    earliestRecordingTime = Math.min(constants.UINT32_MAX, earliestRecordingTime);
+    latestRecordingTime = Math.min(constants.UINT32_MAX, latestRecordingTime);
 
     writeLittleEndianBytes(packet, index, 4, earliestRecordingTime);
     index += 4;
@@ -699,7 +681,7 @@ function configureDevice () {
 
         case 'low':
             /* Low-pass */
-            lowerFilter = UINT16_MAX;
+            lowerFilter = constants.UINT16_MAX;
             higherFilter = settings.higherFilter / 100;
             break;
         case 'band':
@@ -710,7 +692,7 @@ function configureDevice () {
         case 'high':
             /* High-pass */
             lowerFilter = settings.lowerFilter / 100;
-            higherFilter = UINT16_MAX;
+            higherFilter = constants.UINT16_MAX;
             break;
         case 'none':
             lowerFilter = 0;
@@ -973,12 +955,11 @@ function initialiseDisplay () {
 
 function disableDisplay () {
 
-    ui.updateDate(date);
     updateIdDisplay(id);
     updateFirmwareDisplay(firmwareVersion, firmwareDescription);
     updateBatteryDisplay(batteryState);
 
-    ui.disableTimeDisplay(false);
+    ui.disableTimeDisplay();
 
     idLabel.classList.add('grey');
     idDisplay.classList.add('grey');
@@ -990,8 +971,6 @@ function disableDisplay () {
     batteryDisplay.classList.add('grey');
 
     configureButton.disabled = true;
-
-    applicationMenu.getMenuItemById('copyid').enabled = false;
 
 };
 
@@ -1097,9 +1076,9 @@ function copyDeviceID () {
 
         setTimeout(function () {
 
-            idDisplay.classList.remove('grey');
+            idDisplay.style.color = '';
 
-        }, 5000);
+        }, 2000);
 
     }
 
@@ -1107,11 +1086,13 @@ function copyDeviceID () {
 
 electron.ipcRenderer.on('copy-id', copyDeviceID);
 
-function toggleTimezoneStatus () {
+function changeTimeZoneStatus (mode) {
 
-    ui.toggleTimezoneStatus();
+    ui.setTimeZoneStatus(mode);
 
-    uiSchedule.updateTimezoneStatus(ui.isLocalTime());
+    uiSchedule.updateTimeZoneStatus(mode);
+
+    ui.updateTimeZoneUI();
 
 }
 
@@ -1136,7 +1117,7 @@ function updateLifeDisplayOnChange () {
 
 }
 
-lifeDisplay.getPanel().addEventListener('click', function () {
+lifeDisplay.getPanel().addEventListener('click', () => {
 
     lifeDisplay.toggleSizeWarning(updateLifeDisplayOnChange);
 
@@ -1146,9 +1127,20 @@ function getCurrentConfiguration () {
 
     const config = {};
 
-    config.timePeriods = scheduleBar.getTimePeriods();
+    const timePeriods = scheduleBar.getTimePeriodsNoWrap();
 
-    config.localTime = ui.isLocalTime();
+    for (let i = 0; i < timePeriods.length; i++) {
+
+        timePeriods[i].startMins = timePeriods[i].startMins === 0 ? 0 : timePeriods[i].startMins;
+        timePeriods[i].endMins = timePeriods[i].endMins === 0 ? 1440 : timePeriods[i].endMins;
+
+    }
+
+    config.timePeriods = timePeriods;
+
+    config.customTimeZoneOffset = ipcRenderer.sendSync('request-custom-time-zone');
+
+    config.localTime = ui.getTimeZoneMode() === constants.TIME_ZONE_MODE_LOCAL;
 
     config.ledEnabled = ledCheckbox.checked;
     config.lowVoltageCutoffEnabled = lowVoltageCutoffCheckbox.checked;
@@ -1207,11 +1199,11 @@ function getCurrentConfiguration () {
 
 /* Add listeners to save/load menu options */
 
-electron.ipcRenderer.on('save', function () {
+electron.ipcRenderer.on('save', () => {
 
     const currentConfig = getCurrentConfiguration();
 
-    saveLoad.saveConfiguration(currentConfig, function (err) {
+    saveLoad.saveConfiguration(currentConfig, (err) => {
 
         if (err) {
 
@@ -1227,11 +1219,11 @@ electron.ipcRenderer.on('save', function () {
 
 });
 
-electron.ipcRenderer.on('load', function () {
+electron.ipcRenderer.on('load', () => {
 
     const currentConfig = getCurrentConfiguration();
 
-    saveLoad.loadConfiguration(currentConfig, function (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders) {
+    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders) => {
 
         let sortedPeriods = timePeriods;
         sortedPeriods = sortedPeriods.sort(function (a, b) {
@@ -1240,41 +1232,95 @@ electron.ipcRenderer.on('load', function () {
 
         });
 
-        ui.setTimezoneStatus(localTime);
+        let timeZoneMode;
 
-        scheduleBar.setSchedule(sortedPeriods);
+        if (localTime) {
+
+            timeZoneMode = constants.TIME_ZONE_MODE_LOCAL;
+
+        } else if (customTimeZoneOffset) {
+
+            timeZoneMode = constants.TIME_ZONE_MODE_CUSTOM;
+
+        } else {
+
+            timeZoneMode = constants.TIME_ZONE_MODE_UTC;
+
+        }
+
+        changeTimeZoneStatus(timeZoneMode);
+
+        if (timeZoneMode === constants.TIME_ZONE_MODE_CUSTOM) {
+
+            electron.ipcRenderer.send('set-custom-time-zone', customTimeZoneOffset);
+
+        } else {
+
+            electron.ipcRenderer.send('set-time-zone-menu', timeZoneMode);
+
+        }
+
+        uiSchedule.clearTimes();
+
+        for (let i = 0; i < sortedPeriods.length; i++) {
+
+            uiSchedule.addTime(sortedPeriods[i].startMins, sortedPeriods[i].endMins);
+
+        }
+
+        scheduleBar.updateCanvas();
+
         uiSchedule.updateTimeList();
+
+        let todayString;
+
+        if (firstRecordingDate === '' || lastRecordingDate === '') {
+
+            let today = new Date();
+            const todayTimestamp = today.valueOf();
+            const timeZoneOffset = timeHandler.getTimeZoneOffset() * constants.SECONDS_IN_MINUTE * 1000;
+
+            const todayOffsetTimestamp = todayTimestamp + timeZoneOffset;
+
+            today = new Date(todayOffsetTimestamp);
+
+            todayString = ui.formatDateString(today);
+
+        }
+
+        firstRecordingDate = firstRecordingDate === '' ? todayString : firstRecordingDate;
+        lastRecordingDate = lastRecordingDate === '' ? todayString : lastRecordingDate;
 
         uiSchedule.setFirstRecordingDate(firstRecordingDateEnabled, firstRecordingDate);
         uiSchedule.setLastRecordingDate(lastRecordingDateEnabled, lastRecordingDate);
 
         const settings = {
-            sampleRateIndex: sampleRateIndex,
-            gain: gain,
-            dutyEnabled: dutyEnabled,
-            recordDuration: recordDuration,
-            sleepDuration: sleepDuration,
-            passFiltersEnabled: passFiltersEnabled,
-            filterType: filterType,
-            lowerFilter: lowerFilter,
-            higherFilter: higherFilter,
-            amplitudeThresholdingEnabled: amplitudeThresholdingEnabled,
-            amplitudeThreshold: amplitudeThreshold,
-            frequencyTriggerEnabled: frequencyTriggerEnabled,
-            frequencyTriggerWindowLength: frequencyTriggerWindowLength,
-            frequencyTriggerCentreFrequency: frequencyTriggerCentreFrequency,
-            minimumFrequencyTriggerDuration: minimumFrequencyTriggerDuration,
-            frequencyTriggerThreshold: frequencyTriggerThreshold,
-            requireAcousticConfig: requireAcousticConfig,
-            dailyFolders: dailyFolders,
-            displayVoltageRange: displayVoltageRange,
-            minimumAmplitudeThresholdDuration: minimumAmplitudeThresholdDuration,
-            amplitudeThresholdScaleIndex: amplitudeThresholdingScaleIndex,
-            energySaverModeEnabled: energySaverModeEnabled,
-            disable48DCFilter: disable48DCFilter,
-            lowGainRangeEnabled: lowGainRangeEnabled,
-            timeSettingFromGPSEnabled: timeSettingFromGPSEnabled,
-            magneticSwitchEnabled: magneticSwitchEnabled
+            sampleRateIndex,
+            gain,
+            dutyEnabled,
+            recordDuration,
+            sleepDuration,
+            passFiltersEnabled,
+            filterType,
+            lowerFilter,
+            higherFilter,
+            amplitudeThresholdingEnabled,
+            amplitudeThreshold,
+            frequencyTriggerEnabled,
+            frequencyTriggerWindowLength,
+            frequencyTriggerCentreFrequency,
+            minimumFrequencyTriggerDuration,
+            frequencyTriggerThreshold,
+            requireAcousticConfig,
+            dailyFolders,
+            displayVoltageRange,
+            minimumAmplitudeThresholdDuration,
+            amplitudeThresholdScaleIndex,
+            energySaverModeEnabled,
+            disable48DCFilter,
+            lowGainRangeEnabled,
+            timeSettingFromGPSEnabled,
+            magneticSwitchEnabled
         };
 
         uiSettings.fillUI(settings);
@@ -1291,7 +1337,7 @@ electron.ipcRenderer.on('load', function () {
 
 });
 
-electron.ipcRenderer.on('update-check', function () {
+electron.ipcRenderer.on('update-check', () => {
 
     versionChecker.checkLatestRelease(function (response) {
 
@@ -1348,11 +1394,16 @@ initialiseDisplay();
 
 getAudioMothPacket();
 
-ui.setTimezoneStatus(ui.isLocalTime());
+ui.setTimeZoneStatus(ui.getTimeZoneMode());
+ui.updateTimeZoneUI();
 
 electron.ipcRenderer.on('night-mode', toggleNightMode);
 
-electron.ipcRenderer.on('local-time', toggleTimezoneStatus);
+electron.ipcRenderer.on('change-time-zone-mode', (e, timeZoneMode) => {
+
+    changeTimeZoneStatus(timeZoneMode);
+
+});
 
 configureButton.addEventListener('click', () => {
 
@@ -1379,8 +1430,6 @@ configureButton.addEventListener('click', () => {
     configureDevice();
 
 });
-
-ui.checkUtcToggleability();
 
 uiSchedule.prepareUI(updateLifeDisplayOnChange);
 uiSettings.prepareUI(updateLifeDisplayOnChange);

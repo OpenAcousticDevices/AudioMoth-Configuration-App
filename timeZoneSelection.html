@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="./index.css">
+        <link id="uiCSS" rel="stylesheet" href="./ui.css">
+        <title>Select Custom Time Zone</title>
+    </head>
+
+    <body style="text-align: center; -webkit-user-select: none; -webkit-app-region: drag; overflow: hidden;">
+
+        <div class="container" style="text-align: center; padding: 8px;">
+
+            <div class="row" style="margin-bottom: 5px;">
+
+                <div class="col-12">
+
+                    <select class="form-select" id="time-zone-select" style="font-size: 10pt; width: 100%;"></select>
+
+                </div>
+
+            </div>
+            
+            <div class="row" style="margin-bottom: 7px;">
+                <div class="col-4" style="text-align: left; padding: 0px;">
+                    <button class="btn btn-primary" id="subtract-hour-button" style="margin-top: 4px; margin-left: 12px; text-align: center; width: 50px; font-size: small;">-1h</button>
+                    <button class="btn btn-secondary" id="subtract-min-button" style="margin-top: 4px; text-align: center; width: 60px; font-size: small;">-15m</button>
+                </div>
+                
+                <div class="col-4" style="padding: 0px;">
+                    <span>
+                        <div class="mono-text" id="offset-display" style="display: inline-block;">UTC+00:00</div>
+                    </span>
+                </div>
+                
+                <div class="col-4" style="text-align: right; padding: 0px;">
+                    <button class="btn btn-secondary" id="add-min-button" style="margin-top: 4px; text-align: center; width: 60px; font-size: small;">+15m</button>
+                    <button class="btn btn-primary" id="add-hour-button" style="margin-top: 4px; margin-right: 12px; text-align: center; width: 50px; font-size: small;">+1h</button>
+                </div>
+            </div>
+
+            <div class="fixed-bottom" style="padding: 8px;">
+
+                <div class="row">
+                    <div class="col-12">
+                        <button class="btn btn-success" id="set-button" style="width: 100%;">Set Time Zone</button>
+                    </div>
+                </div>
+                
+            </div>
+
+        </div>
+
+    </body>
+
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script src="./uiTimeZoneSelection.js" charset="utf-8"></script>
+
+</html>

@@ -13,8 +13,6 @@ const scheduleEditor = require('./scheduleEditor.js');
 const uiScheduleEditor = require('./uiScheduleEditor.js');
 const timeHandler = require('../timeHandler.js');
 
-const dateInput = require('./dateInput.js');
-
 const firstRecordingDateCheckbox = document.getElementById('first-date-checkbox');
 const firstRecordingDateLabel = document.getElementById('first-date-label');
 const firstRecordingDateInput = document.getElementById('first-date-input');
@@ -23,21 +21,16 @@ const lastRecordingDateCheckbox = document.getElementById('last-date-checkbox');
 const lastRecordingDateLabel = document.getElementById('last-date-label');
 const lastRecordingDateInput = document.getElementById('last-date-input');
 
-exports.updateTimezoneStatus = (isLocalTime) => {
+exports.updateTimeZoneStatus = () => {
 
-    let timezoneText = 'UTC';
+    let timeZoneText = 'UTC';
 
-    if (isLocalTime) {
+    timeHandler.storeTimeZoneOffset();
 
-        timezoneText = timeHandler.getTimezoneText(isLocalTime);
+    timeZoneText = timeHandler.getTimeZoneText();
 
-    }
-
-    firstRecordingDateLabel.innerHTML = 'First recording date (' + timezoneText + '):';
-    lastRecordingDateLabel.innerHTML = 'Last recording date (' + timezoneText + '):';
-
-    dateInput.updateLocalTimeStatus(firstRecordingDateInput, isLocalTime);
-    dateInput.updateLocalTimeStatus(lastRecordingDateInput, isLocalTime);
+    firstRecordingDateLabel.innerHTML = 'First recording date (' + timeZoneText + '):';
+    lastRecordingDateLabel.innerHTML = 'Last recording date (' + timeZoneText + '):';
 
     uiScheduleEditor.disableRemoveTimeButton();
 
@@ -51,7 +44,7 @@ function startlastRecordingDateError (input) {
 
     }
 
-    input.style.border = '2px solid #0000ff';
+    input.style.border = '1px solid #0000ff';
     input.style.color = 'blue';
 
     setTimeout(function () {
@@ -175,44 +168,38 @@ exports.getSchedule = scheduleEditor.getTimePeriods();
 
 /* First/last recording listeners */
 
-firstRecordingDateInput.addEventListener('focusout', function () {
+firstRecordingDateInput.addEventListener('focusout', () => {
 
     checkDates(0);
 
 });
 
-lastRecordingDateInput.addEventListener('focusout', function () {
+lastRecordingDateInput.addEventListener('focusout', () => {
 
     checkDates(1);
 
 });
 
-firstRecordingDateCheckbox.addEventListener('change', function () {
+firstRecordingDateCheckbox.addEventListener('change', () => {
 
     updateFirstRecordingDateUI();
 
 });
 
-lastRecordingDateCheckbox.addEventListener('change', function () {
+lastRecordingDateCheckbox.addEventListener('change', () => {
 
     updateLastRecordingDateUI();
 
 });
 
-function dateToString (date) {
-
-    return date.toISOString().substring(0, 10);
-
-}
-
-firstRecordingDateLabel.addEventListener('click', function () {
+firstRecordingDateLabel.addEventListener('click', () => {
 
     firstRecordingDateCheckbox.toggleAttribute('checked');
     updateFirstRecordingDateUI();
 
 });
 
-lastRecordingDateLabel.addEventListener('click', function () {
+lastRecordingDateLabel.addEventListener('click', () => {
 
     lastRecordingDateCheckbox.toggleAttribute('checked');
     updateLastRecordingDateUI();
@@ -226,11 +213,7 @@ exports.updateTimeList = uiScheduleEditor.updateTimeList;
 exports.prepareUI = (changeFunction) => {
 
     const today = new Date();
-
-    const year = ('000' + today.getUTCFullYear()).slice(-4);
-    const month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
-    const day = ('0' + today.getUTCDate()).slice(-2);
-    const todayString = year + '-' + month + '-' + day;
+    const todayString = ui.formatDateString(today);
 
     firstRecordingDateInput.value = todayString;
     lastRecordingDateInput.value = todayString;
@@ -242,7 +225,10 @@ exports.prepareUI = (changeFunction) => {
 
     /* Set up time display */
 
-    ui.disableTimeDisplay(true);
+    ui.disableTimeDisplay();
     ui.showTime();
 
 };
+
+exports.addTime = scheduleEditor.addTime;
+exports.clearTimes = scheduleEditor.clearTimes;

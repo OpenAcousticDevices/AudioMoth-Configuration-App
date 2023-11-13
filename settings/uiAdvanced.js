@@ -4,8 +4,7 @@
  * January 2021
  *****************************************************************************/
 
-const electron = require('electron');
-const dialog = electron.remote.dialog;
+const {dialog} = require('@electron/remote');
 
 const acousticConfigCheckBox = document.getElementById('acoustic-config-checkbox');
 const dailyFolderCheckBox = document.getElementById('daily-folder-checkbox');
@@ -46,7 +45,7 @@ exports.isLowGainRangeEnabled = () => {
 
     return lowGainRangeCheckbox.checked;
 
-}
+};
 
 exports.is48DCFilterDisabled = () => {
 

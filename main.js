@@ -6,19 +6,13 @@
 
 'use strict';
 
-const electron = require('electron');
+const {app, Menu, shell, ipcMain, BrowserWindow} = require('electron');
 
-const app = electron.app;
-
-const Menu = electron.Menu;
-
-const shell = electron.shell;
-
-const ipcMain = electron.ipcMain;
+require('@electron/remote/main').initialize();
 
 const path = require('path');
 
-const BrowserWindow = electron.BrowserWindow;
+const constants = require('./constants.js');
 
 const ProgressBar = require('electron-progressbar');
 
@@ -27,54 +21,111 @@ require('electron-debug')({
     devToolsMode: 'undocked'
 });
 
-var mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow;
+let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, timeZoneSelectionWindow;
 
-var expandProgressBar, splitProgressBar, downsampleProgressBar;
-
-function shrinkWindowHeight (windowHeight) {
-
-    if (process.platform === 'darwin') {
-
-        windowHeight -= 20;
-
-    } else if (process.platform === 'linux') {
-
-        windowHeight -= 20;
-
+const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+const standardWindowSettings = {
+    resizable: false,
+    fullscreenable: false,
+    autoHideMenuBar: true,
+    icon: path.join(__dirname, iconLocation),
+    useContentSize: true,
+    webPreferences: {
+        enableRemoteModule: true,
+        nodeIntegration: true,
+        contextIsolation: false
     }
+};
 
-    return windowHeight;
+let expandProgressBar, splitProgressBar, downsampleProgressBar, summariseProgressBar;
+
+const standardProgressBarSettings = {
+    closeOnComplete: false,
+    indeterminate: false
+};
+
+let timeZoneMode = constants.TIME_ZONE_MODE_UTC;
+
+let customTimeZone = 0;
+
+/* Generate settings objects for windows and progress bars */
+
+function generateSettings (width, height, title) {
+
+    const uniqueSettings = {
+        width,
+        height,
+        title
+    };
+
+    const settings = Object.assign({}, standardWindowSettings, uniqueSettings);
+    settings.parent = mainWindow;
+
+    return settings;
 
 }
+
+function generateProgressBarSettings (title, text, detail, fileCount, parent) {
+
+    const uniqueSettings = {
+        title,
+        text,
+        detail,
+        maxValue: fileCount * 100
+    };
+
+    const settings = Object.assign({}, standardProgressBarSettings, uniqueSettings);
+
+    settings.browserWindow = {
+        parent,
+        webPreferences: {
+            enableRemoteModule: true,
+            nodeIntegration: true,
+            contextIsolation: false
+        },
+        closable: true,
+        modal: false
+    };
+
+    return settings;
+
+}
+
+/* Open subwindows */
 
 function openSplitWindow () {
 
     if (splitWindow) {
 
+        splitWindow.show();
         return;
 
     }
 
-    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+    let windowWidth = 565;
+    let windowHeight = 430;
 
-    splitWindow = new BrowserWindow({
-        width: 565,
-        height: shrinkWindowHeight(468),
-        title: 'Split AudioMoth WAV Files',
-        useContentSize: true,
-        resizable: false,
-        fullscreenable: false,
-        icon: path.join(__dirname, iconLocation),
-        parent: mainWindow,
-        webPreferences: {
-            nodeIntegration: true
-        }
-    });
+    if (process.platform === 'linux') {
+
+        windowWidth = 560;
+        windowHeight = 428;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 560;
+        windowHeight = 428;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Split AudioMoth WAV Files');
+    splitWindow = new BrowserWindow(settings);
 
     splitWindow.setMenu(null);
     splitWindow.loadURL(path.join('file://', __dirname, 'processing/split.html'));
 
-    splitWindow.webContents.on('dom-ready', function () {
+    require('@electron/remote/main').enable(splitWindow.webContents);
+
+    splitWindow.webContents.on('dom-ready', () => {
 
         mainWindow.webContents.send('poll-night-mode');
 
@@ -90,15 +141,17 @@ function openSplitWindow () {
 
     });
 
-    splitWindow.on('close', function (e) {
+    splitWindow.on('close', (e) => {
+
+        e.preventDefault();
 
         if (splitProgressBar) {
 
-            e.preventDefault();
+            return;
 
         }
 
-        splitWindow = null;
+        splitWindow.hide();
 
     });
 
@@ -108,30 +161,35 @@ function openExpansionWindow () {
 
     if (expansionWindow) {
 
+        expansionWindow.show();
         return;
 
     }
 
-    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+    let windowWidth = 565;
+    let windowHeight = 615;
 
-    expansionWindow = new BrowserWindow({
-        width: 565,
-        height: shrinkWindowHeight(643),
-        title: 'Expand AudioMoth T.WAV Files',
-        useContentSize: true,
-        resizable: false,
-        fullscreenable: false,
-        icon: path.join(__dirname, iconLocation),
-        parent: mainWindow,
-        webPreferences: {
-            nodeIntegration: true
-        }
-    });
+    if (process.platform === 'linux') {
+
+        windowWidth = 560;
+        windowHeight = 615;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 560;
+        windowHeight = 615;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Expand AudioMoth T.WAV Files');
+    expansionWindow = new BrowserWindow(settings);
 
     expansionWindow.setMenu(null);
     expansionWindow.loadURL(path.join('file://', __dirname, 'processing/expansion.html'));
 
-    expansionWindow.webContents.on('dom-ready', function () {
+    require('@electron/remote/main').enable(expansionWindow.webContents);
+
+    expansionWindow.webContents.on('dom-ready', () => {
 
         mainWindow.webContents.send('poll-night-mode');
 
@@ -147,15 +205,17 @@ function openExpansionWindow () {
 
     });
 
-    expansionWindow.on('close', function (e) {
+    expansionWindow.on('close', (e) => {
+
+        e.preventDefault();
 
         if (expandProgressBar) {
 
-            e.preventDefault();
+            return;
 
         }
 
-        expansionWindow = null;
+        expansionWindow.hide();
 
     });
 
@@ -165,30 +225,35 @@ function openDownsamplingWindow () {
 
     if (downsampleWindow) {
 
+        downsampleWindow.show();
         return;
 
     }
 
-    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+    let windowWidth = 565;
+    let windowHeight = 428;
 
-    downsampleWindow = new BrowserWindow({
-        width: 565,
-        height: shrinkWindowHeight(448),
-        title: 'Downsample AudioMoth WAV Files',
-        useContentSize: true,
-        resizable: false,
-        fullscreenable: false,
-        icon: path.join(__dirname, iconLocation),
-        parent: mainWindow,
-        webPreferences: {
-            nodeIntegration: true
-        }
-    });
+    if (process.platform === 'linux') {
+
+        windowWidth = 560;
+        windowHeight = 428;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 560;
+        windowHeight = 428;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Downsample AudioMoth WAV Files');
+    downsampleWindow = new BrowserWindow(settings);
 
     downsampleWindow.setMenu(null);
     downsampleWindow.loadURL(path.join('file://', __dirname, 'processing/downsampling.html'));
 
-    downsampleWindow.webContents.on('dom-ready', function () {
+    require('@electron/remote/main').enable(downsampleWindow.webContents);
+
+    downsampleWindow.webContents.on('dom-ready', () => {
 
         mainWindow.webContents.send('poll-night-mode');
 
@@ -204,15 +269,81 @@ function openDownsamplingWindow () {
 
     });
 
-    downsampleWindow.on('close', function (e) {
+    downsampleWindow.on('close', (e) => {
+
+        e.preventDefault();
 
         if (downsampleProgressBar) {
 
-            e.preventDefault();
+            return;
 
         }
 
-        downsampleWindow = null;
+        downsampleWindow.hide();
+
+    });
+
+}
+
+function openSummariseWindow () {
+
+    if (summariseWindow) {
+
+        summariseWindow.show();
+        return;
+
+    }
+
+    let windowWidth = 565;
+    let windowHeight = 235;
+
+    if (process.platform === 'linux') {
+
+        windowWidth = 560;
+        windowHeight = 235;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 560;
+        windowHeight = 235;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Summarise AudioMoth Files');
+    summariseWindow = new BrowserWindow(settings);
+
+    summariseWindow.setMenu(null);
+    summariseWindow.loadURL(path.join('file://', __dirname, 'processing/summarise.html'));
+
+    require('@electron/remote/main').enable(summariseWindow.webContents);
+
+    summariseWindow.webContents.on('dom-ready', () => {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (summariseWindow) {
+
+            summariseWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+    summariseWindow.on('close', (e) => {
+
+        e.preventDefault();
+
+        if (summariseProgressBar) {
+
+            return;
+
+        }
+
+        summariseWindow.hide();
 
     });
 
@@ -222,35 +353,43 @@ function openAboutWindow () {
 
     if (aboutWindow) {
 
+        aboutWindow.show();
         return;
 
     }
 
-    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
+    let windowWidth = 400;
+    let windowHeight = 310;
 
-    aboutWindow = new BrowserWindow({
-        width: 400,
-        height: shrinkWindowHeight(340),
-        title: 'About',
-        resizable: false,
-        fullscreenable: false,
-        icon: path.join(__dirname, iconLocation),
-        parent: mainWindow,
-        webPreferences: {
-            nodeIntegration: true
-        }
-    });
+    if (process.platform === 'linux') {
+
+        windowWidth = 395;
+        windowHeight = 310;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 395;
+        windowHeight = 310;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'About');
+    aboutWindow = new BrowserWindow(settings);
 
     aboutWindow.setMenu(null);
     aboutWindow.loadURL(path.join('file://', __dirname, '/about.html'));
 
-    aboutWindow.on('close', function () {
+    require('@electron/remote/main').enable(aboutWindow.webContents);
 
-        aboutWindow = null;
+    aboutWindow.on('close', (e) => {
+
+        e.preventDefault();
+
+        aboutWindow.hide();
 
     });
 
-    aboutWindow.webContents.on('dom-ready', function () {
+    aboutWindow.webContents.on('dom-ready', () => {
 
         mainWindow.webContents.send('poll-night-mode');
 
@@ -268,72 +407,121 @@ function openAboutWindow () {
 
 }
 
+function openTimeZoneSelectionWindow () {
+
+    let windowWidth = 448;
+    let windowHeight = 135;
+
+    if (process.platform === 'linux') {
+
+        windowWidth = 443;
+        windowHeight = 138;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 443;
+        windowHeight = 138;
+
+    }
+
+    if (timeZoneSelectionWindow) {
+
+        timeZoneSelectionWindow.show();
+        return;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Select Custom Time Zone');
+    timeZoneSelectionWindow = new BrowserWindow(settings);
+
+    timeZoneSelectionWindow.setMenu(null);
+    timeZoneSelectionWindow.loadURL(path.join('file://', __dirname, '/timeZoneSelection.html'));
+
+    require('@electron/remote/main').enable(timeZoneSelectionWindow.webContents);
+
+    timeZoneSelectionWindow.on('close', (e) => {
+
+        e.preventDefault();
+        timeZoneSelectionWindow.hide();
+
+    });
+
+    timeZoneSelectionWindow.webContents.on('dom-ready', () => {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (timeZoneSelectionWindow) {
+
+            timeZoneSelectionWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+}
+
 function toggleNightMode () {
 
     mainWindow.webContents.send('night-mode');
 
-    if (splitWindow) {
+    const subwindows = [aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, timeZoneSelectionWindow];
 
-        splitWindow.webContents.send('night-mode');
+    for (let index = 0; index < subwindows.length; index++) {
 
-    }
+        if (subwindows[index]) {
 
-    if (expansionWindow) {
+            subwindows[index].webContents.send('night-mode');
 
-        expansionWindow.webContents.send('night-mode');
-
-    }
-
-    if (downsampleWindow) {
-
-        downsampleWindow.webContents.send('night-mode');
-
-    }
-
-    if (aboutWindow) {
-
-        aboutWindow.webContents.send('night-mode');
+        }
 
     }
 
 }
 
-app.on('ready', function () {
+app.on('ready', () => {
 
-    const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
-    const windowHeight = shrinkWindowHeight(665);
+    let windowWidth = 565;
+    let windowHeight = 680;
+
+    if (process.platform === 'linux') {
+
+        windowWidth = 560;
+        windowHeight = 660;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 560;
+        windowHeight = 656;
+
+    }
 
     mainWindow = new BrowserWindow({
         title: 'AudioMoth Configuration App',
-        width: 565,
+        width: windowWidth,
         height: windowHeight,
-        useContentSize: true,
         resizable: false,
         fullscreenable: false,
+        useContentSize: true,
         icon: path.join(__dirname, iconLocation),
         webPreferences: {
-            nodeIntegration: true
+            enableRemoteModule: true,
+            nodeIntegration: true,
+            contextIsolation: false
         }
     });
 
-    mainWindow.on('restore', function () {
+    require('@electron/remote/main').enable(mainWindow.webContents);
 
-        /* When minimised and restored, Windows platforms alter the BrowserWindow such that the height no longer includes the menu bar */
-        /* This resize cannot be blocked so this fix resizes it, taking into account the menu change */
-        if (process.platform === 'win32') {
-
-            mainWindow.setSize(565, windowHeight + 20);
-
-        }
-
-    });
-
-    const menuTemplate = [{
+    const fileMenu = {
         label: 'File',
         submenu: [{
             label: 'Open Configuration',
             accelerator: 'CommandOrControl+O',
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('load');
 
@@ -341,7 +529,7 @@ app.on('ready', function () {
         }, {
             label: 'Save Configuration',
             accelerator: 'CommandOrControl+S',
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('save');
 
@@ -352,7 +540,7 @@ app.on('ready', function () {
             id: 'copyid',
             label: 'Copy Device ID',
             accelerator: 'CommandOrControl+I',
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('copy-id');
 
@@ -360,18 +548,6 @@ app.on('ready', function () {
             enabled: false
         }, {
             type: 'separator'
-        }, {
-            type: 'checkbox',
-            id: 'localTime',
-            label: 'Local Time',
-            accelerator: 'CommandOrControl+T',
-            checked: false,
-            click: function () {
-
-                mainWindow.webContents.send('local-time');
-                mainWindow.webContents.send('local-time-schedule');
-
-            }
         }, {
             type: 'checkbox',
             id: 'nightmode',
@@ -386,7 +562,7 @@ app.on('ready', function () {
             id: 'scale1',
             label: '16-Bit Amplitude Threshold Scale',
             checked: false,
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('amplitude-threshold-scale', 1);
 
@@ -396,7 +572,7 @@ app.on('ready', function () {
             id: 'scale2',
             label: 'Decibel Amplitude Threshold Scale',
             checked: false,
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('amplitude-threshold-scale', 2);
 
@@ -406,7 +582,7 @@ app.on('ready', function () {
             id: 'scale0',
             label: 'Percentage Amplitude Threshold Scale',
             checked: true,
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('amplitude-threshold-scale', 0);
 
@@ -414,52 +590,86 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
-            label: 'Split AudioMoth WAV Files',
-            accelerator: 'CommandOrControl+P',
-            click: function () {
-
-                openSplitWindow();
-
-            }
-        }, {
-            label: 'Expand AudioMoth T.WAV Files',
-            accelerator: 'CommandOrControl+E',
-            click: function () {
-
-                openExpansionWindow();
-
-            }
-        }, {
-            label: 'Downsample AudioMoth WAV Files',
-            accelerator: 'CommandOrControl+D',
-            click: function () {
-
-                openDownsamplingWindow();
-
-            }
-        }, {
-            type: 'separator'
-        }, {
             label: 'Quit',
             accelerator: 'CommandOrControl+Q',
-            click: function () {
+            click: () => {
 
                 app.quit();
 
             }
         }]
-    }, {
-        label: 'Help',
-        submenu: [{
-            label: 'About',
-            click: function () {
+    };
 
-                openAboutWindow();
+    const timeZoneMenu = {
+        label: 'Time',
+        submenu: [{
+            type: 'checkbox',
+            id: 'timeZone0',
+            label: 'UTC',
+            checked: true,
+            click: () => {
+
+                setTimeZoneModeMenu(constants.TIME_ZONE_MODE_UTC);
+
+                mainWindow.webContents.send('change-time-zone-mode', constants.TIME_ZONE_MODE_UTC);
+                mainWindow.webContents.send('update-schedule');
 
             }
         }, {
+            type: 'checkbox',
+            id: 'timeZone1',
+            label: 'Local',
+            checked: false,
+            click: () => {
+
+                setTimeZoneModeMenu(constants.TIME_ZONE_MODE_LOCAL);
+
+                mainWindow.webContents.send('change-time-zone-mode', constants.TIME_ZONE_MODE_LOCAL);
+                mainWindow.webContents.send('update-schedule');
+
+            }
+        }, {
+            type: 'checkbox',
+            id: 'timeZone2',
+            label: 'Custom',
+            checked: false,
+            click: () => {
+
+                updateTimeZoneMenuCheckbox();
+
+                openTimeZoneSelectionWindow();
+
+            }
+        }]
+    };
+
+    const processMenu = {
+        label: 'Process',
+        submenu: [{
+            label: 'Split AudioMoth WAV Files',
+            click: openSplitWindow
+        }, {
+            label: 'Expand AudioMoth T.WAV Files',
+            click: openExpansionWindow
+        }, {
+            label: 'Downsample AudioMoth WAV Files',
+            click: openDownsamplingWindow
+        }, {
+            type: 'separator'
+        }, {
+            label: 'Summarise AudioMoth Files',
+            click: openSummariseWindow
+        }]
+    };
+
+    const helpMenu = {
+        label: 'Help',
+        submenu: [{
+            label: 'About',
+            click: openAboutWindow
+        }, {
             label: 'Check For Updates',
-            click: function () {
+            click: () => {
 
                 mainWindow.webContents.send('update-check');
 
@@ -467,23 +677,25 @@ app.on('ready', function () {
         }, {
             type: 'separator'
         }, {
-            label: 'AudioMoth Filter Playground',
-            click: function () {
+            label: 'AudioMoth Play Website',
+            click: () => {
 
-                shell.openExternal('https://playground.openacousticdevices.info/');
+                shell.openExternal('https://play.openacousticdevices.info/');
 
             }
         }, {
             type: 'separator'
         }, {
             label: 'Open Acoustic Devices Website',
-            click: function () {
+            click: () => {
 
                 shell.openExternal('https://openacousticdevices.info');
 
             }
         }]
-    }];
+    };
+
+    const menuTemplate = [fileMenu, processMenu, timeZoneMenu, helpMenu];
 
     const menu = Menu.buildFromTemplate(menuTemplate);
 
@@ -493,7 +705,7 @@ app.on('ready', function () {
 
 });
 
-app.on('window-all-closed', function () {
+app.on('window-all-closed', () => {
 
     app.quit();
 
@@ -515,22 +727,9 @@ ipcMain.on('start-expansion-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    expandProgressBar = new ProgressBar({
-        title: 'AudioMoth Configuration App',
-        text: 'Expanding files...',
-        detail: detail,
-        closeOnComplete: false,
-        indeterminate: false,
-        browserWindow: {
-            parent: expansionWindow,
-            webPreferences: {
-                nodeIntegration: true
-            },
-            closable: true,
-            modal: false
-        },
-        maxValue: fileCount * 100
-    });
+    const settings = generateProgressBarSettings('AudioMoth Configuration App - Expansion', 'Expanding files...', detail, fileCount, expansionWindow);
+
+    expandProgressBar = new ProgressBar(settings);
 
     expandProgressBar.on('aborted', () => {
 
@@ -557,10 +756,10 @@ ipcMain.on('set-expansion-bar-progress', (event, fileNum, progress) => {
 
 ipcMain.on('set-expansion-bar-file', (event, fileNum, name) => {
 
-    const index = fileNum + 1;
-    const fileCount = expandProgressBar.getOptions().maxValue / 100;
-
     if (expandProgressBar) {
+
+        const index = fileNum + 1;
+        const fileCount = expandProgressBar.getOptions().maxValue / 100;
 
         expandProgressBar.detail = 'Expanding ' + name + ' (' + index + ' of ' + fileCount + ').';
 
@@ -657,22 +856,9 @@ ipcMain.on('start-split-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    splitProgressBar = new ProgressBar({
-        title: 'AudioMoth Configuration App',
-        text: 'Splitting files...',
-        detail: detail,
-        closeOnComplete: false,
-        indeterminate: false,
-        browserWindow: {
-            parent: splitWindow,
-            webPreferences: {
-                nodeIntegration: true
-            },
-            closable: true,
-            modal: false
-        },
-        maxValue: fileCount * 100
-    });
+    const settings = generateProgressBarSettings('AudioMoth Configuration App - Splitting', 'Splitting files...', detail, fileCount, splitWindow);
+
+    splitProgressBar = new ProgressBar(settings);
 
     splitProgressBar.on('aborted', () => {
 
@@ -699,10 +885,10 @@ ipcMain.on('set-split-bar-progress', (event, fileNum, progress) => {
 
 ipcMain.on('set-split-bar-file', (event, fileNum, name) => {
 
-    const index = fileNum + 1;
-    const fileCount = splitProgressBar.getOptions().maxValue / 100;
-
     if (splitProgressBar) {
+
+        const index = fileNum + 1;
+        const fileCount = splitProgressBar.getOptions().maxValue / 100;
 
         splitProgressBar.detail = 'Splitting ' + name + ' (' + index + ' of ' + fileCount + ').';
 
@@ -799,22 +985,9 @@ ipcMain.on('start-downsample-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    downsampleProgressBar = new ProgressBar({
-        title: 'AudioMoth Configuration App',
-        text: 'Downsampling files...',
-        detail: detail,
-        closeOnComplete: false,
-        indeterminate: false,
-        browserWindow: {
-            parent: splitWindow,
-            webPreferences: {
-                nodeIntegration: true
-            },
-            closable: true,
-            modal: false
-        },
-        maxValue: fileCount * 100
-    });
+    const settings = generateProgressBarSettings('AudioMoth Configuration App - Downsampling', 'Downsampling files...', detail, fileCount, downsampleWindow);
+
+    downsampleProgressBar = new ProgressBar(settings);
 
     downsampleProgressBar.on('aborted', () => {
 
@@ -841,10 +1014,10 @@ ipcMain.on('set-downsample-bar-progress', (event, fileNum, progress) => {
 
 ipcMain.on('set-downsample-bar-file', (event, fileNum, name) => {
 
-    const index = fileNum + 1;
-    const fileCount = downsampleProgressBar.getOptions().maxValue / 100;
-
     if (downsampleProgressBar) {
+
+        const index = fileNum + 1;
+        const fileCount = downsampleProgressBar.getOptions().maxValue / 100;
 
         downsampleProgressBar.detail = 'Downsampling ' + name + ' (' + index + ' of ' + fileCount + ').';
 
@@ -927,6 +1100,124 @@ ipcMain.on('poll-downsample-cancelled', (event) => {
 
 });
 
+/* Summarising progress bar functions */
+
+ipcMain.on('start-summarise-bar', (event, fileCount) => {
+
+    if (summariseProgressBar) {
+
+        return;
+
+    }
+
+    let detail = 'Starting to summarise file';
+    detail += (fileCount > 1) ? 's' : '';
+    detail += '.';
+
+    const settings = generateProgressBarSettings('AudioMoth Configuration App - Summarising', 'Summarising files...', detail, fileCount, summariseWindow);
+
+    summariseProgressBar = new ProgressBar(settings);
+
+    summariseProgressBar.on('aborted', () => {
+
+        if (summariseProgressBar) {
+
+            summariseProgressBar.close();
+            summariseProgressBar = null;
+
+        }
+
+    });
+
+});
+
+ipcMain.on('set-summarise-bar-progress', (event, fileNum, progress) => {
+
+    if (summariseProgressBar) {
+
+        summariseProgressBar.value = (fileNum * 100) + progress;
+
+    }
+
+});
+
+ipcMain.on('set-summarise-bar-file', (event, fileNum, name) => {
+
+    if (summariseProgressBar) {
+
+        const index = fileNum + 1;
+        const fileCount = summariseProgressBar.getOptions().maxValue / 100;
+
+        summariseProgressBar.detail = 'Summarising ' + name + ' (' + index + ' of ' + fileCount + ').';
+
+    }
+
+});
+
+ipcMain.on('set-summarise-bar-error', (event, name) => {
+
+    if (summariseProgressBar) {
+
+        summariseProgressBar.detail = 'Error when summarising ' + name + '.';
+
+    }
+
+});
+
+ipcMain.on('set-summarise-bar-completed', (event, successCount, finaliseResult) => {
+
+    if (summariseProgressBar) {
+
+        let messageText;
+
+        summariseProgressBar.setCompleted();
+
+        if (finaliseResult.success) {
+
+            messageText = 'Successfully summarised ' + successCount + ' file';
+            messageText += (successCount === 1 ? '' : 's');
+            messageText += '.';
+
+        } else {
+
+            messageText = 'Failed to write summary file. ';
+            messageText += finaliseResult.error;
+
+        }
+
+        summariseProgressBar.detail = messageText;
+
+        setTimeout(function () {
+
+            summariseProgressBar.close();
+            summariseProgressBar = null;
+
+            if (summariseWindow) {
+
+                summariseWindow.send('summarise-summary-closed');
+
+            }
+
+        }, 5000);
+
+    }
+
+});
+
+ipcMain.on('poll-summarise-cancelled', (event) => {
+
+    if (summariseProgressBar) {
+
+        event.returnValue = false;
+
+    } else {
+
+        event.returnValue = true;
+
+    }
+
+});
+
 /* Update which amplitude threshold scale option is checked in menu */
 
 ipcMain.on('set-amplitude-threshold-scale', (event, index) => {
@@ -936,5 +1227,54 @@ ipcMain.on('set-amplitude-threshold-scale', (event, index) => {
     const scaleMenuItems = [menu.getMenuItemById('scale0'), menu.getMenuItemById('scale1'), menu.getMenuItemById('scale2')];
 
     scaleMenuItems[index].checked = true;
+
+});
+
+/* Update which time zone option is checked in menu */
+
+function updateTimeZoneMenuCheckbox () {
+
+    const menu = Menu.getApplicationMenu();
+
+    const timeZoneMenuItems = [menu.getMenuItemById('timeZone0'), menu.getMenuItemById('timeZone1'), menu.getMenuItemById('timeZone2')];
+
+    for (let i = 0; i < timeZoneMenuItems.length; i++) {
+
+        timeZoneMenuItems[i].checked = i === timeZoneMode;
+
+    }
+
+}
+
+function setTimeZoneModeMenu (index) {
+
+    timeZoneMode = index;
+
+    updateTimeZoneMenuCheckbox();
+
+}
+
+ipcMain.on('set-time-zone-menu', (event, mode) => {
+
+    setTimeZoneModeMenu(mode);
+
+});
+
+ipcMain.on('set-custom-time-zone', (event, tz) => {
+
+    const newTimeZoneMode = tz === 0 ? constants.TIME_ZONE_MODE_UTC : constants.TIME_ZONE_MODE_CUSTOM;
+
+    setTimeZoneModeMenu(newTimeZoneMode);
+
+    customTimeZone = tz;
+
+    mainWindow.webContents.send('change-time-zone-mode', newTimeZoneMode);
+    mainWindow.webContents.send('update-schedule');
+
+});
+
+ipcMain.on('request-custom-time-zone', (event) => {
+
+    event.returnValue = customTimeZone;
 
 });

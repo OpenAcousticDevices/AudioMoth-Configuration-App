@@ -9,59 +9,85 @@
 /* global document */
 
 const electron = require('electron');
-const menu = electron.remote.Menu;
-const ipc = electron.ipcRenderer;
 
 const strftime = require('strftime');
 
 const timeHandler = require('./timeHandler.js');
 const scheduleBar = require('./scheduleBar.js');
 const nightMode = require('./nightMode.js');
+const constants = require('./constants.js');
 
 /* UI components */
 
-const applicationMenu = menu.getApplicationMenu();
-
-const timezoneLabel = document.getElementById('timezone-label');
+const timeZoneLabel = document.getElementById('time-zone-label');
 
 const timeDisplay = document.getElementById('time-display');
 
-var localTime = false;
+let timeZoneMode = constants.TIME_ZONE_MODE_UTC;
 
-var deviceDate = new Date(0);
+let deviceDate;
 
-function isLocalTime () {
+/* Date formatting functions */
 
-    return localTime;
+function formatDateString (date) {
+
+    const year = ('0000' + date.getUTCFullYear()).slice(-4);
+    const month = ('00' + (date.getUTCMonth() + 1)).slice(-2);
+    const day = ('00' + date.getUTCDate()).slice(-2);
+
+    return year + '-' + month + '-' + day;
+
+}
+
+exports.formatDateString = formatDateString;
+
+function extractDateComponents (dateString) {
+
+    const dateArray = dateString.split('-');
+
+    const year = parseInt(dateArray[0]);
+    const month = parseInt(dateArray[1]);
+    const day = parseInt(dateArray[2]);
+
+    return {
+        year: year,
+        month: month,
+        day: day,
+    };
 
 }
 
-exports.isLocalTime = isLocalTime;
+exports.extractDateComponents = extractDateComponents;
 
-function setLocalTime (lTime) {
+/* Time zone mode function */
 
-    localTime = lTime;
-    applicationMenu.getMenuItemById('localTime').checked = localTime;
+function getTimeZoneMode () {
+
+    return timeZoneMode;
 
 }
+
+exports.getTimeZoneMode = getTimeZoneMode;
 
 /* Generate and display current time in either UTC or local time */
 
 function showTime () {
 
-    let timezoneOffset = 0;
+    if (deviceDate) {
 
-    if (isLocalTime()) {
+        const timeZoneOffset = timeHandler.getTimeZoneOffset();
 
-        timezoneOffset = timeHandler.calculateTimezoneOffsetMins();
+        const strftimeUTC = strftime.timezone(timeZoneOffset);
 
-    }
+        if (timeDisplay) {
 
-    const strftimeUTC = strftime.timezone(timezoneOffset);
+            timeDisplay.textContent = strftimeUTC('%H:%M:%S %d/%m/%Y', deviceDate);
 
-    if (timeDisplay) {
+        }
 
-        timeDisplay.textContent = strftimeUTC('%H:%M:%S %d/%m/%Y', deviceDate);
+    } else {
+
+        timeDisplay.textContent = '--:--:-- --/--/----';
 
     }
 
@@ -91,19 +117,13 @@ exports.updateDate = (date) => {
 
 };
 
-exports.disableTimeDisplay = (blankValue) => {
+exports.disableTimeDisplay = () => {
 
     if (timeDisplay) {
 
         timeDisplay.classList.add('grey');
 
-        timezoneLabel.classList.add('grey');
-
-        if (blankValue) {
-
-            deviceDate = new Date(0);
-
-        }
+        timeZoneLabel.classList.add('grey');
 
     }
 
@@ -115,27 +135,27 @@ exports.enableTimeDisplay = () => {
 
         timeDisplay.classList.remove('grey');
 
-        timezoneLabel.classList.remove('grey');
+        timeZoneLabel.classList.remove('grey');
 
     }
 
 };
 
-/* Switch between time zone modes (UTC and local) */
+/* Switch between time zone modes (UTC, local, and custom) */
 
-function setTimezoneStatus (local) {
+function setTimeZoneStatus (mode) {
 
-    let timezoneText = 'UTC';
+    timeZoneMode = mode;
 
-    setLocalTime(local);
+}
 
-    if (isLocalTime()) {
+exports.setTimeZoneStatus = setTimeZoneStatus;
 
-        timezoneText = timeHandler.getTimezoneText(isLocalTime());
+function updateTimeZoneUI () {
 
-    }
+    const timeZoneText = timeHandler.getTimeZoneText();
 
-    timezoneLabel.innerHTML = timezoneText;
+    timeZoneLabel.innerHTML = timeZoneText;
 
     scheduleBar.clearSelectedPeriod();
 
@@ -143,15 +163,7 @@ function setTimezoneStatus (local) {
 
 }
 
-exports.setTimezoneStatus = setTimezoneStatus;
-
-function toggleTimezoneStatus () {
-
-    setTimezoneStatus(!isLocalTime());
-
-}
-
-exports.toggleTimezoneStatus = toggleTimezoneStatus;
+exports.updateTimeZoneUI = updateTimeZoneUI;
 
 function setNightMode (nm) {
 
@@ -177,33 +189,14 @@ exports.toggleNightMode = toggleNightMode;
 
 exports.isNightMode = nightMode.isEnabled;
 
-function checkUtcToggleability () {
-
-    const timezoneOffset = timeHandler.calculateTimezoneOffsetMins();
-
-    if (timezoneOffset === 0) {
-
-        applicationMenu.getMenuItemById('localTime').enabled = false;
-        return false;
-
-    }
-
-    return true;
-
-}
-
-ipc.on('poll-night-mode', function () {
+electron.ipcRenderer.on('poll-night-mode', () => {
 
     electron.ipcRenderer.send('night-mode-poll-reply', nightMode.isEnabled());
 
 });
-
-exports.checkUtcToggleability = checkUtcToggleability;
 
 exports.setSunriseSunsetEnabled = scheduleBar.setSunriseSunsetEnabled;
 exports.isSunriseSunsetEnabled = scheduleBar.isSunriseSunsetEnabled;
 exports.setSunriseSunset = scheduleBar.setSunriseSunset;
 exports.getSunrise = scheduleBar.getSunrise;
 exports.getSunset = scheduleBar.getSunset;
-
-exports.calculateTimezoneOffsetMins = timeHandler.calculateTimezoneOffsetMins;

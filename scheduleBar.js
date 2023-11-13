@@ -11,17 +11,16 @@
 const ui = require('./ui.js');
 const timeHandler = require('./timeHandler.js');
 const schedule = require('./schedule/schedule.js');
+const constants = require('./constants.js');
 
 const timeCanvas = document.getElementById('time-canvas');
 const timeContext = timeCanvas.getContext('2d');
 const labelCanvas = document.getElementById('label-canvas');
 const labelContext = labelCanvas.getContext('2d');
 
-const canvasHolder = document.getElementById('canvas-holder');
-var clickableCanvas;
-var clickCallback;
+let clickCallback;
 
-var selectedPeriod = null;
+let selectedPeriod = null;
 
 /* Function to rescale */
 
@@ -64,38 +63,24 @@ function drawPeriod (startMins, endMins, timeCanvas) {
 function updateCanvas () {
 
     let timePeriods = schedule.getTimePeriods();
-    timePeriods = ui.isLocalTime() ? timeHandler.convertTimePeriodsToLocal(timePeriods) : timePeriods;
+
+    const timeZoneMode = ui.getTimeZoneMode();
+
+    if (timeZoneMode !== constants.TIME_ZONE_MODE_UTC) {
+
+        timePeriods = timeHandler.shiftTimePeriods(timePeriods, false);
+
+    }
 
     const currentTimeDate = new Date();
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);
 
-    const localMidnight = timeHandler.convertTimeToLocal(1440);
-    let startingAtMidnight = false;
-    let endingAtMidnight = false;
-
     for (let i = 0; i < timePeriods.length; i++) {
 
         const startMins = timePeriods[i].startMins;
-        const endMins = timePeriods[i].endMins;
-
-        if (ui.isLocalTime()) {
-
-            /* If a time period is split across UTC midnight then set flags to enable the line denoting a split */
-
-            if (startMins === localMidnight) {
-
-                startingAtMidnight = true;
-
-            }
-
-            if (endMins === localMidnight) {
-
-                endingAtMidnight = true;
-
-            }
-
-        }
+        let endMins = timePeriods[i].endMins;
+        endMins = endMins === 0 ? 1440 : endMins;
 
         if (selectedPeriod !== null && (selectedPeriod.startMins === startMins && selectedPeriod.endMins === endMins)) {
 
@@ -124,15 +109,6 @@ function updateCanvas () {
 
     }
 
-    if (startingAtMidnight && endingAtMidnight) {
-
-        const localMidnightPx = localMidnight / 1440 * timeCanvas.width;
-
-        timeContext.fillStyle = '#CC0000';
-        timeContext.fillRect(localMidnightPx, 0, 0.002 * timeCanvas.width, timeCanvas.height);
-
-    }
-
     /* 6am, midday and 6pm markers */
 
     if (ui.isNightMode()) {
@@ -149,15 +125,11 @@ function updateCanvas () {
     timeContext.fillRect(0.5 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
     timeContext.fillRect(0.75 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
 
-    let currentMins;
+    let currentMins = (currentTimeDate.getUTCHours() * constants.MINUTES_IN_HOUR) + currentTimeDate.getUTCMinutes();
 
-    if (ui.isLocalTime()) {
+    if (timeZoneMode !== constants.TIME_ZONE_MODE_UTC) {
 
-        currentMins = (currentTimeDate.getHours() * 60) + currentTimeDate.getMinutes();
-
-    } else {
-
-        currentMins = (currentTimeDate.getUTCHours() * 60) + currentTimeDate.getUTCMinutes();
+        currentMins += timeHandler.getTimeZoneOffset();
 
     }
 
@@ -187,7 +159,7 @@ function updateSelectedPeriod (event) {
 
     /* If there's only one possible time period and it covers the entire length of the schedule, don't bother with the full check */
 
-    if (timePeriods.length === 1 && timePeriods[0].startMins === 0 && timePeriods[0].endMins === 1440) {
+    if (timePeriods.length === 1 && timePeriods[0].startMins === timePeriods[0].endMins) {
 
         const selectedIndex = 0;
 
@@ -201,12 +173,12 @@ function updateSelectedPeriod (event) {
 
     }
 
-    const rect = clickableCanvas.getBoundingClientRect();
-    const clickMins = (event.clientX - rect.left) / clickableCanvas.width * 1440;
+    const rect = timeCanvas.getBoundingClientRect();
+    const clickMins = (event.clientX - rect.left) / timeCanvas.width * 1440;
 
-    if (ui.isLocalTime()) {
+    if (ui.getTimeZoneMode() !== constants.TIME_ZONE_MODE_UTC) {
 
-        timePeriods = timeHandler.convertTimePeriodsToLocal(timePeriods);
+        timePeriods = timeHandler.shiftTimePeriods(timePeriods, false);
 
     }
 
@@ -293,34 +265,10 @@ function drawTimeLabels () {
 
 exports.drawTimeLabels = drawTimeLabels;
 
-exports.prepareScheduleCanvas = (clickable, callback) => {
+exports.prepareScheduleCanvas = (callback) => {
 
-    clickCallback = null;
-
-    if (clickable) {
-
-        clickCallback = callback;
-
-        clickableCanvas = document.createElement('canvas');
-
-        clickableCanvas.id = 'clickable-canvas';
-        clickableCanvas.width = timeCanvas.width;
-        clickableCanvas.height = timeCanvas.height;
-
-        clickableCanvas.style.position = 'absolute';
-
-        clickableCanvas.style.left = '50%';
-
-        const offset = -1 * clickableCanvas.width / 2;
-        clickableCanvas.style.marginLeft = offset + 'px';
-
-        clickableCanvas.style.top = timeCanvas.offsetTop + 'px';
-
-        canvasHolder.appendChild(clickableCanvas);
-
-        clickableCanvas.addEventListener('click', updateSelectedPeriod);
-
-    }
+    clickCallback = callback;
+    timeCanvas.addEventListener('click', updateSelectedPeriod);
 
     /* Rescale for resolution of screen */
     rescale(timeCanvas);
@@ -346,5 +294,5 @@ exports.setSchedule = (timePeriods) => {
 };
 
 exports.getTimePeriods = schedule.getTimePeriods;
-exports.getSunPeriods = schedule.getSunPeriods;
+exports.getTimePeriodsNoWrap = schedule.getTimePeriodsNoWrap;
 exports.MAX_PERIODS = schedule.MAX_PERIODS;

@@ -9,18 +9,19 @@
 /* global document */
 
 const electron = require('electron');
-const dialog = electron.remote.dialog;
+const {dialog, getCurrentWindow} = require('@electron/remote');
 
 /* Get functions which control elements common to the expansion, split, and downsample windows */
 const ui = require('./uiCommon.js');
 const uiOutput = require('./uiOutput.js');
+const uiInput = require('./uiInput.js');
 
 const path = require('path');
 const fs = require('fs');
 
 const audiomothUtils = require('audiomoth-utils');
 
-var currentWindow = electron.remote.getCurrentWindow();
+const currentWindow = getCurrentWindow();
 
 const SAMPLE_RATES = [8000, 16000, 32000, 48000, 96000, 192000, 250000, 384000];
 
@@ -41,8 +42,8 @@ const fileLabel = document.getElementById('file-label');
 const fileButton = document.getElementById('file-button');
 const downsampleButton = document.getElementById('downsample-button');
 
-var files = [];
-var downsampling = false;
+let files = [];
+let downsampling = false;
 
 const DEFAULT_SLEEP_AMOUNT = 2000;
 
@@ -203,7 +204,7 @@ function downsampleFiles () {
                 errorFilePath = path.join(errorFileLocation, 'ERRORS.TXT');
                 errorFileStream = fs.createWriteStream(errorFilePath, {flags: 'a'});
 
-                errorFileStream.write('-- Downsample --\n');
+                errorFileStream.write('-- Downsample --\r\n');
 
             }
 
@@ -223,7 +224,7 @@ function downsampleFiles () {
                 for (let e = 0; e < unwrittenErrorCount; e++) {
 
                     const unwrittenErrorIndex = unwrittenErrors.pop();
-                    fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\n';
+                    fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\r\n';
 
                 }
 
@@ -263,7 +264,7 @@ function downsampleFiles () {
         for (let e = 0; e < unwrittenErrorCount; e++) {
 
             const unwrittenErrorIndex = unwrittenErrors.pop();
-            fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\n';
+            fileContent += path.basename(errorFiles[unwrittenErrorIndex]) + ' - ' + errors[unwrittenErrorIndex] + '\r\n';
 
         }
 
@@ -299,7 +300,7 @@ electron.ipcRenderer.on('downsample-summary-closed', enableUI);
 
 function updateInputDirectoryDisplay (directoryArray) {
 
-    if (directoryArray.length === 0 || !directoryArray) {
+    if (!directoryArray || directoryArray.length === 0) {
 
         fileLabel.innerHTML = 'No AudioMoth WAV files selected.';
         downsampleButton.disabled = true;
@@ -339,7 +340,7 @@ selectionRadios[1].addEventListener('change', resetUI);
 
 fileButton.addEventListener('click', () => {
 
-    files = uiOutput.selectRecordings(FILE_REGEX);
+    files = uiInput.selectRecordings(FILE_REGEX);
 
     updateInputDirectoryDisplay(files);
 

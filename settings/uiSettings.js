@@ -5,8 +5,7 @@
  *****************************************************************************/
 
 const electron = require('electron');
-const dialog = electron.remote.dialog;
-const BrowserWindow = electron.remote.BrowserWindow;
+const {dialog, BrowserWindow} = require('@electron/remote');
 
 const constants = require('../constants.js');
 
@@ -29,11 +28,11 @@ const sleepDurationLabel = document.getElementById('sleep-duration-label');
 
 /* Whether or not the warning on sleep duration being set less than 5 has been displayed this app load */
 
-var sleepWarningDisplayed = false;
+let sleepWarningDisplayed = false;
 
 /* Whether or not to display a warning if minimum amplitude threshold is greater than recording length */
 
-var displayDurationWarning = true;
+let displayDurationWarning = true;
 
 /* Add listeners to all radio buttons which update the life display */
 
@@ -41,7 +40,7 @@ function addRadioButtonListeners (changeFunction) {
 
     for (let i = 0; i < sampleRadioButtons.length; i++) {
 
-        sampleRadioButtons[i].addEventListener('change', function () {
+        sampleRadioButtons[i].addEventListener('change', () => {
 
             const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
             const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
@@ -58,7 +57,7 @@ function addRadioButtonListeners (changeFunction) {
 
 }
 
-/* Enable/diable amplitude thresholding UI based on checkbox */
+/* Enable/disable amplitude thresholding UI based on checkbox */
 
 function updateDutyCycleUI () {
 

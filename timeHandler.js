@@ -4,35 +4,16 @@
  * November 2019
  *****************************************************************************/
 
-function getConnections (periods) {
+const {ipcRenderer} = require('electron');
 
-    const connections = [];
+const constants = require('./constants.js');
+const ui = require('./ui.js');
 
-    for (let i = 0; i < periods.length; i++) {
-
-        connections[i] = -1;
-
-        for (let j = 0; j < periods.length; j++) {
-
-            if ((periods[i].startMins === 0 && periods[j].endMins === 1440) || (periods[i].endMins === 1440 && periods[j].startMins === 0)) {
-
-                connections[i] = j;
-
-            }
-
-        }
-
-    }
-
-    return connections;
-
-}
-
-exports.getConnections = getConnections;
+let storedTimeZoneOffset = 0;
 
 function sortPeriods (periods) {
 
-    const sortedPeriods = periods.sort(function (a, b) {
+    const sortedPeriods = periods.sort((a, b) => {
 
         return a.startMins - b.startMins;
 
@@ -44,32 +25,47 @@ function sortPeriods (periods) {
 
 exports.sortPeriods = sortPeriods;
 
-/* Calculate the current offset from UTC */
+function storeTimeZoneOffset () {
 
-function calculateTimezoneOffsetMins () {
+    storedTimeZoneOffset = 0;
 
-    const currentDate = new Date();
-    return (-1 * currentDate.getTimezoneOffset());
+    if (ui.getTimeZoneMode() === constants.TIME_ZONE_MODE_LOCAL) {
+
+        const currentDate = new Date();
+
+        storedTimeZoneOffset = -currentDate.getTimezoneOffset();
+
+    }
+
+    if (ui.getTimeZoneMode() === constants.TIME_ZONE_MODE_CUSTOM) {
+
+        storedTimeZoneOffset = ipcRenderer.sendSync('request-custom-time-zone');
+
+    }
 
 }
 
-exports.calculateTimezoneOffsetMins = calculateTimezoneOffsetMins;
+exports.storeTimeZoneOffset = storeTimeZoneOffset;
 
-function calculateTimezoneOffsetHours () {
+function getTimeZoneOffset () {
 
-    return (calculateTimezoneOffsetMins() / 60);
+    return storedTimeZoneOffset;
 
 }
 
-exports.calculateTimezoneOffsetHours = calculateTimezoneOffsetHours;
+exports.getTimeZoneOffset = getTimeZoneOffset;
 
-function convertTimeToLocal (time) {
+/* ------------------------------------------------- Time zone conversion functions ------------------------------------------------- */
+
+function shiftTime (time, toUTC) {
 
     /* Offset is given as UTC - local time in minutes */
 
-    const timezoneOffset = calculateTimezoneOffsetMins();
+    let timeZoneOffset = storedTimeZoneOffset;
 
-    time = (time + timezoneOffset) % 1440;
+    timeZoneOffset = toUTC ? timeZoneOffset * -1 : timeZoneOffset;
+
+    time = (time + timeZoneOffset) % 1440;
 
     /* If time zone offset move time over midnight */
 
@@ -83,65 +79,70 @@ function convertTimeToLocal (time) {
 
 }
 
-exports.convertTimeToLocal = convertTimeToLocal;
+function shiftTimePeriod (timePeriod, toUTC) {
 
-function convertTimePeriodToLocal (timePeriod) {
-
-    const startMins = convertTimeToLocal(timePeriod.startMins);
-    const endMins = convertTimeToLocal(timePeriod.endMins);
+    const startMins = shiftTime(timePeriod.startMins, toUTC);
+    const endMins = shiftTime(timePeriod.endMins, toUTC);
 
     return {
-        startMins: startMins,
-        endMins: endMins
+        startMins,
+        endMins
     };
 
 }
 
-/* See if any periods are over midnight and have to be split */
+exports.shiftTimePeriod = shiftTimePeriod;
 
-function checkTimePeriodsForSplits (localTimePeriods) {
+/* Convert a list of time periods from UTC to local */
 
-    for (let i = 0; i < localTimePeriods.length; i++) {
+function shiftTimePeriods (tps, toUTC) {
 
-        const localTimePeriod = localTimePeriods[i];
+    let shiftedTimePeriods = [];
 
-        if (localTimePeriod.startMins > localTimePeriod.endMins) {
+    for (let i = 0; i < tps.length; i++) {
 
-            localTimePeriods.splice(i, 1);
+        const timePeriod = tps[i];
+        const shiftedTimePeriod = shiftTimePeriod(timePeriod, toUTC);
 
-            localTimePeriods.push({
-                startMins: localTimePeriod.startMins,
-                endMins: 1440
-            });
-            localTimePeriods.push({
-                startMins: 0,
-                endMins: localTimePeriod.endMins
-            });
-
-        }
+        shiftedTimePeriods.push({
+            startMins: shiftedTimePeriod.startMins,
+            endMins: shiftedTimePeriod.endMins
+        });
 
     }
 
-    return localTimePeriods;
+    shiftedTimePeriods = sortPeriods(shiftedTimePeriods);
+
+    shiftedTimePeriods = checkTimePeriodsForOverlaps(shiftedTimePeriods);
+
+    return shiftedTimePeriods;
 
 }
 
-exports.checkTimePeriodsForSplits = checkTimePeriodsForSplits;
+exports.shiftTimePeriods = shiftTimePeriods;
+
+/* ------------------------------------------------- Time period checks ------------------------------------------------- */
 
 /* See if any newly created time periods overlap and can be merged */
 
-function checkTimePeriodsForOverlaps (localTimePeriods) {
+function checkTimePeriodsForOverlaps (timePeriods) {
 
-    for (let i = 0; i < localTimePeriods.length; i++) {
+    for (let i = 0; i < timePeriods.length; i++) {
 
-        for (let j = 0; j < localTimePeriods.length; j++) {
+        for (let j = 0; j < timePeriods.length; j++) {
 
-            if (localTimePeriods[i].endMins === localTimePeriods[j].startMins) {
+            if (timePeriods[i].startMins === timePeriods[j].startMins && timePeriods[i].endMins === timePeriods[j].endMins) {
 
-                localTimePeriods[i].endMins = localTimePeriods[j].endMins;
-                localTimePeriods.splice(j, 1);
+                continue;
 
-                return checkTimePeriodsForOverlaps(localTimePeriods);
+            }
+
+            if (timePeriods[i].endMins === timePeriods[j].startMins) {
+
+                timePeriods[i].endMins = timePeriods[j].endMins;
+                timePeriods.splice(j, 1);
+
+                return checkTimePeriodsForOverlaps(timePeriods);
 
             }
 
@@ -149,153 +150,37 @@ function checkTimePeriodsForOverlaps (localTimePeriods) {
 
     }
 
-    return localTimePeriods;
+    return timePeriods;
 
 }
 
 exports.checkTimePeriodsForOverlaps = checkTimePeriodsForOverlaps;
 
-/* Convert a list of time periods from UTC to local */
+/* ------------------------------------------------- Other functions ------------------------------------------------- */
 
-function convertTimePeriodsToLocal (tps) {
+/* Get the text representation of the current timeZone */
 
-    const localTimePeriods = [];
+function getTimeZoneText () {
 
-    for (let i = 0; i < tps.length; i++) {
+    let timeZoneText = 'UTC';
 
-        const timePeriod = tps[i];
-        const localTimePeriod = convertTimePeriodToLocal(timePeriod);
+    if (storedTimeZoneOffset === 0) return timeZoneText;
 
-        localTimePeriods.push({
-            startMins: localTimePeriod.startMins,
-            endMins: localTimePeriod.endMins
-        });
+    const timeZoneOffsetHours = storedTimeZoneOffset < 0 ? Math.ceil(storedTimeZoneOffset / constants.MINUTES_IN_HOUR) : Math.floor(storedTimeZoneOffset / constants.MINUTES_IN_HOUR);
 
-    }
+    const timeZoneOffsetMins = Math.abs(storedTimeZoneOffset % constants.MINUTES_IN_HOUR);
 
-    return localTimePeriods;
+    timeZoneText += storedTimeZoneOffset > 0 ? '+' : '-';
 
-}
+    timeZoneText += Math.abs(timeZoneOffsetHours);
 
-exports.convertTimePeriodsToLocal = convertTimePeriodsToLocal;
+    if (timeZoneOffsetMins > 0) timeZoneText += ':' + ('00' + timeZoneOffsetMins).slice(-2);
 
-/* Convert a time in mins to UTC */
-
-function convertTimetoUTC (time) {
-
-    /* Offset is given as UTC - local time in minutes */
-
-    const timezoneOffset = calculateTimezoneOffsetMins();
-
-    time = (time - timezoneOffset) % 1440;
-
-    /* If time zone offset move time over midnight */
-
-    if (time < 0) {
-
-        time += 1440;
-
-    }
-
-    return time;
+    return timeZoneText;
 
 }
 
-exports.convertTimetoUTC = convertTimetoUTC;
-
-/* Check if the given times need to be altered to match the app's current time zone setting */
-
-function convertTimePeriodToUTC (timePeriod) {
-
-    const startMins = convertTimetoUTC(timePeriod.startMins);
-    const endMins = convertTimetoUTC(timePeriod.endMins);
-
-    /* If the start and end times are the same, the time period covers the entire day */
-
-    if (startMins === endMins) {
-
-        return timePeriod;
-
-    }
-
-    return {
-        startMins: startMins,
-        endMins: endMins
-    };
-
-}
-
-exports.convertTimePeriodToUTC = convertTimePeriodToUTC;
-
-/* Convert a list of local time periods to UTC */
-
-exports.convertLocalTimePeriodsToUTC = (localTimePeriods) => {
-
-    let utcTimePeriods = [];
-
-    for (let i = 0; i < localTimePeriods.length; i++) {
-
-        const localTimePeriod = localTimePeriods[i];
-
-        const utcTimePeriod = convertTimePeriodToUTC(localTimePeriod);
-
-        utcTimePeriods.push({
-            startMins: utcTimePeriod.startMins,
-            endMins: utcTimePeriod.endMins
-        });
-
-    }
-
-    utcTimePeriods = checkTimePeriodsForSplits(utcTimePeriods);
-
-    utcTimePeriods = sortPeriods(utcTimePeriods);
-
-    utcTimePeriods = checkTimePeriodsForOverlaps(utcTimePeriods);
-
-    return utcTimePeriods;
-
-};
-
-/* Get the text representation of the current timezone */
-
-function getTimezoneText (localTime) {
-
-    let timezoneText = 'UTC';
-
-    if (localTime) {
-
-        /* Offset is given as UTC - local time */
-
-        const timezoneOffset = calculateTimezoneOffsetHours();
-
-        const timezoneOffsetHours = Math.floor(timezoneOffset);
-        const timezoneOffsetMins = Math.abs(timezoneOffset - timezoneOffsetHours) * 60;
-
-        if (timezoneOffset !== 0) {
-
-            if (timezoneOffset > 0) {
-
-                timezoneText += '+';
-
-            }
-
-            timezoneText += timezoneOffsetHours;
-
-            if (timezoneOffsetMins > 0) {
-
-                timezoneText += ':' + timezoneOffsetMins;
-
-            }
-
-        }
-
-    }
-
-    return timezoneText;
-
-}
-
-exports.getTimezoneText = getTimezoneText;
+exports.getTimeZoneText = getTimeZoneText;
 
 /* Pad the left of each time with zeroes */
 
@@ -309,9 +194,9 @@ function pad (n) {
 
 function minsToTimeString (mins) {
 
-    const timeHours = Math.floor(mins / 60);
+    const timeHours = Math.floor(mins / constants.MINUTES_IN_HOUR);
 
-    return pad(timeHours) + ':' + pad((mins - (timeHours * 60)));
+    return pad(timeHours) + ':' + pad((mins - (timeHours * constants.MINUTES_IN_HOUR)));
 
 }
 

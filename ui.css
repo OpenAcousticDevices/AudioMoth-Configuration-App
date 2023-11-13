@@ -9,3 +9,9 @@ body {
 input {
   border: thin solid #cfcfcf;
 }
+
+.tooltip .tooltip-inner {
+  max-width: none;
+  white-space: pre-wrap;
+  text-align: left;
+}

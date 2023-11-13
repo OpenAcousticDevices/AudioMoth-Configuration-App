@@ -12,6 +12,7 @@ const ui = require('../ui.js');
 const scheduleBar = require('../scheduleBar.js');
 const timeHandler = require('../timeHandler.js');
 const schedule = require('../schedule/schedule.js');
+const constants = require('../constants.js');
 
 const timeList = document.getElementById('time-list');
 
@@ -63,50 +64,155 @@ exports.clearTimes = clearTimes;
 
 /* Check to see if two periods of time overlap */
 
-function overlaps (startTime1, endTime1, startTime2, endTime2) {
+function isSubset (startTime1, endTime1, startTime2, endTime2) {
 
-    return (startTime1 <= endTime2 && endTime1 >= startTime2);
+    const a = startTime1 < endTime1 && startTime2 < endTime2 && startTime2 >= startTime1 && endTime2 <= endTime1;
+    const b = startTime1 > endTime1 && startTime2 < endTime2 && startTime2 >= startTime1 && (endTime2 >= startTime1 || endTime2 <= endTime1);
+    const c = startTime1 > endTime1 && startTime2 < endTime2 && startTime2 <= endTime1 && endTime2 <= endTime1;
+    const d = startTime1 > endTime1 && startTime2 > endTime2 && startTime2 > startTime1 && endTime2 < endTime1;
+    const e = startTime1 === endTime1;
+
+    return a || b || c || d || e;
 
 }
 
-exports.overlaps = overlaps;
+function isSuperset (startTime1, endTime1, startTime2, endTime2) {
+
+    return isSubset(startTime2, endTime2, startTime1, endTime1);
+
+}
+
+function startEndOverlaps (startTime1, endTime1, startTime2, endTime2) {
+
+    const a = startTime1 < endTime1 && startTime2 > endTime2 && endTime2 >= startTime1 && startTime2 <= endTime1;
+    const b = startTime1 > endTime1 && startTime2 < endTime2 && startTime2 <= endTime1 && endTime2 >= startTime1;
+    const c = startTime1 > endTime1 && startTime2 > endTime2 && endTime2 >= startTime1 && startTime2 >= endTime1;
+    const d = startTime1 > endTime1 && startTime2 > endTime2 && endTime2 <= startTime1 && startTime2 <= endTime1;
+
+    return a || b || c || d;
+
+}
+
+function startOverlaps (startTime1, endTime1, startTime2, endTime2) {
+
+    const a = startTime1 < endTime1 && startTime2 >= startTime1 && startTime2 <= endTime1;
+    const b = startTime1 > endTime1 && startTime2 >= startTime1;
+    const c = startTime1 > endTime1 && startTime2 <= endTime1;
+
+    return a || b || c;
+
+}
+
+function endOverlaps (startTime1, endTime1, startTime2, endTime2) {
+
+    const a = startTime1 < endTime1 && endTime2 >= startTime1 && endTime2 <= endTime1;
+    const b = startTime1 > endTime1 && endTime2 >= startTime1;
+    const c = startTime1 > endTime1 && endTime2 <= endTime1;
+
+    return a || b || c;
+
+}
 
 /* Add a new recording period to the data structure and update UI */
 
 function addTime (startMins, endMins) {
 
+    endMins = endMins === 1440 ? 0 : endMins;
+
     let timePeriods, newStart, newEnd;
 
     timePeriods = schedule.getTimePeriods();
 
+    if (startMins === endMins) {
+
+        timePeriods = [];
+
+        timePeriods.push({
+            startMins,
+            endMins
+        });
+
+        schedule.setTimePeriods(timePeriods);
+
+        return;
+
+    }
+
     for (let i = 0; i < timePeriods.length; i++) {
 
-        /* If an overlap occurs, attempt to merge the overlapping time periods */
+        const existingStartMins = timePeriods[i].startMins;
+        let existingEndMins = timePeriods[i].endMins;
+        existingEndMins = existingEndMins === 1440 ? 0 : existingEndMins;
 
-        if (overlaps(timePeriods[i].startMins, timePeriods[i].endMins, startMins, endMins)) {
+        /* Check if the new period is just a time inside an existing period */
 
-            if (timePeriods.length < schedule.MAX_PERIODS) {
+        if (isSubset(existingStartMins, existingEndMins, startMins, endMins)) {
 
-                newStart = Math.min(startMins, timePeriods[i].startMins);
-                newEnd = Math.max(endMins, timePeriods[i].endMins);
+            console.log('Subset');
 
-                timePeriods = removeTime(timePeriods[i], timePeriods);
+            return true;
 
-                schedule.setTimePeriods(timePeriods);
+        }
 
-                return addTime(newStart, newEnd);
+        if (isSuperset(existingStartMins, existingEndMins, startMins, endMins)) {
 
-            }
+            console.log('Superset');
 
-            return false;
+            timePeriods = removeTime(timePeriods[i], timePeriods);
+
+            schedule.setTimePeriods(timePeriods);
+
+            return addTime(startMins, endMins);
+
+        }
+
+        if (startEndOverlaps(existingStartMins, existingEndMins, startMins, endMins)) {
+
+            console.log('Start and end overlaps');
+
+            timePeriods = removeTime(timePeriods[i], timePeriods);
+
+            schedule.setTimePeriods(timePeriods);
+
+            return addTime(startMins, startMins);
+
+        }
+
+        if (startOverlaps(existingStartMins, existingEndMins, startMins, endMins)) {
+
+            console.log('Start overlaps');
+
+            newStart = existingStartMins;
+            newEnd = endMins;
+
+            timePeriods = removeTime(timePeriods[i], timePeriods);
+
+            schedule.setTimePeriods(timePeriods);
+
+            return addTime(newStart, newEnd);
+
+        }
+
+        if (endOverlaps(existingStartMins, existingEndMins, startMins, endMins)) {
+
+            console.log('End overlaps');
+
+            newStart = startMins;
+            newEnd = existingEndMins;
+
+            timePeriods = removeTime(timePeriods[i], timePeriods);
+
+            schedule.setTimePeriods(timePeriods);
+
+            return addTime(newStart, newEnd);
 
         }
 
     }
 
     timePeriods.push({
-        startMins: startMins,
-        endMins: endMins
+        startMins,
+        endMins
     });
 
     schedule.setTimePeriods(timePeriods);
@@ -117,58 +223,32 @@ function addTime (startMins, endMins) {
 
 function formatAndAddTime (startTimestamp, endTimestamp) {
 
-    let utcPeriod, added;
+    let utcPeriod;
 
     const timePeriod = {
         startMins: startTimestamp,
         endMins: endTimestamp
     };
 
-    if (ui.isLocalTime()) {
+    const timeZoneMode = ui.getTimeZoneMode();
 
-        utcPeriod = timeHandler.convertTimePeriodToUTC(timePeriod);
-
-    } else {
+    if (timeZoneMode === constants.TIME_ZONE_MODE_UTC) {
 
         utcPeriod = {
             startMins: (timePeriod.startMins % 1440),
             endMins: (timePeriod.endMins % 1440)
         };
 
+    } else {
+
+        utcPeriod = timeHandler.shiftTimePeriod(timePeriod, true);
+
     }
 
     startTimestamp = utcPeriod.startMins;
     endTimestamp = utcPeriod.endMins;
 
-    /* If end time precedes start time, assume period should wrap around midnight */
-
-    if (endTimestamp < startTimestamp) {
-
-        endTimestamp += 1440;
-
-    }
-
-    if (endTimestamp === startTimestamp) {
-
-        added = addTime(0, 1440);
-
-    } else if (endTimestamp > 1440) {
-
-        /* Split time period into two periods either side of midnight */
-
-        added = addTime(startTimestamp, 1440);
-
-        if (schedule.getTimePeriodCount() < schedule.MAX_PERIODS) {
-
-            added = addTime(0, endTimestamp - 1440) && added;
-
-        }
-
-    } else {
-
-        added = addTime(startTimestamp, endTimestamp);
-
-    }
+    const added = addTime(startTimestamp, endTimestamp);
 
     /* Return success boolean (used to report failure when manually adding period) */
 
@@ -176,12 +256,13 @@ function formatAndAddTime (startTimestamp, endTimestamp) {
 
 }
 
+exports.addTime = addTime;
 exports.formatAndAddTime = formatAndAddTime;
 
 exports.getTimePeriods = schedule.getTimePeriods;
 exports.setTimePeriods = schedule.setTimePeriods;
 
-scheduleBar.prepareScheduleCanvas(true, function (selectedIndex) {
+scheduleBar.prepareScheduleCanvas(function (selectedIndex) {
 
     timeList.options.selectedIndex = selectedIndex;
     timeList.focus();

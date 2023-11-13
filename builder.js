@@ -1,12 +1,11 @@
-
 'use strict';
 
 const builder = require('electron-builder');
 const Platform = builder.Platform;
 
-var config, target, argTarget;
+let config, target;
 
-argTarget = process.argv[2];
+const argTarget = process.argv[2];
 
 switch (argTarget) {
 
@@ -55,7 +54,7 @@ default:
 
 builder.build({
     targets: target,
-    config: config
+    config
 }).then(function (m) {
 
     console.log('Generated files:');

@@ -6,11 +6,14 @@
 
 const electron = require('electron');
 
+const ariaSpeak = require('../ariaSpeak.js');
+
 const schedule = require('../schedule/schedule.js');
 const scheduleEditor = require('./scheduleEditor.js');
 const timeHandler = require('../timeHandler.js');
 const ui = require('../ui.js');
 const timeInput = require('./timeInput.js');
+const constants = require('../constants.js');
 
 /* UI components */
 
@@ -24,7 +27,15 @@ const endTimeInput = document.getElementById('end-time-input');
 
 /* Function which uses changed schedule to update life approximation */
 
-var updateLifeDisplayOnChange;
+let updateLifeDisplayOnChange;
+
+/* Pad the left of each time with zeroes */
+
+function pad (n) {
+
+    return (n < 10) ? ('0' + n) : n;
+
+}
 
 /* Obtain time periods from UI and add to data structure in response to button press */
 
@@ -33,10 +44,17 @@ function addTimeOnClick () {
     const startTimeSplit = timeInput.getValue(startTimeInput).split(':');
     const endTimeSplit = timeInput.getValue(endTimeInput).split(':');
 
-    const startTimestamp = (parseInt(startTimeSplit[0], 10) * 60) + parseInt(startTimeSplit[1], 10);
-    let endTimestamp = (parseInt(endTimeSplit[0], 10) * 60) + parseInt(endTimeSplit[1], 10);
+    const startHours = parseInt(startTimeSplit[0], 10);
+    const startMins = parseInt(startTimeSplit[1], 10);
+    const endHours = parseInt(endTimeSplit[0], 10);
+    const endMins = parseInt(endTimeSplit[1], 10);
 
-    endTimestamp = (endTimestamp > 0) ? endTimestamp : 1440;
+    const startTimestamp = (startHours * constants.MINUTES_IN_HOUR) + startMins;
+    let endTimestamp = (endHours * constants.MINUTES_IN_HOUR) + endMins;
+
+    endTimestamp = (endTimestamp > 0) ? endTimestamp : 0;
+
+    ariaSpeak.speak(pad(startHours) + ':' + pad(startMins) + ' to ' + pad(endHours) + ':' + pad(endMins));
 
     scheduleEditor.formatAndAddTime(startTimestamp, endTimestamp);
 
@@ -68,16 +86,18 @@ function removeTimeOnClick () {
 
     const timePeriod = getTimePeriodFromList();
 
-    if (ui.isLocalTime()) {
+    const timeZoneMode = ui.getTimeZoneMode();
 
-        let ltps = timeHandler.convertTimePeriodsToLocal(timePeriods);
-        ltps = scheduleEditor.removeTime(timePeriod, ltps);
+    if (timeZoneMode === constants.TIME_ZONE_MODE_UTC) {
 
-        timePeriods = timeHandler.convertLocalTimePeriodsToUTC(ltps);
+        timePeriods = scheduleEditor.removeTime(timePeriod, timePeriods);
 
     } else {
 
-        timePeriods = scheduleEditor.removeTime(timePeriod, timePeriods);
+        let ltps = timeHandler.shiftTimePeriods(timePeriods, false);
+        ltps = scheduleEditor.removeTime(timePeriod, ltps);
+
+        timePeriods = timeHandler.shiftTimePeriods(ltps, true);
 
     }
 
@@ -98,13 +118,15 @@ function updateTimeList () {
 
     const timePeriods = schedule.getTimePeriods();
 
-    if (ui.isLocalTime()) {
+    const timeZoneMode = ui.getTimeZoneMode();
 
-        tp = timeHandler.convertTimePeriodsToLocal(timePeriods);
+    if (timeZoneMode === constants.TIME_ZONE_MODE_UTC) {
+
+        tp = timePeriods;
 
     } else {
 
-        tp = timePeriods;
+        tp = timeHandler.shiftTimePeriods(timePeriods, false);
 
     }
 
@@ -112,36 +134,18 @@ function updateTimeList () {
 
     /* Sort recording periods in order of occurrence */
 
-    tp = tp.sort(function (a, b) {
-
-        return a.startMins - b.startMins;
-
-    });
+    tp = timeHandler.sortPeriods(tp);
 
     for (let i = 0; i < tp.length; i += 1) {
 
         const startMins = tp[i].startMins;
-        const endMins = tp[i].endMins;
+        let endMins = tp[i].endMins;
+        endMins = endMins === 0 ? 1440 : endMins;
 
-        let timezoneText = '(UTC';
-        if (ui.isLocalTime()) {
-
-            const timezoneOffset = timeHandler.calculateTimezoneOffsetHours();
-
-            if (timezoneOffset >= 0) {
-
-                timezoneText += '+';
-
-            }
-
-            timezoneText += timezoneOffset;
-
-        }
-
-        timezoneText += ')';
+        const timeZoneText = '(' + timeHandler.getTimeZoneText() + ')';
 
         const option = document.createElement('option');
-        option.text = timeHandler.minsToTimeString(startMins) + ' - ' + timeHandler.minsToTimeString(endMins) + ' ' + timezoneText;
+        option.text = timeHandler.minsToTimeString(startMins) + ' - ' + timeHandler.minsToTimeString(endMins) + ' ' + timeZoneText;
         option.value = [startMins, endMins];
         timeList.add(option);
 
@@ -158,7 +162,7 @@ function updateTimeList () {
 
 exports.updateTimeList = updateTimeList;
 
-electron.ipcRenderer.on('local-time-schedule', updateTimeList);
+electron.ipcRenderer.on('update-schedule', updateTimeList);
 
 function clearTimesOnClick () {
 
@@ -183,7 +187,7 @@ exports.prepareUI = (changeFunction) => {
     removeTimeButton.addEventListener('click', removeTimeOnClick);
     clearTimeButton.addEventListener('click', clearTimesOnClick);
 
-    timeList.addEventListener('change', function () {
+    timeList.addEventListener('change', () => {
 
         removeTimeButton.disabled = (timeList.value === null || timeList.value === '');
 

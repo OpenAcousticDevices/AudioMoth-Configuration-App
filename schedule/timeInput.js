@@ -2,6 +2,8 @@
 
 /* global document, HTMLElement, customElements */
 
+const ariaSpeak = require('../ariaSpeak.js');
+
 const DEFAULT_WIDTH = '50px';
 const DEFAULT_HEIGHT = '25px';
 
@@ -609,7 +611,7 @@ function handleKeyDown (e) {
 
     }
 
-    const patt = new RegExp('^[0-9]$');
+    const patt = /^[0-9]$/;
 
     if (patt.test(e.key)) {
 
@@ -710,7 +712,7 @@ class TimeInput extends HTMLElement {
 
         inputNode.addEventListener('keydown', handleKeyDown);
 
-        hourSpanNode.addEventListener('click', function () {
+        hourSpanNode.addEventListener('click', () => {
 
             if (!isEnabled(divNode)) {
 
@@ -722,9 +724,15 @@ class TimeInput extends HTMLElement {
             highlightInput(inputNode);
             inputNode.focus();
 
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + hourSpanNode.innerText + ':' + minuteSpanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
+
         });
 
-        minuteSpanNode.addEventListener('click', function () {
+        minuteSpanNode.addEventListener('click', () => {
 
             if (!isEnabled(divNode)) {
 
@@ -736,9 +744,15 @@ class TimeInput extends HTMLElement {
             highlightInput(inputNode);
             inputNode.focus();
 
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + hourSpanNode.innerText + ':' + minuteSpanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
+
         });
 
-        inputNode.addEventListener('focusin', function () {
+        inputNode.addEventListener('focusin', () => {
 
             divNode.setAttribute('numbersEntered', '0');
 
@@ -756,9 +770,15 @@ class TimeInput extends HTMLElement {
 
             }
 
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + hourSpanNode.innerText + ':' + minuteSpanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
+
         });
 
-        inputNode.addEventListener('focusout', function () {
+        inputNode.addEventListener('focusout', () => {
 
             if (!isEnabled(divNode)) {
 
@@ -772,7 +792,7 @@ class TimeInput extends HTMLElement {
 
         });
 
-        inputNode.addEventListener('click', function () {
+        inputNode.addEventListener('click', () => {
 
             if (!isEnabled(divNode)) {
 
@@ -783,6 +803,12 @@ class TimeInput extends HTMLElement {
             divNode.setAttribute('selectedIndex', '0');
             highlightInput(inputNode);
             inputNode.focus();
+
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + hourSpanNode.innerText + ':' + minuteSpanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
 
         });
 

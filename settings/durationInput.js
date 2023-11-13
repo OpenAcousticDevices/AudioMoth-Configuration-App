@@ -8,6 +8,8 @@
 
 /* global document, HTMLElement, customElements, Event */
 
+const ariaSpeak = require('../ariaSpeak.js');
+
 const DEFAULT_MAX_CHAR_LENGTH = 5;
 /* Currently, only single digit minimums are supported. Minimums of 10 or greater will require reimplementation */
 const DEFAULT_MIN_VALUE = 0;
@@ -254,7 +256,7 @@ function handleKeyDown (e) {
 
     }
 
-    const patt = new RegExp('^[0-9]$');
+    const patt = /^[0-9]$/;
 
     if (patt.test(e.key)) {
 
@@ -349,7 +351,7 @@ class DurationInput extends HTMLElement {
 
         inputNode.addEventListener('keydown', handleKeyDown);
 
-        holderNode.addEventListener('click', function () {
+        holderNode.addEventListener('click', () => {
 
             if (!isEnabled(divNode)) {
 
@@ -362,9 +364,15 @@ class DurationInput extends HTMLElement {
 
             inputNode.focus();
 
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + spanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
+
         });
 
-        inputNode.addEventListener('focusin', function () {
+        inputNode.addEventListener('focusin', () => {
 
             minValue = divNode.getAttribute('minValue');
             minValue = (minValue === null) ? DEFAULT_MIN_VALUE : parseInt(minValue);
@@ -380,11 +388,17 @@ class DurationInput extends HTMLElement {
             setAttributeValue(inputNode, 'selected', 'true');
             highlightInput(inputNode);
 
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + spanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
+
         });
 
-        inputNode.addEventListener('focusout', function () {
+        inputNode.addEventListener('focusout', () => {
 
-            var maxValue, currentInputValue;
+            let maxValue;
 
             maxValue = divNode.getAttribute('maxValue');
             maxValue = (maxValue === null) ? DEFAULT_MAX_VALUE : parseInt(maxValue);
@@ -395,7 +409,7 @@ class DurationInput extends HTMLElement {
 
             }
 
-            currentInputValue = parseInt(getAttributeValue(inputNode, 'inputValue'));
+            const currentInputValue = parseInt(getAttributeValue(inputNode, 'inputValue'));
 
             if (currentInputValue < minValue || currentInputValue > maxValue) {
 
@@ -412,7 +426,7 @@ class DurationInput extends HTMLElement {
 
         });
 
-        inputNode.addEventListener('click', function () {
+        inputNode.addEventListener('click', () => {
 
             if (!isEnabled(divNode)) {
 
@@ -422,6 +436,12 @@ class DurationInput extends HTMLElement {
 
             highlightInput(inputNode);
             inputNode.focus();
+
+            const ariaLabel = divNode.getAttribute('aria-label');
+            let ariaDescription = ariaLabel || '';
+            ariaDescription += ' edit ' + spanNode.innerText;
+
+            ariaSpeak.speak(ariaDescription);
 
         });
 

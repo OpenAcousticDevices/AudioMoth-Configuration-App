@@ -8,12 +8,7 @@
 
 /* global document */
 
-const electron = require('electron');
-const dialog = electron.remote.dialog;
-const currentWindow = electron.remote.getCurrentWindow();
-
-const path = require('path');
-const fs = require('fs');
+const {dialog} = require('@electron/remote');
 
 const outputCheckbox = document.getElementById('output-checkbox');
 const outputButton = document.getElementById('output-button');
@@ -22,7 +17,7 @@ const outputLabel = document.getElementById('output-label');
 const subdirectoriesLabel = document.getElementById('subdirectories-label');
 const subdirectoriesCheckbox = document.getElementById('subdirectories-checkbox');
 
-var outputDir = '';
+let outputDir = '';
 
 const prefixInput = document.getElementById('prefix-input');
 const prefixCheckbox = document.getElementById('prefix-checkbox');
@@ -101,84 +96,6 @@ outputButton.addEventListener('click', () => {
 
 });
 
-/* Open dialog and set files to be expanded */
-
-exports.selectRecordings = (fileRegex) => {
-
-    let folderContents, filePath, fileName, recordings;
-
-    const selectionTypes = ['openFile', 'openDirectory'];
-    const selectionType = getSelectedRadioValue('selection-radio');
-    const properties = [selectionTypes[selectionType], 'multiSelections'];
-
-    /* If files are being selected, allow users to selectt more than one item. Only a single folder can be selected */
-
-    if (selectionType === 0) {
-
-        properties.push('multiSelections');
-
-    }
-
-    /* If files are being selected, limit selection to .wav files */
-
-    const filters = (selectionType === 0) ? [{name: 'wav', extensions: ['wav']}] : [];
-
-    const selection = dialog.showOpenDialogSync(currentWindow, {
-        title: 'Select recording file or folder containing recordings',
-        nameFieldLabel: 'Recordings',
-        properties: properties,
-        filters: filters
-    });
-
-    if (selection) {
-
-        recordings = [];
-
-        if (selectionType === 0) {
-
-            for (let i = 0; i < selection.length; i++) {
-
-                filePath = selection[i];
-                fileName = path.basename(filePath);
-
-                /* Check if wav files match a given regex and thus can be expanded/split */
-
-                if (filePath.charAt(0) !== '.' && fileRegex.test(fileName.toUpperCase())) {
-
-                    recordings.push(filePath);
-
-                }
-
-            }
-
-        } else {
-
-            for (let i = 0; i < selection.length; i++) {
-
-                folderContents = fs.readdirSync(selection[i]);
-
-                for (let j = 0; j < folderContents.length; j++) {
-
-                    filePath = folderContents[j];
-
-                    if (filePath.charAt(0) !== '.' && fileRegex.test(filePath.toUpperCase())) {
-
-                        recordings.push(path.join(selection[i], filePath));
-
-                    }
-
-                }
-
-            }
-
-        }
-
-        return recordings;
-
-    }
-
-};
-
 /* Remove all characters which aren't A-Z, a-z, 0-9, and _ */
 
 prefixInput.addEventListener('keydown', (e) => {
@@ -190,7 +107,7 @@ prefixInput.addEventListener('keydown', (e) => {
 
     }
 
-    var reg = /[^A-Za-z-_0-9]{1}/g;
+    const reg = /[^A-Za-z-_0-9]{1}/g;
 
     if (reg.test(e.key)) {
 

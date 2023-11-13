@@ -1,5 +1,6 @@
 .table>tbody>tr>td,
 .table>tbody>tr>th {
+  background: #000000;
   color: #FFFFFF;
 }
 
@@ -27,22 +28,10 @@ select {
   border: #FFFFFF;
 }
 
-#low-pass-filter-slider .slider-selection {
+.slider-horizontal .slider-selection {
   background: rgb(64, 100, 216);
 }
 
-#high-pass-filter-slider .slider-track {
-  background: rgb(64, 100, 216);
-}
-
-#band-pass-filter-slider .slider-selection {
-  background: rgb(64, 100, 216);
-}
-
-#amplitude-threshold-slider .slider-track {
-  background: rgb(64, 100, 216);
-}
-
-#goertzel-threshold-slider .slider-track {
-  background: rgb(64, 100, 216);
+.grey {
+  color: #808080;
 }

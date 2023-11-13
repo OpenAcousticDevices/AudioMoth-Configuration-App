@@ -198,3 +198,22 @@ exports.getFirmwareClassification = (desc) => {
 
 exports.latestFirmwareVersionArray = [1, 8, 0];
 exports.latestFirmwareVersionString = '1.8.0';
+
+/* Time zone modes */
+
+exports.TIME_ZONE_MODE_UTC = 0;
+exports.TIME_ZONE_MODE_LOCAL = 1;
+exports.TIME_ZONE_MODE_CUSTOM = 2;
+exports.TIME_ZONE_MODE_STRINGS = ['UTC', 'LOCAL', 'CUSTOM'];
+
+/* Calculation values */
+
+exports.UINT32_MAX = 0xFFFFFFFF;
+exports.UINT16_MAX = 0xFFFF;
+
+exports.MILLISECONDS_IN_SECOND = 1000;
+
+exports.SECONDS_IN_MINUTE = 60;
+exports.SECONDS_IN_DAY = 86400;
+
+exports.MINUTES_IN_HOUR = 60;

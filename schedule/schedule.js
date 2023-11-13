@@ -7,7 +7,7 @@
 const MAX_PERIODS = 4;
 exports.MAX_PERIODS = MAX_PERIODS;
 
-var timePeriods = [];
+let timePeriods = [];
 
 exports.getTimePeriodCount = () => {
 
@@ -26,6 +26,48 @@ exports.clear = () => {
 exports.getTimePeriods = () => {
 
     return timePeriods;
+
+};
+
+/* Older firmware doesn't support time periods where startMins > endMins. Replace periods which do this with a period either side of midnight */
+
+exports.getTimePeriodsNoWrap = () => {
+
+    const noWrapTimePeriods = [];
+
+    for (let i = 0; i < timePeriods.length; i++) {
+
+        const startMins = timePeriods[i].startMins;
+        const endMins = timePeriods[i].endMins;
+
+        if (startMins >= endMins && endMins !== 0) {
+
+            noWrapTimePeriods.push({
+                startMins,
+                endMins: 1440
+            });
+
+            noWrapTimePeriods.push({
+                startMins: 0,
+                endMins
+            });
+
+        } else {
+
+            noWrapTimePeriods.push(timePeriods[i]);
+
+        }
+
+    }
+
+    let sortedPeriods = noWrapTimePeriods;
+    sortedPeriods = sortedPeriods.sort((a, b) => {
+
+        return a.startMins - b.startMins;
+
+    });
+
+    return sortedPeriods;
 
 };
 

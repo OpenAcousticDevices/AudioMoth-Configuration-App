@@ -18,7 +18,7 @@ const lifeDisplayPanel = document.getElementById('life-display-panel');
 
 /* Whether or not the life display box should display the warning or original information */
 
-var displaySizeWarning = true;
+let displaySizeWarning = true;
 
 exports.getPanel = () => {
 
@@ -40,7 +40,26 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
     for (let i = 0; i < timePeriods.length; i += 1) {
 
-        let periodSecs = (timePeriods[i].endMins - timePeriods[i].startMins) * 60;
+        const startMins = timePeriods[i].startMins;
+        const endMins = timePeriods[i].endMins;
+
+        let periodSecs = 0;
+
+        if (startMins < endMins) {
+
+            periodSecs = endMins - startMins;
+
+        } else if (startMins === endMins) {
+
+            periodSecs = 1440;
+
+        } else if (startMins > endMins) {
+
+            periodSecs = (1440 - startMins) + endMins;
+
+        }
+
+        periodSecs *= constants.SECONDS_IN_MINUTE;
 
         /* First recording in a period has prep time scheduled for just before period */
 
@@ -104,9 +123,9 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
     return {
         prepTime: totalPrepTime,
-        recordingTimes: recordingTimes,
+        recordingTimes,
         sleepTime: totalSleepTime,
-        containsTruncatedRecording: containsTruncatedRecording
+        containsTruncatedRecording
     };
 
 }
@@ -215,8 +234,24 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
         for (let i = 0; i < schedule.length; i++) {
 
-            const period = schedule[i];
-            const length = period.endMins - period.startMins;
+            const startMins = schedule[i].startMins;
+            const endMins = schedule[i].endMins;
+
+            let length;
+
+            if (startMins < endMins) {
+
+                length = endMins - startMins;
+
+            } else if (startMins === endMins) {
+
+                length = 1440;
+
+            } else if (startMins > endMins) {
+
+                length = (1440 - startMins) + endMins;
+
+            }
 
             preparationInstances += 1;
 

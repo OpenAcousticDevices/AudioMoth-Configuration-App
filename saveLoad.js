@@ -6,14 +6,13 @@
 
 'use strict';
 
-const electron = require('electron');
-const dialog = electron.remote.dialog;
-const BrowserWindow = electron.remote.BrowserWindow;
+const {dialog, BrowserWindow, app} = require('@electron/remote');
 
 const fs = require('fs');
 const Validator = require('jsonschema').Validator;
 
 const constants = require('./constants.js');
+const ui = require('./ui.js');
 
 const DEFAULT_SETTINGS = {
     timePeriods: [],
@@ -24,7 +23,7 @@ const DEFAULT_SETTINGS = {
     gain: 2,
     recordDuration: 55,
     sleepDuration: 5,
-    localTime: false,
+    timeZoneMode: 'UTC',
     firstRecordingDateEnabled: false,
     lastRecordingDateEnabled: false,
     dutyEnabled: true,
@@ -50,6 +49,31 @@ const DEFAULT_SETTINGS = {
     magneticSwitchEnabled: false
 };
 
+/* Compare two semantic versions and return true if older */
+
+function isOlderSemanticVersion (aVersion, bVersion) {
+
+    for (let i = 0; i < aVersion.length; i++) {
+
+        const aVersionNum = aVersion[i];
+        const bVersionNum = bVersion[i];
+
+        if (aVersionNum > bVersionNum) {
+
+            return false;
+
+        } else if (aVersionNum < bVersionNum) {
+
+            return true;
+
+        }
+
+    }
+
+    return false;
+
+}
+
 /* Save configuration settings in UI to .config file */
 
 function saveConfiguration (currentConfig, callback) {
@@ -74,50 +98,53 @@ function saveConfiguration (currentConfig, callback) {
 
     }
 
-    const versionString = electron.remote.app.getVersion();
+    const versionString = app.getVersion();
 
-    let configuration = '{\n';
-    configuration += '"timePeriods": ' + JSON.stringify(currentConfig.timePeriods) + ',\n';
-    configuration += '"ledEnabled": ' + currentConfig.ledEnabled + ',\n';
-    configuration += '"lowVoltageCutoffEnabled": ' + currentConfig.lowVoltageCutoffEnabled + ',\n';
-    configuration += '"batteryLevelCheckEnabled": ' + currentConfig.batteryLevelCheckEnabled + ',\n';
-    configuration += '"sampleRate": ' + sampleRate + ',\n';
-    configuration += '"gain": ' + currentConfig.gain + ',\n';
-    configuration += '"recordDuration": ' + currentConfig.recordDuration + ',\n';
-    configuration += '"sleepDuration": ' + currentConfig.sleepDuration + ',\n';
-    configuration += '"localTime": ' + currentConfig.localTime + ',\n';
+    let configuration = '{\r\n';
+    configuration += '"timePeriods": ' + JSON.stringify(currentConfig.timePeriods) + ',\r\n';
+    configuration += '"ledEnabled": ' + currentConfig.ledEnabled + ',\r\n';
+    configuration += '"lowVoltageCutoffEnabled": ' + currentConfig.lowVoltageCutoffEnabled + ',\r\n';
+    configuration += '"batteryLevelCheckEnabled": ' + currentConfig.batteryLevelCheckEnabled + ',\r\n';
+    configuration += '"sampleRate": ' + sampleRate + ',\r\n';
+    configuration += '"gain": ' + currentConfig.gain + ',\r\n';
+    configuration += '"recordDuration": ' + currentConfig.recordDuration + ',\r\n';
+    configuration += '"sleepDuration": ' + currentConfig.sleepDuration + ',\r\n';
 
-    configuration += '"firstRecordingDateEnabled": ' + currentConfig.firstRecordingDateEnabled + ',\n';
-    configuration += '"lastRecordingDateEnabled": ' + currentConfig.lastRecordingDateEnabled + ',\n';
+    configuration += ui.getTimeZoneMode() === constants.TIME_ZONE_MODE_CUSTOM ? '"customTimeZoneOffset": ' + currentConfig.customTimeZoneOffset + ',\r\n' : '';
 
-    configuration += currentConfig.firstRecordingDateEnabled ? '"firstRecordingDate": \"' + currentConfig.firstRecordingDate + '\",\n' : '';
-    configuration += currentConfig.lastRecordingDateEnabled ? '"lastRecordingDate": \"' + currentConfig.lastRecordingDate + '\",\n' : '';
+    configuration += '"localTime": ' + currentConfig.localTime + ',\r\n';
 
-    configuration += '"dutyEnabled": ' + currentConfig.dutyEnabled + ',\n';
-    configuration += '"passFiltersEnabled": ' + currentConfig.passFiltersEnabled + ',\n';
+    configuration += '"firstRecordingDateEnabled": ' + currentConfig.firstRecordingDateEnabled + ',\r\n';
+    configuration += '"lastRecordingDateEnabled": ' + currentConfig.lastRecordingDateEnabled + ',\r\n';
 
-    configuration += '"filterType": \"' + filterType + '\",\n';
+    configuration += currentConfig.firstRecordingDateEnabled ? '"firstRecordingDate": \"' + currentConfig.firstRecordingDate + '\",\r\n' : '';
+    configuration += currentConfig.lastRecordingDateEnabled ? '"lastRecordingDate": \"' + currentConfig.lastRecordingDate + '\",\r\n' : '';
 
-    configuration += '"lowerFilter": ' + currentConfig.lowerFilter + ',\n';
-    configuration += '"higherFilter": ' + currentConfig.higherFilter + ',\n';
-    configuration += '"amplitudeThresholdingEnabled": ' + currentConfig.amplitudeThresholdingEnabled + ',\n';
-    configuration += '"amplitudeThreshold": ' + currentConfig.amplitudeThreshold + ',\n';
-    configuration += '"minimumAmplitudeThresholdDuration": ' + currentConfig.minimumAmplitudeThresholdDuration + ',\n';
-    configuration += '"frequencyTriggerEnabled": ' + currentConfig.frequencyTriggerEnabled + ',\n';
-    configuration += '"frequencyTriggerWindowLength": ' + currentConfig.frequencyTriggerWindowLength + ',\n';
-    configuration += '"frequencyTriggerCentreFrequency": ' + currentConfig.frequencyTriggerCentreFrequency + ',\n';
-    configuration += '"minimumFrequencyTriggerDuration": ' + currentConfig.minimumFrequencyTriggerDuration + ',\n';
-    configuration += '"frequencyTriggerThreshold": ' + currentConfig.frequencyTriggerThreshold + ',\n';
-    configuration += '"requireAcousticConfig": ' + currentConfig.requireAcousticConfig + ',\n';
-    configuration += '"dailyFolders": ' + currentConfig.dailyFolders + ',\n';
-    configuration += '"displayVoltageRange": ' + currentConfig.displayVoltageRange + ',\n';
-    configuration += '"amplitudeThresholdScale": \"' + amplitudeThresholdScale + '\",\n';
-    configuration += '"version": \"' + versionString + '\",\n';
-    configuration += '"energySaverModeEnabled": ' + currentConfig.energySaverModeEnabled + ',\n';
-    configuration += '"disable48DCFilter": ' + currentConfig.disable48DCFilter + ',\n';
-    configuration += '"lowGainRangeEnabled": ' + currentConfig.lowGainRangeEnabled + ',\n';
-    configuration += '"timeSettingFromGPSEnabled": ' + currentConfig.timeSettingFromGPSEnabled + ',\n';
-    configuration += '"magneticSwitchEnabled": ' + currentConfig.magneticSwitchEnabled + '\n';
+    configuration += '"dutyEnabled": ' + currentConfig.dutyEnabled + ',\r\n';
+    configuration += '"passFiltersEnabled": ' + currentConfig.passFiltersEnabled + ',\r\n';
+
+    configuration += '"filterType": \"' + filterType + '\",\r\n';
+
+    configuration += '"lowerFilter": ' + currentConfig.lowerFilter + ',\r\n';
+    configuration += '"higherFilter": ' + currentConfig.higherFilter + ',\r\n';
+    configuration += '"amplitudeThresholdingEnabled": ' + currentConfig.amplitudeThresholdingEnabled + ',\r\n';
+    configuration += '"amplitudeThreshold": ' + currentConfig.amplitudeThreshold + ',\r\n';
+    configuration += '"minimumAmplitudeThresholdDuration": ' + currentConfig.minimumAmplitudeThresholdDuration + ',\r\n';
+    configuration += '"frequencyTriggerEnabled": ' + currentConfig.frequencyTriggerEnabled + ',\r\n';
+    configuration += '"frequencyTriggerWindowLength": ' + currentConfig.frequencyTriggerWindowLength + ',\r\n';
+    configuration += '"frequencyTriggerCentreFrequency": ' + currentConfig.frequencyTriggerCentreFrequency + ',\r\n';
+    configuration += '"minimumFrequencyTriggerDuration": ' + currentConfig.minimumFrequencyTriggerDuration + ',\r\n';
+    configuration += '"frequencyTriggerThreshold": ' + currentConfig.frequencyTriggerThreshold + ',\r\n';
+    configuration += '"requireAcousticConfig": ' + currentConfig.requireAcousticConfig + ',\r\n';
+    configuration += '"dailyFolders": ' + currentConfig.dailyFolders + ',\r\n';
+    configuration += '"displayVoltageRange": ' + currentConfig.displayVoltageRange + ',\r\n';
+    configuration += '"amplitudeThresholdScale": \"' + amplitudeThresholdScale + '\",\r\n';
+    configuration += '"version": \"' + versionString + '\",\r\n';
+    configuration += '"energySaverModeEnabled": ' + currentConfig.energySaverModeEnabled + ',\r\n';
+    configuration += '"disable48DCFilter": ' + currentConfig.disable48DCFilter + ',\r\n';
+    configuration += '"lowGainRangeEnabled": ' + currentConfig.lowGainRangeEnabled + ',\r\n';
+    configuration += '"timeSettingFromGPSEnabled": ' + currentConfig.timeSettingFromGPSEnabled + ',\r\n';
+    configuration += '"magneticSwitchEnabled": ' + currentConfig.magneticSwitchEnabled + '\r\n';
     configuration += '}';
 
     const fileName = dialog.showSaveDialogSync({
@@ -258,6 +285,9 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     localTime: {
                         type: 'boolean'
                     },
+                    customTimeZoneOffset: {
+                        type: 'integer'
+                    },
                     firstRecordingDateEnabled: {
                         type: 'boolean'
                     },
@@ -369,7 +399,6 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.dutyEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.sleepDuration === 'undefined');
             isMissingValues |= (typeof jsonObj.recordDuration === 'undefined');
-            isMissingValues |= (typeof jsonObj.localTime === 'undefined');
             isMissingValues |= (typeof jsonObj.passFiltersEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.lowerFilter === 'undefined');
             isMissingValues |= (typeof jsonObj.higherFilter === 'undefined');
@@ -413,7 +442,30 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             }
 
+            /* Don't open config files created by newer app versions */
+
+            let version = (typeof jsonObj.version === 'undefined') ? '0.0.0' : jsonObj.version;
+            const versionArray = version.split('.');
+
+            const appVersionArray = app.getVersion().split('.');
+
+            if (isOlderSemanticVersion(versionArray, appVersionArray)) {
+
+                console.error('Cannot open configuration files created by future app versions');
+                throw new Error('Cannot open configuration files created by future app versions.');
+
+            }
+
             const timePeriods = (typeof jsonObj.timePeriods === 'undefined') ? replacementValues.timePeriods : jsonObj.timePeriods;
+
+            /* If startTime or endTime === 1440, read it as 0 */
+
+            for (let i = 0; i < timePeriods.length; i++) {
+
+                timePeriods[i].startMins = timePeriods[i].startMins === 1440 ? 0 : timePeriods[i].startMins;
+                timePeriods[i].endMins = timePeriods[i].endMins === 1440 ? 0 : timePeriods[i].endMins;
+
+            }
 
             const ledEnabled = (typeof jsonObj.ledEnabled === 'undefined') ? replacementValues.ledEnabled : jsonObj.ledEnabled;
 
@@ -436,11 +488,26 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             let recordDuration = (typeof jsonObj.recordDuration === 'undefined') ? jsonObj.recDuration : jsonObj.recordDuration;
             recordDuration = (typeof recordDuration === 'undefined') ? replacementValues.recordDuration : recordDuration;
 
-            const localTime = (typeof jsonObj.localTime === 'undefined') ? replacementValues.localTime : jsonObj.localTime;
+            /* Try to find time zone mode. If loading an older file try to parse the localTime setting */
+
+            let localTime;
+            let customTimeZoneOffset;
+
+            if (typeof jsonObj.customTimeZoneOffset === 'undefined') {
+
+                localTime = (typeof jsonObj.localTime === 'undefined') ? replacementValues.localTime : jsonObj.localTime;
+
+            } else {
+
+                localTime = false;
+
+                customTimeZoneOffset = jsonObj.customTimeZoneOffset;
+
+            }
+
+            /* In older versions of the app, whether or not the first/last date is enabled was specified in the save file by just the presence of the date */
 
             let firstRecordingDateEnabled;
-
-            // In older versions of the app, whether or not the first/last date is enabled was specified in the save file by just the presence of the date
 
             if (typeof jsonObj.firstRecordingDateEnabled === 'undefined') {
 
@@ -482,26 +549,11 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             }
 
-            const today = new Date();
-
-            const year = ('000' + today.getUTCFullYear()).slice(-4);
-            const month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
-            const day = ('0' + today.getUTCDate()).slice(-2);
-            const todayString = year + '-' + month + '-' + day;
-
             let replacementFirstRecordingDate;
 
             if (typeof replacementValues.firstRecordingDate === 'undefined' || replacementValues.firstRecordingDate === '') {
 
-                if (typeof jsonObj.lastRecordingDate === 'undefined') {
-
-                    replacementFirstRecordingDate = todayString;
-
-                } else {
-
-                    replacementFirstRecordingDate = jsonObj.lastRecordingDate;
-
-                }
+                replacementFirstRecordingDate = '';
 
             } else {
 
@@ -515,15 +567,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             if (typeof replacementValues.lastRecordingDate === 'undefined' || replacementValues.lastRecordingDate === '') {
 
-                if (typeof jsonObj.firstRecordingDate === 'undefined') {
-
-                    replacementLastRecordingDate = todayString;
-
-                } else {
-
-                    replacementLastRecordingDate = jsonObj.firstRecordingDate;
-
-                }
+                replacementLastRecordingDate = '';
 
             } else {
 
@@ -608,11 +652,10 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const magneticSwitchEnabled = (typeof jsonObj.magneticSwitchEnabled === 'undefined') ? replacementValues.magneticSwitchEnabled : jsonObj.magneticSwitchEnabled;
 
-            const version = (typeof jsonObj.version === 'undefined') ? '< 1.5.0' : jsonObj.version;
+            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
 
-            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
-
-            console.log('Loaded configuration file');
+            version = version === '0.0.0' ? '< 1.5.0' : version;
+            console.log('Loaded configuration file created using version ' + version);
 
         } catch (usageErr) {
 
@@ -647,7 +690,7 @@ exports.loadConfiguration = (currentConfig, callback) => {
 
     if (fileName) {
 
-        fs.readFile(fileName[0], function (err, data) {
+        fs.readFile(fileName[0], (err, data) => {
 
             useLoadedConfiguration(err, currentConfig, data, callback);
 

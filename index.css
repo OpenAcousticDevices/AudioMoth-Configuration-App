@@ -1,3 +1,8 @@
+@font-face {
+    font-family: 'Ubuntu';
+    src: url('./ubuntu.mono.ttf');
+}
+
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button { 
     -webkit-appearance: none; 
@@ -13,6 +18,7 @@ input[type=number]::-webkit-outer-spin-button {
 
 .table>tbody>tr>td,
 .table>tbody>tr>th {
+    border-color: transparent;
     border-top: none;
 }
 
@@ -21,11 +27,12 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .grey {
-    color:#808080;
+    color: #D3D3D3;
 }
 
 .mono-text {
-    font-variant-numeric: tabular-nums;
+    font-family: 'Ubuntu';
+    font-size: 27px;
 }
 
 input {
@@ -34,4 +41,18 @@ input {
 
 span {
     font-variant-numeric: tabular-nums;
+}
+
+.groupBorder {
+    border: #cdcdcd thin solid;
+    padding: 5px;
+}
+
+.leftElement {
+    margin-left: 16px;
+}
+
+.rightElement {
+    margin-right: 16px;
+    text-align: right;
 }

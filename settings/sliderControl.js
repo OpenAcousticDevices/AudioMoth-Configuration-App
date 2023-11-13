@@ -7,7 +7,7 @@
 /**
  * Disable playback slider and change CSS to display disabled cursor on hover
  */
- function disableSlider (slider, div) {
+function disableSlider (slider, div) {
 
     slider.disable();
 

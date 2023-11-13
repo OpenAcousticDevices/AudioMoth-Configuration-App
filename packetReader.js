@@ -8,7 +8,7 @@
 
 const audiomoth = require('audiomoth-hid');
 
-const UINT16_MAX = 0xFFFF;
+const constants = require('./constants.js');
 
 function fourBytesToNumber (buffer, offset) {
 
@@ -32,7 +32,7 @@ function digitWithLeadingZero (value) {
 
 function formatTime (minutes) {
 
-    return digitWithLeadingZero(Math.floor(minutes / 60)) + ':' + digitWithLeadingZero(minutes % 60);
+    return digitWithLeadingZero(Math.floor(minutes / constants.MINUTES_IN_HOUR)) + ':' + digitWithLeadingZero(minutes % constants.MINUTES_IN_HOUR);
 
 }
 
@@ -82,10 +82,10 @@ typedef struct {
     uint8_t enableLED;
     uint8_t activeStartStopPeriods;
     startStopPeriod_t startStopPeriods[MAX_START_STOP_PERIODS];
-    int8_t timezoneHours;
+    int8_t timeZoneHours;
     uint8_t enableLowVoltageCutoff;
     uint8_t disableBatteryLevelDisplay;
-    int8_t timezoneMinutes;
+    int8_t timeZoneMinutes;
     uint8_t disableSleepRecordCycle;
     uint32_t earliestRecordingTime;
     uint32_t latestRecordingTime;
@@ -125,8 +125,6 @@ typedef struct {
 
 exports.read = (packet) => {
 
-    let startMinutes, stopMinutes;
-
     /* Read and decode configuration packet */
 
     const time = audiomoth.convertFourBytesFromBufferToDate(packet, 0);
@@ -149,19 +147,19 @@ exports.read = (packet) => {
 
     for (let i = 0; i < activeStartStopPeriods; i += 1) {
 
-        startMinutes = twoBytesToNumber(packet, 19 + 4 * i);
-        stopMinutes = twoBytesToNumber(packet, 21 + 4 * i);
+        const startMinutes = twoBytesToNumber(packet, 19 + 4 * i);
+        const endMinutes = twoBytesToNumber(packet, 21 + 4 * i);
 
-        startStopPeriods.push({startMinutes: startMinutes, stopMinutes: stopMinutes});
+        startStopPeriods.push({startMinutes, endMinutes});
 
     }
 
-    const timezoneHours = packet[39];
+    const timeZoneHours = packet[39] > 127 ? packet[39] - 256 : packet[39];
 
     const enableLowVoltageCutoff = packet[40];
     const disableBatteryLevelDisplay = packet[41];
 
-    const timezoneMinutes = packet[42];
+    const timeZoneMinutes = packet[42] > 127 ? packet[42] - 256 : packet[42];
 
     const disableSleepRecordCycle = packet[43];
 
@@ -276,8 +274,8 @@ exports.read = (packet) => {
 
     console.log('Current time: ', formatDate(time));
 
-    console.log('Timezone Hours:', timezoneHours);
-    console.log('Timezone Minutes:', timezoneMinutes);
+    console.log('TimeZone Hours:', timeZoneHours);
+    console.log('TimeZone Minutes:', timeZoneMinutes);
 
     console.log('Gain:', gain);
     console.log('Clock divider:', clockDivider);
@@ -298,19 +296,22 @@ exports.read = (packet) => {
 
     for (let j = 0; j < activeStartStopPeriods; j++) {
 
-        console.log('Start: ' + formatTime(startStopPeriods[j].startMinutes) + ' - Stop: ' + formatTime(startStopPeriods[j].stopMinutes));
+        const startMins = startStopPeriods[j].startMinutes;
+        const endMins = startStopPeriods[j].endMinutes;
+
+        console.log('Start: ' + formatTime(startMins) + ' (' + startMins + ') - End: ' + formatTime(endMins) + ' (' + endMins + ')');
 
     }
 
     console.log('Earliest recording time:', formatDate(earliestRecordingTime));
     console.log('Latest recording time:', formatDate(latestRecordingTime));
 
-    if (lowerFilterFreq === UINT16_MAX) {
+    if (lowerFilterFreq === constants.UINT16_MAX) {
 
         // Low-pass
         console.log('Low-pass filter set at:', higherFilterFreq / 10, 'kHz');
 
-    } else if (higherFilterFreq === UINT16_MAX) {
+    } else if (higherFilterFreq === constants.UINT16_MAX) {
 
         // High-pass
         console.log('High-pass filter set at:', lowerFilterFreq / 10, 'kHz');

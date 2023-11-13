@@ -10,133 +10,209 @@
 
     <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;-webkit-user-select: none; -webkit-app-region: drag;">
 
-        <div class="container" style="text-align: center; padding: 11px;">
+        <div class="container" style="text-align: center; padding: 8px;">
 
-            <div class="row" style="margin-top: 5px;">
-                <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
+            <div class="row" style="margin-bottom: 8px;">
 
-                    <div class="row" style="margin-top: 10px; margin-bottom: 8px;">
-                        <div class="col-12">
-                            <div style="margin-left: 5px; margin-right: 8px">
-                                <table class="table" style="margin-bottom: 8px;">
-                                    <tr style="font-size: 12px;" title="Max length of a file when expanded.">
-                                        <td align="center" style="padding: 0px"></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio0">1 s</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio1">5 s</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio2">10 s</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio3">15 s</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio4">30 s</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio5">1 min</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio6">5 min</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio7">10 min</label></td>
-                                        <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio8">1 hr</label></td>
+                <div class="col-12" style="padding-bottom: 0px; padding-top: 0px; padding-left: 12px; padding-right: 12px;">
+                    
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div style="margin-left: 10px; margin-right: 8px">
+                            <table class="table" style="margin-top: 12px; margin-bottom: 8px;">
+                                <tr style="font-size: 12px;" title="Max length of a file when expanded.">
+                                    <td align="center" style="padding: 0px"></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio0" aria-label="1 second max file length">1 s</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio1" aria-label="5 second max file length">5 s</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio2" aria-label="10 second max file length">10 s</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio3" aria-label="15 second max file length">15 s</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio4" aria-label="30 second max file length">30 s</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio5" aria-label="1 minute max file length">1 min</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio6" aria-label="5 minute max file length">5 min</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio7" aria-label="10 minute max file length">10 min</label></td>
+                                    <td align="center" style="padding: 0px"><label class="max-length-ui" for="max-length-radio8" aria-label="1 hour max file length">1 hr</label></td>
+                                </tr>
+                                <tr title="Select the max length of an expanded file." aria-hidden="true">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="max-length-type-label" class="max-length-ui">Maximum file length:</td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="0" name="max-length-radio" id="max-length-radio0" checked>
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="1" name="max-length-radio" id="max-length-radio1">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="2" name="max-length-radio" id="max-length-radio2">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="3" name="max-length-radio" id="max-length-radio3">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="4" name="max-length-radio" id="max-length-radio4">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="5" name="max-length-radio" id="max-length-radio5">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="6" name="max-length-radio" id="max-length-radio6">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="7" name="max-length-radio" id="max-length-radio7">
+                                    </td>
+                                    <td align="center" style="padding-top: 0px; padding-bottom: 0px">
+                                        <input class="max-length-ui" type="radio" value="8" name="max-length-radio" id="max-length-radio8">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-12" style="padding-top: 0px; padding-bottom: 8px; padding-left: 12px; padding-right: 12px;">
+
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div class="row" style="margin-top: 8px; padding-left: 12px; padding-right: 12px;">
+
+                            <div style="padding-left: 20px; padding-right: 10px;">
+                                <table class="table" style="margin-bottom: 0px;">
+                                    <tr class="settings-text" style="font-size: 12px;" title="Select multiple files or a folder of recordings.">
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;" name="selection-radio-label">File</td>
+                                        <td align="center" style="padding: 0px; width: 45px;" name="selection-radio-label">Folder</td>
                                     </tr>
-                                    <tr title="Select the max length of an expanded file.">
-                                        <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="max-length-type-label" class="max-length-ui">Maximum file length:</td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="0" name="max-length-radio" id="max-length-radio0" checked>
+                                    <tr class="settings-text" title="Select multiple files or a folder of recordings." aria-hidden="true">
+                                        <td align="left" style="padding: 0px;" id="selection-type-label">Selection type:</td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;"></td>
+                                        <td align="center" style="padding: 0px;">
+                                            <input class="settings-inputs" type="radio" value="0" name="selection-radio" aria-label="Selection type file" checked>
                                         </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="1" name="max-length-radio" id="max-length-radio1">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="2" name="max-length-radio" id="max-length-radio2">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="3" name="max-length-radio" id="max-length-radio3">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="4" name="max-length-radio" id="max-length-radio4">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="5" name="max-length-radio" id="max-length-radio5">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="6" name="max-length-radio" id="max-length-radio6">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="7" name="max-length-radio" id="max-length-radio7">
-                                        </td>
-                                        <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                            <input class="max-length-ui" type="radio" value="8" name="max-length-radio" id="max-length-radio8">
+                                        <td align="center" style="padding: 0px;">
+                                            <input class="settings-inputs" type="radio" value="1" name="selection-radio" aria-label="Selection type folder">
                                         </td>
                                     </tr>
                                 </table>
                             </div>
+
                         </div>
-                    </div>
 
-                </div>
-            </div>
-
-            <div class="fixed-bottom" style="width: 100%; padding: 11px; padding-top: 8px;">
-
-                <div class="row" style="margin-top: 8px;">
-                    <div style="border: #cdcdcd thin solid; margin-left: 15px; width: 543px;">
-    
-                        <div class="row" style="margin-top: 1%; margin-bottom: 8px;">
-                            <div class="col-12">
-                                <div style="margin-left: 8px; margin-right: 8px">
-                                    <table class="table" style="margin-bottom: 8px;">
-                                        <tr class="settings-text" style="font-size: 12px;" title="Select multiple files or a folder of recordings.">
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;"></td>
-                                            <td align="center" style="padding: 0px;" name="selection-radio-label">File</td>
-                                            <td align="center" style="padding: 0px; width: 45px;" name="selection-radio-label">Folder</td>
-                                        </tr>
-                                        <tr class="settings-text" title="Select multiple files or a folder of recordings.">
-                                            <td align="left" style="padding-top: 0px; padding-bottom: 0px;" id="selection-type-label">Selection type:</td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px"></td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                                <input class="settings-inputs" type="radio" value="0" name="selection-radio" checked>
-                                            </td>
-                                            <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                                <input class="settings-inputs" type="radio" value="1" name="selection-radio">
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
+                        <div class="row" style="margin-top: 8px; margin-bottom: 12px;">
+                            <div class="col-5" style="padding-left: 12px;">
+                                <button id="file-button" class="btn btn-primary" style="width: 100%; margin-left: 20px;">Select Files</button>
                             </div>
-                        </div>
-    
-                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
-                            <div class="col-4">
-                                <button id="file-button" class="btn btn-primary" style="width: 100%; margin-left: 16px;">Select Files</button>
-                            </div>
-                            <div class="col-8">
-                                <div style="margin-top: 11px; text-align: right; margin-right: 16px;">
+                            <div class="col-7" style="padding-right: 12px;">
+                                <div style="margin-top: 11px; text-align: right; margin-right: 20px;">
                                     <span id="file-label" title="AudioMoth recordings will have a file name ending in '.WAV'.">No AudioMoth WAV files selected.</span>
                                 </div>
                             </div>
                         </div>
+                    
                     </div>
+                
                 </div>
-
-                <div id="output-content"></div> 
-
-                <div class="row" style="margin-top: 8px;">
-                    <div class="col-12">
-                        <button id="split-button" class="btn btn-success" disabled style="width: 100%;">Split Files</button>
-                    </div>
-                </div>
+            
             </div>
+
+            <div class="row">
+            
+                <div class="col-12" style="padding-top: 0px; padding-bottom: 8px; padding-left: 12px; padding-right: 12px;">
+
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                            <div class="col-1" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <label for="prefix-checkbox" id="prefix-checkbox-label" class="visually-hidden">Add prefix to WAV file names:</label>
+                                <input id="prefix-checkbox" name="AddPrefix" type="checkbox" style="margin-left: 20px; margin-top: 9px;">
+                            </div>
+                            <div class="col-5" style="padding-left: 0px;">
+                                <div style="margin-top: 6px; margin-bottom: 0px; text-align: left;">
+                                    <label id="prefix-label" for="prefix-checkbox" title="Prefix which will be added to WAV file to differentiate it from the original file" style="margin-left: 20px;" class="grey">Add WAV file prefix:</label>
+                                </div>
+                            </div>
+                            <div class="col-6" style="padding: 0px; padding-right: 12px;">
+                                <div style="text-align: right; margin-top: 2px; margin-bottom: 0px; margin-right: 20px;">
+                                    <input id="prefix-input" maxlength="20" disabled style="text-align: right;" class="grey">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                
+                </div>
+
+            </div>
+
+            <div class="row">
+            
+                <div class="col-12" style="padding-top: 0px; padding-left: 12px; padding-right: 12px;">
+
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div class="row" style="margin-top: 12px; margin-bottom: 8px;">
+                            <div class="col-9" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <label for="output-checkbox" style="margin-left: 20px; margin-bottom: 0px;">Enable destination folder:</label>
+                            </div>
+                            <div class="col-3" style="text-align: right; padding: 0px; padding-right: 12px;">
+                                <input id="output-checkbox" name="EnableDestinationFolder" type="checkbox" style="margin-right: 20px;">
+                            </div>
+                        </div>
+                
+                        <div class="row" style="margin-bottom: 16px;">
+                            <div class="col-9" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <label for="subdirectories-checkbox" class="grey" id="subdirectories-label" style="margin-left: 20px; margin-bottom: 0px;">Generate subfolders in destination:</label>
+                            </div>
+                            <div class="col-3" style="text-align: right; padding: 0px; padding-right: 12px;">
+                                <input id="subdirectories-checkbox" name="GenerateSubfolders" type="checkbox" style="margin-right: 20px;" disabled>
+                            </div>
+                        </div>
+                
+                        <div class="row" style="margin-top: 8px; margin-bottom: 12px;">
+                            <div class="col-4" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <button id="output-button" class="btn btn-primary" style="width: 100%; margin-left: 20px;" disabled>Select Destination</button>
+                            </div>
+                            <div class="col-8" style="padding: 0px; padding-right: 12px;">
+                                <div style="margin-top: 11px; text-align: right; margin-right: 20px;">
+                                    <span id="output-label">Writing WAV files to source folder.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="fixed-bottom" style="padding: 8px;">
+
+                <div style="width: 100%;">
+                    <div class="row">
+                        <div class="col-12">
+                            <button id="split-button" class="btn btn-success" disabled style="width: 100%;">Split Files</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
 
     </body>
 
-    <script>
-        window.jQuery = window.$ = require('jquery');
-        $("#output-content").load('output.html');
-    </script>
     <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
     <script src="uiSplit.js" charset="utf-8"></script>
 

@@ -2,56 +2,9 @@
 
 /* global document */
 
+const ui = require('./ui.js');
+
 const dateInputs = document.getElementsByClassName('custom-date-input');
-
-function dateToUTCString (date) {
-
-    const year = ('000' + date.getUTCFullYear()).slice(-4);
-    const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
-    const day = ('0' + date.getUTCDate()).slice(-2);
-    return year + '-' + month + '-' + day;
-
-}
-
-exports.updateLocalTimeStatus = (input, isLocalTime) => {
-
-    let todayYear, todayMonth, todayDay, currentDate;
-
-    const today = new Date();
-
-    const dayDiff = today.getDate() - today.getUTCDate();
-
-    const lastValidDate = new Date(input.getAttribute('lastValidDate'));
-
-    if (isLocalTime) {
-
-        todayYear = ('000' + today.getFullYear()).slice(-4);
-        todayMonth = ('0' + (today.getMonth() + 1)).slice(-2);
-        todayDay = ('0' + today.getDate()).slice(-2);
-
-        currentDate = new Date(input.value);
-        currentDate.setDate(currentDate.getDate() + dayDiff);
-
-        lastValidDate.setDate(lastValidDate.getDate() + dayDiff);
-
-    } else {
-
-        todayYear = ('000' + today.getUTCFullYear()).slice(-4);
-        todayMonth = ('0' + (today.getUTCMonth() + 1)).slice(-2);
-        todayDay = ('0' + today.getUTCDate()).slice(-2);
-
-        currentDate = new Date(input.value);
-        currentDate.setDate(currentDate.getDate() - dayDiff);
-
-        lastValidDate.setDate(lastValidDate.getDate() - dayDiff);
-
-    }
-
-    input.value = dateToUTCString(currentDate);
-    input.setAttribute('min', todayYear + '-' + todayMonth + '-' + todayDay);
-    input.setAttribute('lastValidDate', dateToUTCString(lastValidDate));
-
-};
 
 function isValidDate (input, d) {
 
@@ -107,7 +60,7 @@ function handleFocusOut (e) {
 
         setToLastValidDate(input, input.getAttribute('lastValidDate'));
 
-        input.style.border = '2px solid #0000ff';
+        input.style.border = '1px solid #0000ff';
         input.style.color = 'blue';
 
         setTimeout(function () {
@@ -128,11 +81,7 @@ function handleFocusOut (e) {
 }
 
 const today = new Date();
-
-const year = ('000' + today.getUTCFullYear()).slice(-4);
-const month = ('0' + (today.getUTCMonth() + 1)).slice(-2);
-const day = ('0' + today.getUTCDate()).slice(-2);
-const todayString = year + '-' + month + '-' + day;
+const todayString = ui.formatDateString(today);
 
 for (let i = 0; i < dateInputs.length; i++) {
 

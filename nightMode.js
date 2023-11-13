@@ -6,9 +6,9 @@
 
 'use strict';
 
-const electron = require('electron');
+const {app} = require('@electron/remote');
 
-var nightMode = false;
+let nightMode = false;
 
 exports.isEnabled = () => {
 
@@ -29,11 +29,11 @@ function setNightMode (nm) {
 
     if (nightMode) {
 
-        newLink.setAttribute('href', electron.remote.app.getAppPath() + '/uiNight.css');
+        newLink.setAttribute('href', app.getAppPath() + '/uiNight.css');
 
     } else {
 
-        newLink.setAttribute('href', electron.remote.app.getAppPath() + '/ui.css');
+        newLink.setAttribute('href', app.getAppPath() + '/ui.css');
 
     }
 

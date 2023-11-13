@@ -11,6 +11,8 @@ const Slider = require('bootstrap-slider');
 
 // Filter Playground/Config App import functions differently
 
+const ariaSpeak = require('../ariaSpeak.js');
+
 // /* global enableSlider, disableSlider */
 const sliderControl = require('./sliderControl.js');
 const enableSlider = sliderControl.enableSlider;
@@ -1197,7 +1199,7 @@ function addFilterRadioButtonListeners (filterValueChangeFunction) {
 
     for (let i = 0; i < filterRadioButtons.length; i++) {
 
-        filterRadioButtons[i].addEventListener('change', function () {
+        filterRadioButtons[i].addEventListener('change', () => {
 
             updateFilterUI();
             updateFilterSliders();
@@ -1483,14 +1485,47 @@ function prepareUI (changeFunction, checkRecordingDurationFunction, filterValueC
 
     // Add slider listeners
 
-    bandPassFilterSlider.on('change', updateFilterLabel);
-    lowPassFilterSlider.on('change', updateFilterLabel);
-    highPassFilterSlider.on('change', updateFilterLabel);
+    bandPassFilterSlider.on('change', () => {
 
-    amplitudeThresholdSlider.on('change', updateThresholdLabel);
-    goertzelThresholdSlider.on('change', updateThresholdLabel);
+        updateFilterLabel();
+        ariaSpeak.speak(filterLabel.textContent.replace('kHz', 'kilohertz'));
 
-    goertzelFilterCentreSlider.on('change', updateThresholdLabel);
+    });
+
+    lowPassFilterSlider.on('change', () => {
+
+        updateFilterLabel();
+        ariaSpeak.speak(filterLabel.textContent.replace('kHz', 'kilohertz'));
+
+    });
+
+    highPassFilterSlider.on('change', () => {
+
+        updateFilterLabel();
+        ariaSpeak.speak(filterLabel.textContent.replace('kHz', 'kilohertz'));
+
+    });
+
+    amplitudeThresholdSlider.on('change', () => {
+
+        updateThresholdLabel();
+        ariaSpeak.speak(thresholdLabel.textContent.replace('kHz', 'kilohertz'));
+
+    });
+
+    goertzelThresholdSlider.on('change', () => {
+
+        updateThresholdLabel();
+        ariaSpeak.speak(thresholdLabel.textContent.replace('kHz', 'kilohertz'));
+
+    });
+
+    goertzelFilterCentreSlider.on('change', () => {
+
+        updateThresholdLabel();
+        ariaSpeak.speak(goertzelFilterLabel.textContent.replace('kHz', 'kilohertz'));
+
+    });
 
     updateThresholdTypeUI();
 
