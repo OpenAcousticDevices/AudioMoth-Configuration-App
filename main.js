@@ -84,7 +84,8 @@ function generateProgressBarSettings (title, text, detail, fileCount, parent) {
             contextIsolation: false
         },
         closable: true,
-        modal: false
+        modal: false,
+        height: process.platform === 'linux' ? 140 : 175
     };
 
     return settings;
@@ -485,12 +486,12 @@ function toggleNightMode () {
 app.on('ready', () => {
 
     let windowWidth = 565;
-    let windowHeight = 680;
+    let windowHeight = 675;
 
     if (process.platform === 'linux') {
 
         windowWidth = 560;
-        windowHeight = 660;
+        windowHeight = 654;
 
     } else if (process.platform === 'darwin') {
 

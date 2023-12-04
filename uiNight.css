@@ -35,3 +35,16 @@ select {
 .grey {
   color: #808080;
 }
+
+.greyStart::first-letter, .allGrey {
+  color: #404040;
+}
+
+.disabledBackground {
+  background-color: black;
+}
+
+.disabledBackgroundWindows {
+  background-color: black;
+}
+

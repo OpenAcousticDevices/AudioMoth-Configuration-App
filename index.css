@@ -39,10 +39,6 @@ input {
     font-variant-numeric: tabular-nums;
 }
 
-span {
-    font-variant-numeric: tabular-nums;
-}
-
 .groupBorder {
     border: #cdcdcd thin solid;
     padding: 5px;
@@ -55,4 +51,8 @@ span {
 .rightElement {
     margin-right: 16px;
     text-align: right;
+}
+
+.greyStart {
+    display: inline-block;
 }

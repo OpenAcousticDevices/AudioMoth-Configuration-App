@@ -11,7 +11,7 @@ const constants = require('../constants.js');
 
 const uiFiltering = require('./uiFiltering.js');
 const uiAdvanced = require('./uiAdvanced.js');
-const durationInput = require('./durationInput.js');
+const splitDurationInput = require('./splitDurationInput.js');
 
 /* UI components */
 
@@ -20,8 +20,14 @@ const gainRadioButtons = document.getElementsByName('gain-radio');
 
 const dutyCheckBox = document.getElementById('duty-checkbox');
 
-const recordingDurationInput = document.getElementById('recording-duration-input');
-const sleepDurationInput = document.getElementById('sleep-duration-input');
+const sleepDurationInput = splitDurationInput.create('sleep-duration-input', 0, true);
+const recordingDurationInput = splitDurationInput.create('recording-duration-input', 1, true);
+
+// Define the next elements which tab navigation would jump to. This allows inputs to know whether or not to start from the final field if shift-tabbed to
+const recordingDurationTextInput = splitDurationInput.getTextInput(recordingDurationInput);
+splitDurationInput.setNextElements(sleepDurationInput, [recordingDurationTextInput]);
+const ledCheckbox = document.getElementById('led-checkbox');
+splitDurationInput.setNextElements(recordingDurationInput, [ledCheckbox]);
 
 const recordingDurationLabel = document.getElementById('recording-duration-label');
 const sleepDurationLabel = document.getElementById('sleep-duration-label');
@@ -63,18 +69,18 @@ function updateDutyCycleUI () {
 
     if (dutyCheckBox.checked) {
 
-        durationInput.setEnabled(recordingDurationInput, true);
+        splitDurationInput.setEnabled(recordingDurationInput, true);
         recordingDurationLabel.classList.remove('grey');
 
-        durationInput.setEnabled(sleepDurationInput, true);
+        splitDurationInput.setEnabled(sleepDurationInput, true);
         sleepDurationLabel.classList.remove('grey');
 
     } else {
 
-        durationInput.setEnabled(recordingDurationInput, false);
+        splitDurationInput.setEnabled(recordingDurationInput, false);
         recordingDurationLabel.classList.add('grey');
 
-        durationInput.setEnabled(sleepDurationInput, false);
+        splitDurationInput.setEnabled(sleepDurationInput, false);
         sleepDurationLabel.classList.add('grey');
 
     }
@@ -87,7 +93,7 @@ function checkRecordingDuration () {
 
     if (dutyCheckBox.checked) {
 
-        const duration = durationInput.getValue(recordingDurationInput);
+        const duration = splitDurationInput.getValue(recordingDurationInput);
         checkMinimumTriggerTime(duration);
 
     }
@@ -98,15 +104,18 @@ function checkRecordingDuration () {
 
 exports.prepareUI = (changeFunction) => {
 
-    recordingDurationInput.addEventListener('change', changeFunction);
+    splitDurationInput.addChangeFunction(recordingDurationInput, () => {
 
-    recordingDurationInput.addEventListener('focusout', checkRecordingDuration);
+        changeFunction();
+        checkRecordingDuration();
 
-    sleepDurationInput.addEventListener('change', changeFunction);
+    });
 
-    sleepDurationInput.addEventListener('focusout', () => {
+    splitDurationInput.addChangeFunction(sleepDurationInput, () => {
 
-        if (!sleepWarningDisplayed && durationInput.getValue(sleepDurationInput) < 5) {
+        changeFunction();
+
+        if (!sleepWarningDisplayed && splitDurationInput.getValue(sleepDurationInput) < 5) {
 
             sleepWarningDisplayed = true;
 
@@ -119,7 +128,7 @@ exports.prepareUI = (changeFunction) => {
 
             if (buttonIndex !== 0) {
 
-                durationInput.setValue(sleepDurationInput, 5);
+                splitDurationInput.setTotalValue(sleepDurationInput, 5);
 
             }
 
@@ -152,8 +161,8 @@ exports.prepareUI = (changeFunction) => {
 
     uiAdvanced.prepareUI(changeFunction);
 
-    durationInput.setValue(sleepDurationInput, 5);
-    durationInput.setValue(recordingDurationInput, 55);
+    splitDurationInput.setTotalValue(sleepDurationInput, 5);
+    splitDurationInput.setTotalValue(recordingDurationInput, 55);
 
 };
 
@@ -169,8 +178,8 @@ exports.getSettings = () => {
         sampleRateIndex: parseInt(getSelectedRadioValue('sample-rate-radio')),
         gain: parseInt(getSelectedRadioValue('gain-radio')),
         dutyEnabled: dutyCheckBox.checked,
-        recordDuration: durationInput.getValue(recordingDurationInput),
-        sleepDuration: durationInput.getValue(sleepDurationInput),
+        recordDuration: splitDurationInput.getValue(recordingDurationInput),
+        sleepDuration: splitDurationInput.getValue(sleepDurationInput),
         passFiltersEnabled: uiFiltering.filteringIsEnabled(),
         filterType: uiFiltering.getFilterType(),
         lowerFilter: uiFiltering.getLowerSliderValue(),
@@ -245,8 +254,8 @@ exports.fillUI = (settings) => {
 
     uiFiltering.updateThresholdUI();
 
-    durationInput.setValue(sleepDurationInput, settings.sleepDuration);
-    durationInput.setValue(recordingDurationInput, settings.recordDuration);
+    splitDurationInput.setTotalValue(sleepDurationInput, settings.sleepDuration);
+    splitDurationInput.setTotalValue(recordingDurationInput, settings.recordDuration);
 
     uiAdvanced.fillUI(settings);
 

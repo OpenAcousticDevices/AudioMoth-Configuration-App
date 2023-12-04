@@ -22,8 +22,12 @@ const addTimeButton = document.getElementById('add-time-button');
 const removeTimeButton = document.getElementById('remove-time-button');
 const clearTimeButton = document.getElementById('clear-time-button');
 
-const startTimeInput = document.getElementById('start-time-input');
-const endTimeInput = document.getElementById('end-time-input');
+const startTimeInput = timeInput.create('start-time-input', true);
+const endTimeInput = timeInput.create('end-time-input', true);
+
+const endTimeTextInput = timeInput.getTextInput(endTimeInput);
+timeInput.setNextElements(startTimeInput, [endTimeTextInput]);
+timeInput.setNextElements(endTimeInput, [addTimeButton, timeList]);
 
 /* Function which uses changed schedule to update life approximation */
 

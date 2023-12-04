@@ -83,8 +83,8 @@ function isOlderSemanticVersion (aVersion, bVersion) {
 
     for (let i = 0; i < aVersion.length; i++) {
 
-        const aVersionNum = aVersion[i];
-        const bVersionNum = bVersion[i];
+        const aVersionNum = parseInt(aVersion[i]);
+        const bVersionNum = parseInt(bVersion[i]);
 
         if (aVersionNum > bVersionNum) {
 
@@ -1224,6 +1224,8 @@ electron.ipcRenderer.on('load', () => {
     const currentConfig = getCurrentConfiguration();
 
     saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders) => {
+
+        document.activeElement.blur();
 
         let sortedPeriods = timePeriods;
         sortedPeriods = sortedPeriods.sort(function (a, b) {

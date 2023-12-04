@@ -55,8 +55,8 @@ function isOlderSemanticVersion (aVersion, bVersion) {
 
     for (let i = 0; i < aVersion.length; i++) {
 
-        const aVersionNum = aVersion[i];
-        const bVersionNum = bVersion[i];
+        const aVersionNum = parseInt(aVersion[i]);
+        const bVersionNum = parseInt(bVersion[i]);
 
         if (aVersionNum > bVersionNum) {
 
