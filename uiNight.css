@@ -39,12 +39,3 @@ select {
 .greyStart::first-letter, .allGrey {
   color: #404040;
 }
-
-.disabledBackground {
-  background-color: black;
-}
-
-.disabledBackgroundWindows {
-  background-color: black;
-}
-

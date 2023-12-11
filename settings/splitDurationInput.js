@@ -44,30 +44,10 @@ exports.setEnabled = (div, setting) => {
 
     } else {
 
-        switch (process.platform) {
+        for (let i = 0; i < uiElements.length; i++) {
 
-        case 'linux':
-        case 'win32':
-            textInput.style.backgroundColor = '#EBEBE4';
-            textInput.style.border = '1px solid #cccccc';
-
-            for (let i = 0; i < uiElements.length; i++) {
-
-                uiElements[i].classList.add('grey');
-                uiElements[i].style.backgroundColor = 'EBEBE4';
-
-            }
-
-            break;
-
-        case 'darwin':
-            for (let i = 0; i < uiElements.length; i++) {
-
-                uiElements[i].classList.add('grey');
-                uiElements[i].style.backgroundColor = 'white';
-
-            }
-            break;
+            uiElements[i].classList.add('grey');
+            uiElements[i].style.backgroundColor = 'EBEBE4';
 
         }
 

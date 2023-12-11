@@ -19,11 +19,3 @@ input {
 .greyStart::first-letter, .allGrey {
   color: #f0f0f0;
 }
-
-.disabledBackground {
-  background-color: white;
-}
-
-.disabledBackgroundWindows {
-  background-color: #EBEBE4;
-}

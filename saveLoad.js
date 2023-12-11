@@ -449,10 +449,17 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const appVersionArray = app.getVersion().split('.');
 
-            if (isOlderSemanticVersion(versionArray, appVersionArray)) {
+            if (isOlderSemanticVersion(appVersionArray, versionArray)) {
 
                 console.error('Cannot open configuration files created by future app versions');
-                throw new Error('Cannot open configuration files created by future app versions.');
+
+                dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+                    type: 'error',
+                    title: 'Incorrect format',
+                    message: 'Cannot open the configuration file as it was created by a release of the AudioMoth Configuration App greater than ' + app.getVersion() + '.'
+                });
+
+                return;
 
             }
 
@@ -655,6 +662,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
 
             version = version === '0.0.0' ? '< 1.5.0' : version;
+
             console.log('Loaded configuration file created using version ' + version);
 
         } catch (usageErr) {
@@ -662,7 +670,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
                 type: 'error',
                 title: 'Incorrect format',
-                message: 'Configuration file was not readable.'
+                message: 'An error occurred whilst trying to read the Configuration file. The file format is incorrect.'
             });
 
             console.error(usageErr);
