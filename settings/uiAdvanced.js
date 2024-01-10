@@ -8,7 +8,6 @@ const {dialog} = require('@electron/remote');
 
 const acousticConfigCheckBox = document.getElementById('acoustic-config-checkbox');
 const dailyFolderCheckBox = document.getElementById('daily-folder-checkbox');
-const voltageRangeCheckBox = document.getElementById('voltage-range-checkbox');
 const energySaverModeCheckbox = document.getElementById('energy-saver-mode-checkbox');
 const lowGainRangeCheckbox = document.getElementById('low-gain-range-checkbox');
 const disable48DCFilterCheckbox = document.getElementById('disable-48-dc-filter-checkbox');
@@ -26,12 +25,6 @@ exports.isAcousticConfigRequired = () => {
 exports.isDailyFolderEnabled = () => {
 
     return dailyFolderCheckBox.checked;
-
-};
-
-exports.displayVoltageRange = () => {
-
-    return voltageRangeCheckBox.checked;
 
 };
 
@@ -68,7 +61,6 @@ exports.isMagneticSwitchEnabled = () => {
 exports.fillUI = (settings) => {
 
     acousticConfigCheckBox.checked = settings.requireAcousticConfig;
-    voltageRangeCheckBox.checked = settings.displayVoltageRange;
     energySaverModeCheckbox.checked = settings.energySaverModeEnabled;
     lowGainRangeCheckbox.checked = settings.lowGainRangeEnabled;
     disable48DCFilterCheckbox.checked = settings.disable48DCFilter;

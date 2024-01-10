@@ -196,8 +196,8 @@ exports.getFirmwareClassification = (desc) => {
 
 /* Version number for the latest firmware */
 
-exports.latestFirmwareVersionArray = ['1', '9', '0'];
-exports.latestFirmwareVersionString = '1.9.0';
+exports.latestFirmwareVersionArray = ['1', '9', '1'];
+exports.latestFirmwareVersionString = '1.9.1';
 
 /* Time zone modes */
 

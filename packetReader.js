@@ -156,7 +156,10 @@ exports.read = (packet) => {
 
     const timeZoneHours = packet[39] > 127 ? packet[39] - 256 : packet[39];
 
-    const enableLowVoltageCutoff = packet[40];
+    /* Low voltage cutoff is now always enabled */
+
+    // const enableLowVoltageCutoff = packet[40];
+
     const disableBatteryLevelDisplay = packet[41];
 
     const timeZoneMinutes = packet[42] > 127 ? packet[42] - 256 : packet[42];
@@ -289,7 +292,6 @@ exports.read = (packet) => {
     console.log('Recording duration:', recordDuration);
 
     console.log('Enable LED:', enableLED === 1);
-    console.log('Enable low-voltage cutoff:', enableLowVoltageCutoff === 1);
     console.log('Enable battery level indication:', disableBatteryLevelDisplay === 0);
 
     console.log('Active recording periods:', activeStartStopPeriods);

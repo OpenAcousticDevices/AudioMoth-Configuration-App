@@ -17,7 +17,6 @@ const ui = require('./ui.js');
 const DEFAULT_SETTINGS = {
     timePeriods: [],
     ledEnabled: true,
-    lowVoltageCutoffEnabled: true,
     batteryLevelCheckEnabled: true,
     sampleRate: 48000,
     gain: 2,
@@ -103,7 +102,10 @@ function saveConfiguration (currentConfig, callback) {
     let configuration = '{\r\n';
     configuration += '"timePeriods": ' + JSON.stringify(currentConfig.timePeriods) + ',\r\n';
     configuration += '"ledEnabled": ' + currentConfig.ledEnabled + ',\r\n';
-    configuration += '"lowVoltageCutoffEnabled": ' + currentConfig.lowVoltageCutoffEnabled + ',\r\n';
+
+    /* Low voltage cutoff is always enabled, include this line so files created by newer versions of the app have the same functionality when loaded in older versions */
+    configuration += '"lowVoltageCutoffEnabled": ' + true + ',\r\n';
+
     configuration += '"batteryLevelCheckEnabled": ' + currentConfig.batteryLevelCheckEnabled + ',\r\n';
     configuration += '"sampleRate": ' + sampleRate + ',\r\n';
     configuration += '"gain": ' + currentConfig.gain + ',\r\n';
@@ -255,9 +257,6 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     batteryCheckEnabled: {
                         type: 'boolean'
                     },
-                    lowVoltageCutoffEnabled: {
-                        type: 'boolean'
-                    },
                     batteryLevelCheckEnabled: {
                         type: 'boolean'
                     },
@@ -393,7 +392,6 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             let isMissingValues = (typeof jsonObj.timePeriods === 'undefined');
             isMissingValues |= (typeof jsonObj.ledEnabled === 'undefined');
-            isMissingValues |= (typeof jsonObj.lowVoltageCutoffEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.batteryLevelCheckEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.gain === 'undefined');
             isMissingValues |= (typeof jsonObj.dutyEnabled === 'undefined');
@@ -475,9 +473,6 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             }
 
             const ledEnabled = (typeof jsonObj.ledEnabled === 'undefined') ? replacementValues.ledEnabled : jsonObj.ledEnabled;
-
-            let lowVoltageCutoffEnabled = (typeof jsonObj.lowVoltageCutoffEnabled === 'undefined') ? jsonObj.batteryCheckEnabled : jsonObj.lowVoltageCutoffEnabled;
-            lowVoltageCutoffEnabled = (typeof lowVoltageCutoffEnabled === 'undefined') ? replacementValues.lowVoltageCutoffEnabled : lowVoltageCutoffEnabled;
 
             const batteryLevelCheckEnabled = (typeof jsonObj.batteryLevelCheckEnabled === 'undefined') ? replacementValues.batteryLevelCheckEnabled : jsonObj.batteryLevelCheckEnabled;
 
@@ -659,7 +654,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const magneticSwitchEnabled = (typeof jsonObj.magneticSwitchEnabled === 'undefined') ? replacementValues.magneticSwitchEnabled : jsonObj.magneticSwitchEnabled;
 
-            callback(timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
+            callback(timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
 
             version = version === '0.0.0' ? '< 1.5.0' : version;
 

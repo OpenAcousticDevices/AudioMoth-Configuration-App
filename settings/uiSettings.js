@@ -32,6 +32,10 @@ splitDurationInput.setNextElements(recordingDurationInput, [ledCheckbox]);
 const recordingDurationLabel = document.getElementById('recording-duration-label');
 const sleepDurationLabel = document.getElementById('sleep-duration-label');
 
+const batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
+const voltageRangeCheckBox = document.getElementById('voltage-range-checkbox');
+const voltageRangeCheckBoxLabel = document.getElementById('voltage-range-checkbox-label');
+
 /* Whether or not the warning on sleep duration being set less than 5 has been displayed this app load */
 
 let sleepWarningDisplayed = false;
@@ -193,7 +197,7 @@ exports.getSettings = () => {
         frequencyTriggerThreshold: uiFiltering.getFrequencyTrigger(),
         requireAcousticConfig: uiAdvanced.isAcousticConfigRequired(),
         dailyFolders: uiAdvanced.isDailyFolderEnabled(),
-        displayVoltageRange: uiAdvanced.displayVoltageRange(),
+        displayVoltageRange: voltageRangeCheckBox.checked,
         minimumAmplitudeThresholdDuration: uiFiltering.getMinimumAmplitudeThresholdDuration(),
         amplitudeThresholdScaleIndex: uiFiltering.getAmplitudeThresholdScaleIndex(),
         energySaverModeEnabled: uiAdvanced.isEnergySaverModeEnabled(),
@@ -215,6 +219,8 @@ exports.getPercentageAmplitudeThresholdExponentMantissa = uiFiltering.getPercent
 exports.getFrequencyFilterThresholdExponentMantissa = uiFiltering.getFrequencyFilterThresholdExponentMantissa;
 
 exports.fillUI = (settings) => {
+
+    voltageRangeCheckBox.checked = settings.displayVoltageRange;
 
     sampleRadioButtons[settings.sampleRateIndex].checked = true;
     gainRadioButtons[settings.gain].checked = true;
@@ -312,4 +318,20 @@ function checkMinimumTriggerTime (recordingLength) {
 
     }
 
-};
+}
+
+batteryLevelCheckbox.addEventListener('change', () => {
+
+    if (batteryLevelCheckbox.checked) {
+
+        voltageRangeCheckBox.disabled = false;
+        voltageRangeCheckBoxLabel.classList.remove('grey');
+
+    } else {
+
+        voltageRangeCheckBox.disabled = true;
+        voltageRangeCheckBoxLabel.classList.add('grey');
+
+    }
+
+});

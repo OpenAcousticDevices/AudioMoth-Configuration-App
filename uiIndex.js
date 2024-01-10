@@ -52,7 +52,6 @@ const batteryDisplay = document.getElementById('battery-display');
 const batteryLabel = document.getElementById('battery-label');
 
 const ledCheckbox = document.getElementById('led-checkbox');
-const lowVoltageCutoffCheckbox = document.getElementById('low-voltage-cutoff-checkbox');
 const batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
 
 const configureButton = document.getElementById('configure-button');
@@ -574,7 +573,9 @@ function configureDevice () {
 
     packet[index++] = offsetHours;
 
-    packet[index++] = lowVoltageCutoffCheckbox.checked ? 1 : 0;
+    /* Low voltage cutoff is always enabled */
+
+    packet[index++] = 1;
 
     packet[index++] = batteryLevelCheckbox.checked ? 0 : 1;
 
@@ -1071,7 +1072,6 @@ function getCurrentConfiguration () {
     config.localTime = ui.getTimeZoneMode() === constants.TIME_ZONE_MODE_LOCAL;
 
     config.ledEnabled = ledCheckbox.checked;
-    config.lowVoltageCutoffEnabled = lowVoltageCutoffCheckbox.checked;
     config.batteryLevelCheckEnabled = batteryLevelCheckbox.checked;
 
     const settings = uiSettings.getSettings();
@@ -1151,7 +1151,7 @@ electron.ipcRenderer.on('load', () => {
 
     const currentConfig = getCurrentConfiguration();
 
-    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, lowVoltageCutoffEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders) => {
+    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders) => {
 
         document.activeElement.blur();
 
@@ -1256,7 +1256,6 @@ electron.ipcRenderer.on('load', () => {
         uiSettings.fillUI(settings);
 
         ledCheckbox.checked = ledEnabled;
-        lowVoltageCutoffCheckbox.checked = lowVoltageCutoffEnabled;
         batteryLevelCheckbox.checked = batteryLevelCheckEnabled;
 
         ui.update();
