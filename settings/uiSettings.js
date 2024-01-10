@@ -320,7 +320,7 @@ function checkMinimumTriggerTime (recordingLength) {
 
 }
 
-batteryLevelCheckbox.addEventListener('change', () => {
+function updateVoltageRangeStatus () {
 
     if (batteryLevelCheckbox.checked) {
 
@@ -334,4 +334,8 @@ batteryLevelCheckbox.addEventListener('change', () => {
 
     }
 
-});
+}
+
+exports.updateVoltageRangeStatus = updateVoltageRangeStatus;
+
+batteryLevelCheckbox.addEventListener('change', updateVoltageRangeStatus);

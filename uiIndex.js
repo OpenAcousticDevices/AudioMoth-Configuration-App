@@ -1257,6 +1257,7 @@ electron.ipcRenderer.on('load', () => {
 
         ledCheckbox.checked = ledEnabled;
         batteryLevelCheckbox.checked = batteryLevelCheckEnabled;
+        uiSettings.updateVoltageRangeStatus();
 
         ui.update();
 
