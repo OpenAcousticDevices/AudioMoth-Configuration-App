@@ -51,11 +51,11 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
         } else if (startMins === endMins) {
 
-            periodSecs = 1440;
+            periodSecs = constants.MINUTES_IN_DAY;
 
         } else if (startMins > endMins) {
 
-            periodSecs = (1440 - startMins) + endMins;
+            periodSecs = (constants.MINUTES_IN_DAY - startMins) + endMins;
 
         }
 
@@ -245,11 +245,11 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
             } else if (startMins === endMins) {
 
-                length = 1440;
+                length = constants.MINUTES_IN_DAY;
 
             } else if (startMins > endMins) {
 
-                length = (1440 - startMins) + endMins;
+                length = (constants.MINUTES_IN_DAY - startMins) + endMins;
 
             }
 
@@ -459,7 +459,7 @@ exports.toggleSizeWarning = (updateFunction) => {
 
     if (!displaySizeWarning) {
 
-        setTimeout(function () {
+        setTimeout(() => {
 
             displaySizeWarning = true;
             updateFunction();

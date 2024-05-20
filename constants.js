@@ -196,8 +196,8 @@ exports.getFirmwareClassification = (desc) => {
 
 /* Version number for the latest firmware */
 
-exports.latestFirmwareVersionArray = ['1', '9', '0'];
-exports.latestFirmwareVersionString = '1.9.0';
+exports.latestFirmwareVersionArray = ['1', '10', '0'];
+exports.latestFirmwareVersionString = '1.10.0';
 
 /* Time zone modes */
 
@@ -217,3 +217,41 @@ exports.SECONDS_IN_MINUTE = 60;
 exports.SECONDS_IN_DAY = 86400;
 
 exports.MINUTES_IN_HOUR = 60;
+exports.MINUTES_IN_DAY = 1440;
+
+/* Schedule limitations */
+
+exports.MAX_PERIODS = 4;
+
+/* Sunrise and sunset results */
+
+exports.SUN_ABOVE_HORIZON = 0;
+exports.NORMAL_SOLUTION = 1;
+exports.SUN_BELOW_HORIZON = 2;
+
+exports.DAY_LONGER_THAN_NIGHT = 0;
+exports.DAY_EQUAL_TO_NIGHT = 1;
+exports.DAY_SHORTER_THAN_NIGHT = 2;
+
+exports.MINIMUM_SUN_RECORDING_GAP = 60;
+exports.SUN_RECORDING_GAP_MULTIPLIER = 4;
+
+/* Sun schedule modes */
+
+exports.MODE_BEFORE_SUNRISE_AFTER_SUNRISE = 0;
+exports.MODE_BEFORE_SUNSET_AFTER_SUNSET = 1;
+exports.MODE_BEFORE_BOTH_AFTER_BOTH = 2;
+exports.MODE_BEFORE_SUNSET_AFTER_SUNRISE = 3;
+exports.MODE_BEFORE_SUNRISE_AFTER_SUNSET = 4;
+
+/* Sun events modes */
+
+exports.SUNRISE_AND_SUNSET = 0;
+exports.CIVIL_DAWN_AND_DUSK = 1;
+exports.NAUTICAL_DAWN_AND_DUSK = 2;
+exports.ASTRONOMICAL_DAWN_AND_DUSK = 3;
+
+/* First/last recording date range */
+
+exports.MIN_FIRST_LAST_DATE = '2020-01-01';
+exports.MAX_FIRST_LAST_DATE = '2029-12-31';

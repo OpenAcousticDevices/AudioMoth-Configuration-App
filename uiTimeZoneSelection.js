@@ -403,7 +403,7 @@ function addBlankOption () {
     const blankOpt = document.createElement('option');
 
     blankOpt.value = timeZoneOffset.toString();
-    
+
     blankOpt.innerHTML = getTimeZoneText(timeZoneOffset);
 
     for (let i = 0; i < options.length; i++) {
@@ -431,7 +431,7 @@ for (let i = 0; i < timeZones.length; i++) {
     const acronym = timeZones[i][0];
 
     const name = timeZones[i][1];
-    
+
     let offsetString = timeZones[i][2];
 
     if (offsetString.includes(':') === false) offsetString += ':00';
@@ -446,14 +446,14 @@ for (let i = 0; i < timeZones.length; i++) {
 
     /* Generate option text */
 
-    let optionText = getTimeZoneText(timeZoneOffset) +  '   ' + acronym + '   ' + name;
-    
+    const optionText = getTimeZoneText(timeZoneOffset) + '   ' + acronym + '   ' + name;
+
     /* Add option to selection */
 
     opt.innerHTML = optionText;
 
     opt.value = timeZoneOffset;
-    
+
     timeZoneSelect.appendChild(opt);
 
 }
@@ -476,4 +476,3 @@ timeZoneSelect.addEventListener('change', () => {
     updateButtons();
 
 });
-

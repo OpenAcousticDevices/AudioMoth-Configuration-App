@@ -18,6 +18,7 @@ const electron = require('electron');
 const {dialog, Menu, clipboard, BrowserWindow} = require('@electron/remote');
 
 const ui = require('./ui.js');
+const schedule = require('./schedule/schedule.js');
 const scheduleBar = require('./scheduleBar.js');
 const saveLoad = require('./saveLoad.js');
 const timeHandler = require('./timeHandler.js');
@@ -27,14 +28,13 @@ const constants = require('./constants.js');
 
 const uiSchedule = require('./schedule/uiSchedule.js');
 const uiSettings = require('./settings/uiSettings.js');
+const uiSun = require('./schedule/uiSun.js');
 
 const versionChecker = require('./versionChecker.js');
 
 const THRESHOLD_SCALE_PERCENTAGE = 0;
 const THRESHOLD_SCALE_16BIT = 1;
 const THRESHOLD_SCALE_DECIBEL = 2;
-
-const MILLISECONDS_IN_SECOND = 1000;
 
 /* UI components */
 
@@ -53,6 +53,8 @@ const batteryLabel = document.getElementById('battery-label');
 
 const ledCheckbox = document.getElementById('led-checkbox');
 const batteryLevelCheckbox = document.getElementById('battery-level-checkbox');
+
+const firstRecordingDateCheckbox = document.getElementById('first-date-checkbox');
 
 const configureButton = document.getElementById('configure-button');
 
@@ -86,6 +88,17 @@ let communicating = false;
 
 const MAXIMUM_RETRIES = 10;
 const DEFAULT_RETRY_INTERVAL = 100;
+
+/* Used for checking clock speed */
+
+const MAXIMUM_SECONDS_DRIFT_IN_ONE_DAY = 600;
+
+const MAXIMUM_ALLOWABLE_AUDIOMOTH_TIME_ERROR = 2;
+
+let displayedClockError = false;
+
+let connectionComputerTime = null;
+let connectionAudioMothTime = null;
 
 /* Compare two semantic versions and return true if older */
 
@@ -125,7 +138,7 @@ async function callWithRetry (funcSync, argument, milliseconds, repeats) {
         try {
 
             if (argument) {
-                
+
                 result = await funcSync(argument);
 
             } else {
@@ -186,6 +199,9 @@ async function getAudioMothPacket () {
 
         const date = await callWithRetry(getTime, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
 
+        const nowComputerTime = new Date(); 
+        const nowAudioMothTime = date;
+
         const id = await callWithRetry(getID, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
 
         const description = await callWithRetry(getFirmwareDescription, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
@@ -193,6 +209,41 @@ async function getAudioMothPacket () {
         const versionArr = await callWithRetry(getFirmwareVersion, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
 
         const batteryState = await callWithRetry(getBatteryState, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
+
+        /* Compare current date/time object with previous time to make sure clock isn't running too slow/fast */
+
+        if (communicating === false && displayedClockError === false) {
+
+            if (connectionComputerTime === null || connectionAudioMothTime === null) {
+
+                connectionComputerTime = nowComputerTime;
+                connectionAudioMothTime = date;
+    
+            }
+
+            const computerTimeDiff = nowComputerTime - connectionComputerTime;
+
+            const audioMothTimeDiff = nowAudioMothTime - connectionAudioMothTime;
+
+            const maximumAllowableDrift = Math.floor(MAXIMUM_SECONDS_DRIFT_IN_ONE_DAY * computerTimeDiff / constants.MILLISECONDS_IN_SECOND / constants.SECONDS_IN_DAY);
+
+            const measuredAudioMothDrift = Math.round((computerTimeDiff - audioMothTimeDiff) / constants.MILLISECONDS_IN_SECOND);
+
+            if (Math.abs(measuredAudioMothDrift) > MAXIMUM_ALLOWABLE_AUDIOMOTH_TIME_ERROR && Math.abs(measuredAudioMothDrift) > maximumAllowableDrift) {
+
+                const direction = measuredAudioMothDrift < 0 ? "fast" : "slow";
+
+                dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
+                    type: 'warning',
+                    title: 'Device clock too ' + direction,
+                    message: 'The clock on the connected AudioMoth seems to be running ' + direction + '. This may be a hardware problem.'
+                });
+
+                displayedClockError = true;
+
+            }
+
+        }
 
         /* No exceptions have occurred so update display */
 
@@ -213,11 +264,11 @@ async function getAudioMothPacket () {
         const supported = checkVersionCompatibility();
 
         if (communicating === false) {
-            
+
             ui.updateDate(date);
 
             ui.showTime();
-            
+
             enableDisplay();
 
         }
@@ -236,13 +287,20 @@ async function getAudioMothPacket () {
 
         disableDisplay();
 
+        displayedClockError = false;
+
+        connectionComputerTime = null;
+        connectionAudioMothTime = null;
+
     }
 
-    const milliseconds = Date.now() % MILLISECONDS_IN_SECOND;
+    /* Schedule the next call */
 
-    let delay = MILLISECONDS_IN_SECOND / 2 - milliseconds;
+    const milliseconds = Date.now() % constants.MILLISECONDS_IN_SECOND;
 
-    if (delay < 0) delay += MILLISECONDS_IN_SECOND;
+    let delay = constants.MILLISECONDS_IN_SECOND / 2 - milliseconds;
+
+    if (delay < 0) delay += constants.MILLISECONDS_IN_SECOND;
 
     setTimeout(getAudioMothPacket, delay);
 
@@ -276,19 +334,19 @@ function checkVersionCompatibility () {
 
     case constants.FIRMWARE_OFFICIAL_RELEASE:
     case constants.FIRMWARE_OFFICIAL_RELEASE_CANDIDATE:
-    
+
         versionWarningTitle = 'Firmware update recommended';
         versionWarningText = 'Update to at least version ' + constants.latestFirmwareVersionString + ' of AudioMoth-Firmware-Basic firmware to use all the features of this version of the AudioMoth Configuration App.';
-        
+
         break;
 
     case constants.FIRMWARE_CUSTOM_EQUIVALENT:
-        
+
         trueVersionArr = getEquivalentVersion(firmwareDescription);
 
         versionWarningTitle = 'Unsupported features';
         versionWarningText = 'The firmware installed on your AudioMoth does not allow you to use all the features of this version of the AudioMoth Configuration App.';
-        
+
         break;
 
     case constants.FIRMWARE_UNSUPPORTED:
@@ -298,8 +356,8 @@ function checkVersionCompatibility () {
         if (firmwareWarningShown === false) {
 
             firmwareWarningShown = true;
-            
-            setTimeout(function () {
+
+            setTimeout(() => {
 
                 dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
                     type: 'warning',
@@ -325,7 +383,7 @@ function checkVersionCompatibility () {
 
             versionWarningShown = true;
 
-            setTimeout(function () {
+            setTimeout(() => {
 
                 dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
                     type: 'warning',
@@ -460,9 +518,30 @@ async function sendAudioMothPacket (packet) {
 
 }
 
-function configureDevice () {
+/**
+ * Fit 4 ten bit values into a 5 byte area of a bvffer
+ * @param {buffer} buffer Buffer data is to be written to
+ * @param {integer} start Where in the buffer to start writing
+ * @param {integer} value1 First value
+ * @param {integer} value2 Second value
+ * @param {integer} value3 Third value
+ * @param {integer} value4 Fourth value
+ */
+function writeFourTenBitValuesAsFiveBytes (buffer, start, value1, value2, value3, value4) {
 
-    ui.disableTimeDisplay();
+    buffer[start] = value1 & 0b0011111111;
+
+    buffer[start + 1] = ((value1 & 0b1100000000) >> 8) | ((value2 & 0b0000111111) << 2);
+
+    buffer[start + 2] = ((value2 & 0b1111000000) >> 6) | ((value3 & 0b0000001111) << 4);
+
+    buffer[start + 3] = ((value3 & 0b1111110000) >> 4) | ((value4 & 0b0000000011) << 6);
+
+    buffer[start + 4] = (value4 & 0b1111111100) >> 2;
+
+}
+
+function configureDevice () {
 
     const USB_LAG = 20;
 
@@ -470,7 +549,7 @@ function configureDevice () {
 
     console.log('Configuring device');
 
-    const settings = uiSettings.getSettings();
+    const settings = getCurrentConfiguration();
 
     /* Build configuration packet */
 
@@ -526,42 +605,76 @@ function configureDevice () {
 
     packet[index++] = ledCheckbox.checked ? 1 : 0;
 
-    let timePeriods;
+    if (settings.sunScheduleEnabled) {
 
-    if (isOlderSemanticVersion(trueFirmwareVersion, ['1', '9', '0'])) {
+        let packedValue3 = settings.sunMode & 0b111;
+        packedValue3 |= (settings.sunDefinition & 0b11) << 3;
 
-        /* If AudioMoth is using a firmware version older than 1.9.0, split any periods which wrap around */
+        packet[index++] = packedValue3;
 
-        timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriodsNoWrap()));
+        let latitude = settings.latitude.degrees * 100 + settings.latitude.hundredths;
+        latitude *= settings.latitude.positiveDirection ? 1 : -1;
+
+        writeLittleEndianBytes(packet, index, 2, latitude);
+        index += 2;
+
+        let longitude = settings.longitude.degrees * 100 + settings.longitude.hundredths;
+        longitude *= settings.longitude.positiveDirection ? 1 : -1;
+
+        writeLittleEndianBytes(packet, index, 2, longitude);
+        index += 2;
+
+        packet[index++] = settings.sunRounding;
+
+        const sunPeriods = settings.sunPeriods;
+
+        writeFourTenBitValuesAsFiveBytes(packet, index, sunPeriods.sunriseBefore, sunPeriods.sunriseAfter, sunPeriods.sunsetBefore, sunPeriods.sunsetAfter);
+        index += 5;
+
+        /* Pad rest of block as normal schedule is 10 bytes longer than sunrise/sunset settings */
+
+        index += 10;
 
     } else {
 
-        timePeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
+        let timePeriods;
 
-    }
+        if (isOlderSemanticVersion(trueFirmwareVersion, ['1', '9', '0'])) {
 
-    timePeriods = timeHandler.sortPeriods(timePeriods);
+            /* If AudioMoth is using a firmware version older than 1.9.0, split any periods which wrap around */
 
-    packet[index++] = timePeriods.length;
+            timePeriods = JSON.parse(JSON.stringify(schedule.getTimePeriodsNoWrap()));
 
-    for (let i = 0; i < timePeriods.length; i++) {
+        } else {
 
-        writeLittleEndianBytes(packet, index, 2, timePeriods[i].startMins);
-        index += 2;
+            timePeriods = JSON.parse(JSON.stringify(schedule.getTimePeriods()));
 
-        const endMins = timePeriods[i].endMins === 0 ? 1440 : timePeriods[i].endMins;
-        writeLittleEndianBytes(packet, index, 2, endMins);
-        index += 2;
+        }
 
-    }
+        timePeriods = timeHandler.sortPeriods(timePeriods);
 
-    for (let i = 0; i < (scheduleBar.MAX_PERIODS + 1) - timePeriods.length; i++) {
+        packet[index++] = timePeriods.length;
 
-        writeLittleEndianBytes(packet, index, 2, 0);
-        index += 2;
+        for (let i = 0; i < timePeriods.length; i++) {
 
-        writeLittleEndianBytes(packet, index, 2, 0);
-        index += 2;
+            writeLittleEndianBytes(packet, index, 2, timePeriods[i].startMins);
+            index += 2;
+
+            const endMins = timePeriods[i].endMins === 0 ? constants.MINUTES_IN_DAY : timePeriods[i].endMins;
+            writeLittleEndianBytes(packet, index, 2, endMins);
+            index += 2;
+
+        }
+
+        for (let i = 0; i < (constants.MAX_PERIODS + 1) - timePeriods.length; i++) {
+
+            writeLittleEndianBytes(packet, index, 2, 0);
+            index += 2;
+
+            writeLittleEndianBytes(packet, index, 2, 0);
+            index += 2;
+
+        }
 
     }
 
@@ -675,7 +788,7 @@ function configureDevice () {
 
     /* Amplitude threshold or Goertzel filter frequency can be in this packet index */
 
-    let unionValue;
+    let thresholdUnionValue;
 
     const amplitudeThresholdScaleIndex = settings.amplitudeThresholdScaleIndex;
 
@@ -703,21 +816,21 @@ function configureDevice () {
 
         }
 
-        unionValue = amplitudeThreshold;
+        thresholdUnionValue = amplitudeThreshold;
 
     } else if (settings.frequencyTriggerEnabled && !isOlderSemanticVersion(trueFirmwareVersion, ['1', '8', '0'])) {
 
-        /* If firmware is older than 1.8.0, then frequency thresholding isn't supported, so just send zero */
-
-        unionValue = settings.frequencyTriggerCentreFrequency / 100;
+        thresholdUnionValue = settings.frequencyTriggerCentreFrequency / 100;
 
     } else {
 
-        unionValue = 0;
+        /* If firmware is older than 1.8.0, then frequency thresholding isn't supported, so just send zero */
+
+        thresholdUnionValue = 0;
 
     }
 
-    writeLittleEndianBytes(packet, index, 2, unionValue);
+    writeLittleEndianBytes(packet, index, 2, thresholdUnionValue);
     index += 2;
 
     /* Pack values into a single byte */
@@ -854,6 +967,10 @@ function configureDevice () {
     /* Whether to create a new folder each day to store files */
     const dailyFolders = settings.dailyFolders ? 1 : 0;
 
+    /* Whether to enable sunrise/sunset scheduling */
+
+    const sunScheduleEnabled = settings.sunScheduleEnabled ? 1 : 0;
+
     let packedByte3 = (energySaverModeEnabled & 0b1) & 1;
     packedByte3 |= (disable48DCFilter & 0b1) << 1;
     packedByte3 |= (timeSettingFromGPSEnabled & 0b1) << 2;
@@ -861,6 +978,7 @@ function configureDevice () {
     packedByte3 |= (lowGainRangeEnabled & 0b1) << 4;
     packedByte3 |= (enableFrequencyFilter & 0b1) << 5;
     packedByte3 |= (dailyFolders & 0b1) << 6;
+    packedByte3 |= (sunScheduleEnabled & 0b1) << 7;
 
     packet[index++] = packedByte3;
 
@@ -882,11 +1000,19 @@ function configureDevice () {
 
     communicating = true;
 
+    ui.disableTimeDisplay();
+
     configureButton.disabled = true;
 
-    const updateDelay = sendTimeDiff <= 0 ? MILLISECONDS_IN_SECOND : sendTimeDiff;
+    connectionAudioMothTime = null;
 
-    setTimeout(function () {
+    connectionComputerTime = null;
+
+    displayedClockError = false;
+
+    const updateDelay = sendTimeDiff <= 0 ? constants.MILLISECONDS_IN_SECOND : sendTimeDiff;
+
+    setTimeout(() => {
 
         communicating = false;
 
@@ -904,8 +1030,8 @@ function configureDevice () {
 
         console.log('Sending in', sendTimeDiff);
 
-        setTimeout(function () {
-
+        setTimeout(() => {
+    
             sendAudioMothPacket(packet);
 
         }, sendTimeDiff);
@@ -917,7 +1043,6 @@ function configureDevice () {
 /* Initialise device information displays */
 
 function initialiseDisplay () {
-
 
     ui.showTime();
 
@@ -1005,7 +1130,7 @@ function copyDeviceID () {
 
     idDisplay.style.color = 'green';
 
-    setTimeout(function () {
+    setTimeout(() => {
 
         idDisplay.style.color = '';
 
@@ -1033,16 +1158,27 @@ function toggleNightMode () {
 
 function updateLifeDisplayOnChange () {
 
-    let sortedPeriods = JSON.parse(JSON.stringify(scheduleBar.getTimePeriods()));
-    sortedPeriods = sortedPeriods.sort(function (a, b) {
+    let recordingPeriods;
+
+    if (uiSun.usingSunSchedule()) {
+
+        recordingPeriods = uiSun.getRecordingPeriods();
+
+    } else {
+
+        recordingPeriods = JSON.parse(JSON.stringify(schedule.getTimePeriods()));
+
+    }
+
+    recordingPeriods = recordingPeriods.sort((a, b) => {
 
         return a.startMins - b.startMins;
 
     });
 
-    const settings = uiSettings.getSettings();
+    const settings = getCurrentConfiguration();
 
-    lifeDisplay.updateLifeDisplay(sortedPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.frequencyTriggerEnabled, settings.dutyEnabled, settings.energySaverModeEnabled, settings.timeSettingFromGPSEnabled);
+    lifeDisplay.updateLifeDisplay(recordingPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.frequencyTriggerEnabled, settings.dutyEnabled, settings.energySaverModeEnabled, settings.timeSettingFromGPSEnabled);
 
 }
 
@@ -1056,16 +1192,31 @@ function getCurrentConfiguration () {
 
     const config = {};
 
-    const timePeriods = scheduleBar.getTimePeriodsNoWrap();
+    const settings = uiSettings.getSettings();
+
+    const timePeriods = schedule.getTimePeriodsNoWrap();
 
     for (let i = 0; i < timePeriods.length; i++) {
 
         timePeriods[i].startMins = timePeriods[i].startMins === 0 ? 0 : timePeriods[i].startMins;
-        timePeriods[i].endMins = timePeriods[i].endMins === 0 ? 1440 : timePeriods[i].endMins;
+        timePeriods[i].endMins = timePeriods[i].endMins === 0 ? constants.MINUTES_IN_DAY : timePeriods[i].endMins;
 
     }
 
     config.timePeriods = timePeriods;
+
+    config.sunScheduleEnabled = settings.sunScheduleEnabled;
+
+    config.latitude = uiSchedule.getLatitude();
+    config.longitude = uiSchedule.getLongitude();
+
+    config.sunMode = uiSchedule.getSunMode();
+
+    config.sunPeriods = uiSchedule.getSunPeriods();
+
+    config.sunRounding = uiSchedule.getSunRounding();
+
+    config.sunDefinition = ipcRenderer.sendSync('request-sun-definition-index');
 
     config.customTimeZoneOffset = ipcRenderer.sendSync('request-custom-time-zone');
 
@@ -1073,8 +1224,6 @@ function getCurrentConfiguration () {
 
     config.ledEnabled = ledCheckbox.checked;
     config.batteryLevelCheckEnabled = batteryLevelCheckbox.checked;
-
-    const settings = uiSettings.getSettings();
 
     config.sampleRateIndex = settings.sampleRateIndex;
     config.gain = settings.gain;
@@ -1151,7 +1300,7 @@ electron.ipcRenderer.on('load', () => {
 
     const currentConfig = getCurrentConfiguration();
 
-    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders) => {
+    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders, sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition) => {
 
         document.activeElement.blur();
 
@@ -1190,13 +1339,15 @@ electron.ipcRenderer.on('load', () => {
 
         }
 
-        uiSchedule.clearTimes();
+        let schedule = [];
 
         for (let i = 0; i < sortedPeriods.length; i++) {
 
-            uiSchedule.addTime(sortedPeriods[i].startMins, sortedPeriods[i].endMins);
+            schedule = uiSchedule.addTime(sortedPeriods[i].startMins, sortedPeriods[i].endMins, schedule);
 
         }
+
+        scheduleBar.setSchedule(schedule);
 
         scheduleBar.updateCanvas();
 
@@ -1250,14 +1401,23 @@ electron.ipcRenderer.on('load', () => {
             disable48DCFilter,
             lowGainRangeEnabled,
             timeSettingFromGPSEnabled,
-            magneticSwitchEnabled
+            magneticSwitchEnabled,
+            sunRounding,
+            sunDefinition
         };
-
-        uiSettings.fillUI(settings);
 
         ledCheckbox.checked = ledEnabled;
         batteryLevelCheckbox.checked = batteryLevelCheckEnabled;
-        uiSettings.updateVoltageRangeStatus();
+
+        uiSettings.fillUI(settings);
+
+        electron.ipcRenderer.send('set-sun-definition-index', sunDefinition);
+
+        uiSchedule.updateSunDefinitionUI(sunDefinition);
+
+        uiSchedule.setSunSettings(sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding);
+
+        uiSun.updateMapWindow();
 
         ui.update();
 
@@ -1337,9 +1497,122 @@ electron.ipcRenderer.on('change-time-zone-mode', (e, timeZoneMode) => {
 
 configureButton.addEventListener('click', () => {
 
-    const timePeriods = scheduleBar.getTimePeriods();
+    const timePeriods = schedule.getTimePeriods();
 
-    if (timePeriods.length === 0) {
+    const sunScheduleEnabled = uiSun.usingSunSchedule();
+
+    if (sunScheduleEnabled) {
+
+        const sunRecordingPeriods = uiSun.getRecordingPeriods();
+        const sunMode = uiSun.getMode();
+
+        const beforeSunriseMins = uiSun.getBeforeSunriseMins();
+        const afterSunriseMins = uiSun.getAfterSunriseMins();
+        const beforeSunsetMins = uiSun.getBeforeSunsetMins();
+        const afterSunsetMins = uiSun.getAfterSunsetMins();
+
+        const noSunrise = beforeSunriseMins === 0 && afterSunriseMins === 0;
+        const noSunset = beforeSunsetMins === 0 && afterSunsetMins === 0;
+
+        const sunDefinitionIndex = ipcRenderer.sendSync('request-sun-definition-index');
+
+        if (isOlderSemanticVersion(firmwareVersion.split('.'), [1, 10, 0])) {
+
+            let message = 'The firmware on the connected AudioMoth does not support ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise/sunset' : 'dawn/dusk';
+            message += ' scheduling. Update to at least version 1.10.0 or switch to a fixed schedule to configure.';
+
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'Unsupported firmware',
+                message
+            });
+
+            console.log('Configuration cancelled');
+
+            return;
+
+        }
+
+        if (sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH && noSunrise && noSunset) {
+
+            let message = 'The ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise and sunset' : 'dawn and dusk';
+            message += ' recording periods have zero duration. This means the AudioMoth will not record when in CUSTOM mode.';
+
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No recording periods',
+                message
+            });
+
+            console.log('Configuration cancelled');
+
+            return;
+
+        }
+
+        if ((sunMode === constants.MODE_BEFORE_SUNRISE_AFTER_SUNRISE || sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH) && noSunrise) {
+
+            let message = 'The ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise' : 'dawn';
+            message += ' recording period has zero duration. This means the AudioMoth will not record around sunrise when in CUSTOM mode.';
+
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No recording periods',
+                message
+            });
+
+            console.log('Configuration cancelled');
+
+            return;
+
+        }
+
+        if ((sunMode === constants.MODE_BEFORE_SUNSET_AFTER_SUNSET || sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH) && noSunset) {
+
+            let message = 'The ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunset' : 'dusk';
+            message += ' recording period has zero duration. This means the AudioMoth will not record around sunrise when in CUSTOM mode.';
+
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No recording periods',
+                message
+            });
+
+            console.log('Configuration cancelled');
+
+            return;
+
+        }
+
+        if (sunRecordingPeriods.length === 0) {
+
+            let messageText = sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'Sunrise and sunset ' : 'Dawn and dusk';
+            messageText += 'calculation shows no recording periods for the ';
+            messageText += firstRecordingDateCheckbox.checked ? 'selected first recording date. ' : 'current date. ';
+            messageText += 'This means the AudioMoth may not record when in CUSTOM mode. Are you sure you wish to apply this configuration?';
+
+            const buttonIndex = dialog.showMessageBoxSync({
+                type: 'warning',
+                buttons: ['Yes', 'No'],
+                title: 'No recording periods',
+                message: messageText
+            });
+
+            if (buttonIndex === 1) {
+
+                console.log('Configuration cancelled');
+
+                return;
+
+            }
+
+        }
+
+    } else if (timePeriods.length === 0) {
 
         const buttonIndex = dialog.showMessageBoxSync({
             type: 'warning',
@@ -1359,6 +1632,13 @@ configureButton.addEventListener('click', () => {
     }
 
     configureDevice();
+
+});
+
+uiSun.prepareUI(() => {
+
+    updateLifeDisplayOnChange();
+    scheduleBar.updateCanvas();
 
 });
 

@@ -12,11 +12,16 @@ const ui = require('./ui.js');
 const timeHandler = require('./timeHandler.js');
 const schedule = require('./schedule/schedule.js');
 const constants = require('./constants.js');
+const uiSun = require('./schedule/uiSun.js');
 
 const timeCanvas = document.getElementById('time-canvas');
 const timeContext = timeCanvas.getContext('2d');
 const labelCanvas = document.getElementById('label-canvas');
 const labelContext = labelCanvas.getContext('2d');
+
+let scaleFactor;
+
+const sunCanvas = document.getElementById('sun-canvas');
 
 let clickCallback;
 
@@ -26,7 +31,7 @@ let selectedPeriod = null;
 
 function rescale (canvas) {
 
-    let scaleFactor = 1;
+    scaleFactor = 1;
 
     if (Object.prototype.hasOwnProperty.call(window, 'devicePixelRatio')) {
 
@@ -53,10 +58,10 @@ function rescale (canvas) {
 function drawPeriod (startMins, endMins, timeCanvas) {
 
     /* width / 1440 minutes */
-    const recX = startMins * timeCanvas.width / 1440;
-    const recLen = (endMins - startMins) * timeCanvas.width / 1440;
+    const recX = startMins * timeCanvas.width / constants.MINUTES_IN_DAY;
+    const recLen = (endMins - startMins) * timeCanvas.width / constants.MINUTES_IN_DAY;
 
-    timeContext.fillRect(recX, 0, recLen, timeCanvas.height);
+    timeContext.fillRect(Math.round(recX), 0, Math.round(recLen), timeCanvas.height);
 
 }
 
@@ -76,34 +81,42 @@ function updateCanvas () {
 
     timeContext.clearRect(0, 0, timeCanvas.width, timeCanvas.height);
 
-    for (let i = 0; i < timePeriods.length; i++) {
+    if (uiSun.usingSunSchedule()) {
 
-        const startMins = timePeriods[i].startMins;
-        let endMins = timePeriods[i].endMins;
-        endMins = endMins === 0 ? 1440 : endMins;
+        uiSun.updateSunUI();
 
-        if (selectedPeriod !== null && (selectedPeriod.startMins === startMins && selectedPeriod.endMins === endMins)) {
+    } else {
 
-            timeContext.fillStyle = '#007BFF';
+        for (let i = 0; i < timePeriods.length; i++) {
 
-        } else {
+            const startMins = timePeriods[i].startMins;
+            let endMins = timePeriods[i].endMins;
+            endMins = endMins === 0 ? constants.MINUTES_IN_DAY : endMins;
 
-            timeContext.fillStyle = '#FF0000';
+            if (selectedPeriod !== null && (selectedPeriod.startMins === startMins && selectedPeriod.endMins === endMins)) {
 
-        }
+                timeContext.fillStyle = '#007BFF';
 
-        if (startMins > endMins) {
+            } else {
 
-            drawPeriod(startMins, 1440, timeCanvas);
-            drawPeriod(0, endMins, timeCanvas);
+                timeContext.fillStyle = '#FF0000';
 
-        } else if (startMins === endMins) {
+            }
 
-            drawPeriod(0, 1440, timeCanvas);
+            if (startMins > endMins) {
 
-        } else {
+                drawPeriod(startMins, constants.MINUTES_IN_DAY, timeCanvas);
+                drawPeriod(0, endMins, timeCanvas);
 
-            drawPeriod(startMins, endMins, timeCanvas);
+            } else if (startMins === endMins) {
+
+                drawPeriod(0, constants.MINUTES_IN_DAY, timeCanvas);
+
+            } else {
+
+                drawPeriod(startMins, endMins, timeCanvas);
+
+            }
 
         }
 
@@ -121,9 +134,9 @@ function updateCanvas () {
 
     }
 
-    timeContext.fillRect(0.25 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
-    timeContext.fillRect(0.5 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
-    timeContext.fillRect(0.75 * timeCanvas.width, 0, 0.002 * timeCanvas.width, timeCanvas.height);
+    timeContext.fillRect(Math.round(0.25 * timeCanvas.width), 0, 1 * scaleFactor, timeCanvas.height);
+    timeContext.fillRect(Math.round(0.5 * timeCanvas.width), 0, 1 * scaleFactor, timeCanvas.height);
+    timeContext.fillRect(Math.round(0.75 * timeCanvas.width), 0, 1 * scaleFactor, timeCanvas.height);
 
     let currentMins = (currentTimeDate.getUTCHours() * constants.MINUTES_IN_HOUR) + currentTimeDate.getUTCMinutes();
 
@@ -133,10 +146,15 @@ function updateCanvas () {
 
     }
 
-    const currentX = currentMins * timeCanvas.width / 1440;
+    let currentX = currentMins * timeCanvas.width / constants.MINUTES_IN_DAY;
+
+    /* Wrap time around midnight at both ends */
+
+    currentX = currentX % timeCanvas.width;
+    currentX = currentX < 0 ? currentX + timeCanvas.width : currentX;
 
     timeContext.fillStyle = '#00AF00';
-    timeContext.fillRect((currentX - 1), 0, 0.004 * timeCanvas.width, timeCanvas.height);
+    timeContext.fillRect(Math.floor(currentX), 0, 2 * scaleFactor, timeCanvas.height);
 
 }
 
@@ -174,7 +192,7 @@ function updateSelectedPeriod (event) {
     }
 
     const rect = timeCanvas.getBoundingClientRect();
-    const clickMins = (event.clientX - rect.left) / timeCanvas.width * 1440;
+    const clickMins = (event.clientX - rect.left) / timeCanvas.width * constants.MINUTES_IN_DAY;
 
     if (ui.getTimeZoneMode() !== constants.TIME_ZONE_MODE_UTC) {
 
@@ -191,7 +209,7 @@ function updateSelectedPeriod (event) {
 
         if (startMins > endMins) {
 
-            if ((clickMins >= startMins && clickMins < 1440) || (clickMins >= 0 && clickMins < endMins)) {
+            if ((clickMins >= startMins && clickMins < constants.MINUTES_IN_DAY) || (clickMins >= 0 && clickMins < endMins)) {
 
                 selectedIndex = i;
 
@@ -268,11 +286,20 @@ exports.drawTimeLabels = drawTimeLabels;
 exports.prepareScheduleCanvas = (callback) => {
 
     clickCallback = callback;
-    timeCanvas.addEventListener('click', updateSelectedPeriod);
+    timeCanvas.addEventListener('click', (event) => {
+
+        if (!uiSun.usingSunSchedule()) {
+
+            updateSelectedPeriod(event);
+
+        }
+
+    });
 
     /* Rescale for resolution of screen */
     rescale(timeCanvas);
     rescale(labelCanvas);
+    rescale(sunCanvas);
 
     /* Draw labels below timeline */
     drawTimeLabels();
@@ -292,7 +319,3 @@ exports.setSchedule = (timePeriods) => {
     updateCanvas();
 
 };
-
-exports.getTimePeriods = schedule.getTimePeriods;
-exports.getTimePeriodsNoWrap = schedule.getTimePeriodsNoWrap;
-exports.MAX_PERIODS = schedule.MAX_PERIODS;

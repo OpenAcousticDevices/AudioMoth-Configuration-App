@@ -98,10 +98,10 @@ function walk (dir) {
 
     /* Try to read the directory contents */
 
-    var list;
+    let list;
 
     try {
-        
+
         list = fs.readdirSync(dir);
 
     } catch (e) {
@@ -111,7 +111,7 @@ function walk (dir) {
     }
 
     /* Process each file in the directory */
-    
+
     list.forEach((file) => {
 
         const filePath = path.join(dir, file);
@@ -140,8 +140,6 @@ function walk (dir) {
 
 exports.selectAllFilesInFolder = () => {
 
-    let files;
-
     const selection = dialog.showOpenDialogSync(currentWindow, {
         title: 'Select folder containing files',
         nameFieldLabel: 'Recordings',
@@ -149,7 +147,21 @@ exports.selectAllFilesInFolder = () => {
         filters: []
     });
 
+    return updateFilesInFolder(selection);
+
+};
+
+function updateFilesInFolder (selection) {
+
+    let files;
+
     if (selection && selection[0]) {
+
+        if (!fs.existsSync(selection[0])) {
+
+            return;
+
+        }
 
         files = [];
 
@@ -162,10 +174,13 @@ exports.selectAllFilesInFolder = () => {
         }
 
         return {
+            selection,
             folder: selection[0],
-            files: files
+            files
         };
 
     }
 
-};
+}
+
+exports.updateFilesInFolder = updateFilesInFolder;

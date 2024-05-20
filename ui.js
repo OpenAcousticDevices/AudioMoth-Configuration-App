@@ -50,9 +50,9 @@ function extractDateComponents (dateString) {
     const day = parseInt(dateArray[2]);
 
     return {
-        year: year,
-        month: month,
-        day: day,
+        year,
+        month,
+        day
     };
 
 }

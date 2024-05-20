@@ -45,7 +45,27 @@ const DEFAULT_SETTINGS = {
     lowGainRangeEnabled: false,
     disable48DCFilter: false,
     timeSettingFromGPSEnabled: false,
-    magneticSwitchEnabled: false
+    magneticSwitchEnabled: false,
+    sunScheduleEnabled: false,
+    latitude: {
+        degrees: 0,
+        hundredths: 0,
+        positiveDirection: true
+    },
+    longitude: {
+        degrees: 0,
+        hundredths: 0,
+        positiveDirection: true
+    },
+    sunMode: 2,
+    sunPeriods: {
+        sunriseBefore: 60,
+        sunriseAfter: 60,
+        sunsetBefore: 60,
+        sunsetAfter: 60
+    },
+    sunRounding: 5,
+    sunDefinition: 0
 };
 
 /* Compare two semantic versions and return true if older */
@@ -146,7 +166,30 @@ function saveConfiguration (currentConfig, callback) {
     configuration += '"disable48DCFilter": ' + currentConfig.disable48DCFilter + ',\r\n';
     configuration += '"lowGainRangeEnabled": ' + currentConfig.lowGainRangeEnabled + ',\r\n';
     configuration += '"timeSettingFromGPSEnabled": ' + currentConfig.timeSettingFromGPSEnabled + ',\r\n';
-    configuration += '"magneticSwitchEnabled": ' + currentConfig.magneticSwitchEnabled + '\r\n';
+    configuration += '"magneticSwitchEnabled": ' + currentConfig.magneticSwitchEnabled + ',\r\n';
+
+    configuration += '"sunScheduleEnabled": ' + currentConfig.sunScheduleEnabled;
+
+    if (currentConfig.sunScheduleEnabled) {
+
+        configuration += ',\r\n';
+
+        configuration += '"latitude": ' + JSON.stringify(currentConfig.latitude) + ',\r\n';
+        configuration += '"longitude": ' + JSON.stringify(currentConfig.longitude) + ',\r\n';
+
+        configuration += '"sunMode": ' + currentConfig.sunMode + ',\r\n';
+        configuration += '"sunPeriods": ' + JSON.stringify(currentConfig.sunPeriods) + ',\r\n';
+
+        configuration += '"sunRounding": ' + currentConfig.sunRounding + ',\r\n';
+
+        configuration += '"sunDefinition": ' + currentConfig.sunDefinition + '\r\n';
+
+    } else {
+
+        configuration += '\r\n';
+
+    }
+
     configuration += '}';
 
     const fileName = dialog.showSaveDialogSync({
@@ -367,6 +410,43 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     },
                     magneticSwitchEnabled: {
                         type: 'boolean'
+                    },
+                    sunScheduleEnabled: {
+                        type: 'boolean'
+                    },
+                    latitude: {
+                        type: 'object',
+                        properties: {
+                            degrees: {type: 'integer'},
+                            hundredths: {type: 'integer'},
+                            positiveDirection: {type: 'boolean'}
+                        }
+                    },
+                    longitude: {
+                        type: 'object',
+                        properties: {
+                            degrees: {type: 'integer'},
+                            hundredths: {type: 'integer'},
+                            positiveDirection: {type: 'boolean'}
+                        }
+                    },
+                    sunMode: {
+                        type: 'integer'
+                    },
+                    sunPeriods: {
+                        type: 'object',
+                        properties: {
+                            sunriseBefore: {type: 'integer'},
+                            sunriseAfter: {type: 'integer'},
+                            sunsetBefore: {type: 'integer'},
+                            sunsetAfter: {type: 'integer'}
+                        }
+                    },
+                    sunRounding: {
+                        type: 'integer'
+                    },
+                    sunDefinition: {
+                        type: 'integer'
                     }
                 },
                 required: []
@@ -416,6 +496,28 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.lowGainRangeEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.timeSettingFromGPSEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.magneticSwitchEnabled === 'undefined');
+            isMissingValues |= (typeof jsonObj.sunScheduleEnabled === 'undefined');
+
+            /* Don't open config files created by newer app versions */
+
+            let version = (typeof jsonObj.version === 'undefined') ? '0.0.0' : jsonObj.version;
+            const versionArray = version.split('.');
+
+            const appVersionArray = app.getVersion().split('.');
+
+            if (isOlderSemanticVersion(appVersionArray, versionArray)) {
+
+                console.error('Cannot open configuration files created by future app versions');
+
+                dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+                    type: 'error',
+                    title: 'Incorrect format',
+                    message: 'Cannot open the configuration file as it was created by a release of the AudioMoth Configuration App greater than ' + app.getVersion() + '.'
+                });
+
+                return;
+
+            }
 
             if (isMissingValues) {
 
@@ -440,35 +542,14 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             }
 
-            /* Don't open config files created by newer app versions */
-
-            let version = (typeof jsonObj.version === 'undefined') ? '0.0.0' : jsonObj.version;
-            const versionArray = version.split('.');
-
-            const appVersionArray = app.getVersion().split('.');
-
-            if (isOlderSemanticVersion(appVersionArray, versionArray)) {
-
-                console.error('Cannot open configuration files created by future app versions');
-
-                dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
-                    type: 'error',
-                    title: 'Incorrect format',
-                    message: 'Cannot open the configuration file as it was created by a release of the AudioMoth Configuration App greater than ' + app.getVersion() + '.'
-                });
-
-                return;
-
-            }
-
             const timePeriods = (typeof jsonObj.timePeriods === 'undefined') ? replacementValues.timePeriods : jsonObj.timePeriods;
 
             /* If startTime or endTime === 1440, read it as 0 */
 
             for (let i = 0; i < timePeriods.length; i++) {
 
-                timePeriods[i].startMins = timePeriods[i].startMins === 1440 ? 0 : timePeriods[i].startMins;
-                timePeriods[i].endMins = timePeriods[i].endMins === 1440 ? 0 : timePeriods[i].endMins;
+                timePeriods[i].startMins = timePeriods[i].startMins === constants.MINUTES_IN_DAY ? 0 : timePeriods[i].startMins;
+                timePeriods[i].endMins = timePeriods[i].endMins === constants.MINUTES_IN_DAY ? 0 : timePeriods[i].endMins;
 
             }
 
@@ -654,7 +735,49 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const magneticSwitchEnabled = (typeof jsonObj.magneticSwitchEnabled === 'undefined') ? replacementValues.magneticSwitchEnabled : jsonObj.magneticSwitchEnabled;
 
-            callback(timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders);
+            let sunScheduleEnabled = (typeof jsonObj.sunScheduleEnabled === 'undefined') ? replacementValues.sunScheduleEnabled : jsonObj.sunScheduleEnabled;
+
+            if (typeof jsonObj.sunScheduleEnabled === 'undefined') {
+
+                if (timePeriods.length > 0) {
+
+                    sunScheduleEnabled = false;
+
+                } else {
+
+                    sunScheduleEnabled = replacementValues.sunScheduleEnabled;
+
+                }
+
+            } else {
+
+                sunScheduleEnabled = jsonObj.sunScheduleEnabled;
+
+            }
+
+            const latitude = (typeof jsonObj.latitude === 'undefined') ? replacementValues.latitude : jsonObj.latitude;
+            const longitude = (typeof jsonObj.longitude === 'undefined') ? replacementValues.longitude : jsonObj.longitude;
+
+            const sunMode = (typeof jsonObj.sunMode === 'undefined') ? replacementValues.sunMode : jsonObj.sunMode;
+
+            const sunPeriods = (typeof jsonObj.sunPeriods === 'undefined') ? replacementValues.sunPeriods : jsonObj.sunPeriods;
+
+            const sunRounding = (typeof jsonObj.sunRounding === 'undefined') ? replacementValues.sunRounding : jsonObj.sunRounding;
+
+            const sunDefinition = (typeof jsonObj.sunDefinition === 'undefined') ? replacementValues.sunDefinition : jsonObj.sunDefinition;
+
+            callback(timePeriods,
+                ledEnabled, batteryLevelCheckEnabled,
+                sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration,
+                localTime, customTimeZoneOffset,
+                firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate,
+                passFiltersEnabled, filterType, lowerFilter, higherFilter,
+                amplitudeThresholdingEnabled, amplitudeThreshold,
+                frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold,
+                requireAcousticConfig, displayVoltageRange,
+                minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex,
+                energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders,
+                sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition);
 
             version = version === '0.0.0' ? '< 1.5.0' : version;
 
@@ -665,7 +788,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
                 type: 'error',
                 title: 'Incorrect format',
-                message: 'An error occurred whilst trying to read the Configuration file. The file format is incorrect.'
+                message: 'An error occurred whilst trying to read the configuration file. The file format is incorrect.'
             });
 
             console.error(usageErr);

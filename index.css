@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'Ubuntu';
-    src: url('./ubuntu.mono.ttf');
+    src: url('./resources/ubuntu.mono.ttf');
 }
 
 input[type=number]::-webkit-inner-spin-button, 
@@ -55,4 +55,26 @@ input {
 
 .greyStart {
     display: inline-block;
+}
+
+.form-select-sm {
+    height: 25px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+}
+
+canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.wider-col {
+    height: 182px;
+    width: 89.55%;
+}
+
+.button-icon {
+    width: 13px;
+    height: 13px;
+    vertical-align: initial;
 }

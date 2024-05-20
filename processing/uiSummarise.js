@@ -28,6 +28,7 @@ const summariseButton = document.getElementById('summarise-button');
 let files = [];
 let outputDir = '';
 let sourceDir = '';
+let selection = [];
 
 let summarising = false;
 
@@ -59,7 +60,7 @@ function updateInputDirectoryDisplay (directoryArray) {
 
     if (!directoryArray || directoryArray.length === 0) {
 
-        fileLabel.innerHTML = 'No files selected.';
+        fileLabel.innerHTML = 'No folder selected.';
         summariseButton.disabled = true;
 
     } else {
@@ -124,7 +125,9 @@ fileButton.addEventListener('click', () => {
     const response = uiInput.selectAllFilesInFolder();
 
     if (response) {
-        
+
+        selection = response.selection;
+
         files = response.files;
 
         sourceDir = response.folder;
@@ -219,11 +222,36 @@ summariseButton.addEventListener('click', () => {
 
     }
 
-    summarising = true;
-    disableUI();
+    const response = uiInput.updateFilesInFolder(selection);
 
-    electron.ipcRenderer.send('start-summarise-bar', files.length);
-    setTimeout(summariseFiles, 2000);
+    if (response) {
+
+        files = response.files;
+        sourceDir = response.folder;
+
+        updateInputDirectoryDisplay(files);
+
+        summarising = true;
+        disableUI();
+
+        electron.ipcRenderer.send('start-summarise-bar', files.length);
+        setTimeout(summariseFiles, 2000);
+
+    } else {
+
+        dialog.showMessageBoxSync({
+            type: 'error',
+            title: 'Folder Not Found',
+            message: 'Selected folder no longer exists. Select a new location and try again.'
+        });
+
+        files = [];
+        sourceDir = '';
+        selection = [];
+
+        updateInputDirectoryDisplay(files);
+
+    }
 
 });
 

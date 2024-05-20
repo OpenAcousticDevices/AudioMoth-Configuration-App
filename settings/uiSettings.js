@@ -15,6 +15,8 @@ const splitDurationInput = require('./splitDurationInput.js');
 
 /* UI components */
 
+const sunTab = document.getElementById('sun-tab');
+
 const sampleRadioButtons = document.getElementsByName('sample-rate-radio');
 const gainRadioButtons = document.getElementsByName('gain-radio');
 
@@ -204,7 +206,8 @@ exports.getSettings = () => {
         lowGainRangeEnabled: uiAdvanced.isLowGainRangeEnabled(),
         disable48DCFilter: uiAdvanced.is48DCFilterDisabled(),
         timeSettingFromGPSEnabled: uiAdvanced.isTimeSettingFromGPSEnabled(),
-        magneticSwitchEnabled: uiAdvanced.isMagneticSwitchEnabled()
+        magneticSwitchEnabled: uiAdvanced.isMagneticSwitchEnabled(),
+        sunScheduleEnabled: sunTab.classList.contains('active')
     };
 
     return settings;
@@ -221,6 +224,7 @@ exports.getFrequencyFilterThresholdExponentMantissa = uiFiltering.getFrequencyFi
 exports.fillUI = (settings) => {
 
     voltageRangeCheckBox.checked = settings.displayVoltageRange;
+    updateVoltageRangeCheckboxStatus();
 
     sampleRadioButtons[settings.sampleRateIndex].checked = true;
     gainRadioButtons[settings.gain].checked = true;
@@ -320,7 +324,7 @@ function checkMinimumTriggerTime (recordingLength) {
 
 }
 
-function updateVoltageRangeStatus () {
+function updateVoltageRangeCheckboxStatus () {
 
     if (batteryLevelCheckbox.checked) {
 
@@ -336,6 +340,4 @@ function updateVoltageRangeStatus () {
 
 }
 
-exports.updateVoltageRangeStatus = updateVoltageRangeStatus;
-
-batteryLevelCheckbox.addEventListener('change', updateVoltageRangeStatus);
+batteryLevelCheckbox.addEventListener('change', updateVoltageRangeCheckboxStatus);

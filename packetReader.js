@@ -16,6 +16,15 @@ function fourBytesToNumber (buffer, offset) {
 
 }
 
+function twoBytesToSignedNumber (buffer, offset) {
+
+    let value = (buffer[offset] & 0xFF) + ((buffer[offset + 1] & 0xFF) << 8);
+    value = value >= 32768 ? value - 65536 : value;
+
+    return value;
+
+}
+
 function twoBytesToNumber (buffer, offset) {
 
     return (buffer[offset] & 0xFF) + ((buffer[offset + 1] & 0xFF) << 8);
@@ -67,7 +76,7 @@ function formatPercentage (mantissa, exponent) {
 typedef struct {
     uint16_t startMinutes;
     uint16_t stopMinutes;
-} startStopPeriod_t;
+} recordingPeriod_t;
 
 typedef struct {
     uint32_t time;
@@ -80,8 +89,23 @@ typedef struct {
     uint16_t sleepDuration;
     uint16_t recordDuration;
     uint8_t enableLED;
-    uint8_t activeStartStopPeriods;
-    startStopPeriod_t startStopPeriods[MAX_START_STOP_PERIODS];
+    union {
+        struct {
+            uint8_t activeRecordingPeriods;
+            recordingPeriod_t recordingPeriods[MAX_RECORDING_PERIODS];
+        };
+        struct {
+            uint8_t sunRecordingMode : 3;
+            uint8_t sunRecordingEvent : 2;
+            int16_t latitudeMinutes;
+            int16_t longitudeMinutes;
+            uint8_t sunRoundingMinutes;
+            uint16_t beforeSunriseMinutes : 10;
+            uint16_t afterSunriseMinutes : 10;
+            uint16_t beforeSunsetMinutes : 10;
+            uint16_t afterSunsetMinutes : 10;
+        };
+    };
     int8_t timeZoneHours;
     uint8_t enableLowVoltageCutoff;
     uint8_t disableBatteryLevelDisplay;
@@ -119,9 +143,50 @@ typedef struct {
     uint8_t enableLowGainRange : 1;
     uint8_t enableGoertzelFilter : 1;
     uint8_t enableDailyFolders : 1;
+    uint8_t enableSunRecording : 1;
 } configSettings_t;
 
 */
+
+/**
+ * Extract four 10-bit numbers from a buffer, starting from a given index
+ * @param {buffer} buffer Buffer containing data
+ * @param {integer} start Where in the buffer to start looking for the four values
+ * @returns An array containing four 10-bit numbers
+ */
+function fiveBytesToFourNumbers (buffer, start) {
+
+    const byte0 = buffer[start];
+    const byte1 = buffer[start + 1];
+    const byte2 = buffer[start + 2];
+    const byte3 = buffer[start + 3];
+    const byte4 = buffer[start + 4];
+
+    const value0 = (byte0 & 0b0011111111) | ((byte1 << 8) & 0b1100000000);
+    const value1 = ((byte1 >> 2) & 0b0000111111) | ((byte2 << 6) & 0b1111000000);
+    const value2 = ((byte2 >> 4) & 0b0000001111) | ((byte3 << 4) & 0b1111110000);
+    const value3 = ((byte3 >> 6) & 0b0000000011) | ((byte4 << 2) & 0b1111111100);
+
+    return [value0, value1, value2, value3];
+
+}
+
+function convertCoordMinsToObject (mins) {
+
+    const positiveDirection = mins > 0;
+
+    mins = Math.abs(mins);
+
+    const degrees = Math.floor(mins / 100);
+    const hundredths = mins % 100;
+
+    return {
+        degrees,
+        hundredths,
+        positiveDirection
+    };
+
+}
 
 exports.read = (packet) => {
 
@@ -142,15 +207,70 @@ exports.read = (packet) => {
 
     const enableLED = packet[17];
 
-    const activeStartStopPeriods = packet[18];
-    const startStopPeriods = [];
+    /* Read advanced settings */
 
-    for (let i = 0; i < activeStartStopPeriods; i += 1) {
+    const packedByte3 = packet[61];
 
-        const startMinutes = twoBytesToNumber(packet, 19 + 4 * i);
-        const endMinutes = twoBytesToNumber(packet, 21 + 4 * i);
+    const energySaverModeEnabled = packedByte3 & 1;
 
-        startStopPeriods.push({startMinutes, endMinutes});
+    const disable48DCFilter = (packedByte3 >> 1) & 1;
+
+    const timeSettingFromGPSEnabled = (packedByte3 >> 2) & 1;
+
+    const magneticSwitchEnabled = (packedByte3 >> 3) & 1;
+
+    const lowGainRangeEnabled = (packedByte3 >> 4) & 1;
+
+    const enableFrequencyFilter = (packedByte3 >> 5) & 1;
+
+    const dailyFolders = (packedByte3 >> 6) & 1;
+
+    const sunRecordingEnabled = (packedByte3 >> 7) & 1;
+
+    /* Read recording schedule or sunrise/sunset settings */
+
+    let sunMode;
+    let sunEvent;
+    let latitude, longitude;
+    let sunRounding;
+    let sunriseBefore, sunriseAfter, sunsetBefore, sunsetAfter;
+
+    let activeRecordingPeriods, recordingPeriods;
+
+    if (sunRecordingEnabled) {
+
+        const packedByte4 = packet[18];
+
+        sunMode = packedByte4 & 0b111;
+        sunEvent = (packedByte4 >> 3) & 0b11;
+
+        latitude = convertCoordMinsToObject(twoBytesToSignedNumber(packet, 19));
+        longitude = convertCoordMinsToObject(twoBytesToSignedNumber(packet, 21));
+
+        sunRounding = packet[23];
+
+        /* packet[24], packet[25], packet[26], packet[27], packet[28] */
+        const numbers = fiveBytesToFourNumbers(packet, 24);
+
+        sunriseBefore = numbers[0];
+        sunriseAfter = numbers[1];
+        sunsetBefore = numbers[2];
+        sunsetAfter = numbers[3];
+
+    } else {
+
+        activeRecordingPeriods = packet[18];
+
+        recordingPeriods = [];
+
+        for (let i = 0; i < activeRecordingPeriods; i += 1) {
+
+            const startMinutes = twoBytesToNumber(packet, 19 + 4 * i);
+            const endMinutes = twoBytesToNumber(packet, 21 + 4 * i);
+
+            recordingPeriods.push({startMinutes, endMinutes});
+
+        }
 
     }
 
@@ -179,24 +299,6 @@ exports.read = (packet) => {
     const displayVoltageRange = (packedByte0 >> 1) & 1;
 
     const minimumTriggerDuration = (packedByte0 >> 2) & 0b111111;
-
-    /* Read remaining settings */
-
-    const packedByte3 = packet[61];
-
-    const energySaverModeEnabled = packedByte3 & 1;
-
-    const disable48DCFilter = (packedByte3 >> 1) & 1;
-
-    const timeSettingFromGPSEnabled = (packedByte3 >> 2) & 1;
-
-    const magneticSwitchEnabled = (packedByte3 >> 3) & 1;
-
-    const lowGainRangeEnabled = (packedByte3 >> 4) & 1;
-
-    const enableFrequencyFilter = (packedByte3 >> 5) & 1;
-
-    const dailyFolders = (packedByte3 >> 6) & 1;
 
     /* Indices contain either amplitude or frequency threshold, so use enableFrequencyFilter to tell which is which */
 
@@ -294,14 +396,42 @@ exports.read = (packet) => {
     console.log('Enable LED:', enableLED === 1);
     console.log('Enable battery level indication:', disableBatteryLevelDisplay === 0);
 
-    console.log('Active recording periods:', activeStartStopPeriods);
+    if (sunRecordingEnabled) {
 
-    for (let j = 0; j < activeStartStopPeriods; j++) {
+        console.log('Sunrise/sunset schedule enabled');
 
-        const startMins = startStopPeriods[j].startMinutes;
-        const endMins = startStopPeriods[j].endMinutes;
+        console.log('\tSun mode:', sunMode);
 
-        console.log('Start: ' + formatTime(startMins) + ' (' + startMins + ') - End: ' + formatTime(endMins) + ' (' + endMins + ')');
+        const sunDefinitionStrings = ['Sunrise/sunset', 'Civil', 'Nautical', 'Astronomical'];
+        console.log('\tSun event:', sunEvent, '-', sunDefinitionStrings[sunEvent]);
+
+        const latitudeDirection = latitude.positiveDirection ? 'N' : 'S';
+        console.log('\tLatitude:', latitude.degrees, '.', latitude.hundredths, '°', latitudeDirection);
+
+        const longitudeDirection = longitude.positiveDirection ? 'E' : 'W';
+        console.log('\tLongitude:', longitude.degrees, '.', longitude.hundredths, '°', longitudeDirection);
+
+        console.log('\tSun rounding:', sunRounding);
+
+        console.log('\tBefore sunrise mins:', sunriseBefore);
+        console.log('\tAfter sunrise mins:', sunriseAfter);
+        console.log('\tBefore sunset mins:', sunsetBefore);
+        console.log('\tAfter sunset mins:', sunsetAfter);
+
+    } else {
+
+        console.log('Standard schedule enabled');
+
+        console.log('\tActive recording periods:', activeRecordingPeriods);
+
+        for (let j = 0; j < activeRecordingPeriods; j++) {
+
+            const startMins = recordingPeriods[j].startMinutes;
+            const endMins = recordingPeriods[j].endMinutes;
+
+            console.log('\tStart: ' + formatTime(startMins) + ' (' + startMins + ') - End: ' + formatTime(endMins) + ' (' + endMins + ')');
+
+        }
 
     }
 

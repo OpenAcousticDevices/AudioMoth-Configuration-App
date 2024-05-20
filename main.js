@@ -21,7 +21,7 @@ require('electron-debug')({
     devToolsMode: 'undocked'
 });
 
-let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, timeZoneSelectionWindow;
+let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, timeZoneSelectionWindow, mapWindow;
 
 const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
 const standardWindowSettings = {
@@ -47,6 +47,8 @@ const standardProgressBarSettings = {
 let timeZoneMode = constants.TIME_ZONE_MODE_UTC;
 
 let customTimeZone = 0;
+
+let sunDefinitionIndex = constants.SUNRISE_AND_SUNSET;
 
 /* Generate settings objects for windows and progress bars */
 
@@ -408,6 +410,62 @@ function openAboutWindow () {
 
 }
 
+function openMapWindow (event, lat, lon) {
+
+    const windowWidth = 600;
+    const windowHeight = 550;
+
+    const newZoom = lat[0] === 0 && lat[1] === 0 && lon[0] === 0 && lon[1] === 0 ? 5 : 12;
+
+    if (mapWindow) {
+
+        mapWindow.webContents.send('update-location-sub-window', lat, lon, true, newZoom);
+
+        mapWindow.show();
+        return;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Select Location');
+    settings.resizable = true;
+    mapWindow = new BrowserWindow(settings);
+
+    mapWindow.setMenu(null);
+    mapWindow.loadURL(path.join('file://', __dirname, '/map.html'));
+
+    require('@electron/remote/main').enable(mapWindow.webContents);
+
+    mapWindow.on('close', (e) => {
+
+        e.preventDefault();
+        mapWindow.hide();
+
+    });
+
+    mapWindow.webContents.on('dom-ready', () => {
+
+        /* If the co-ordinate text boxes have been changed from the default then zoom in when you load the window */
+
+        mapWindow.webContents.send('update-location-sub-window', lat, lon, true, newZoom);
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (mapWindow) {
+
+            mapWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+}
+
+ipcMain.on('open-map-window', openMapWindow);
+
 function openTimeZoneSelectionWindow () {
 
     let windowWidth = 448;
@@ -586,6 +644,52 @@ app.on('ready', () => {
             click: () => {
 
                 mainWindow.webContents.send('amplitude-threshold-scale', 0);
+
+            }
+        }, {
+            type: 'separator'
+        }, {
+            type: 'radio',
+            id: 'sun0',
+            label: 'Sunrise And Sunset',
+            checked: true,
+            click: () => {
+
+                sunDefinitionIndex = constants.SUNRISE_AND_SUNSET;
+                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+
+            }
+        }, {
+            type: 'radio',
+            id: 'sun1',
+            label: 'Civil Dawn And Dusk',
+            checked: false,
+            click: () => {
+
+                sunDefinitionIndex = constants.CIVIL_DAWN_AND_DUSK;
+                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+
+            }
+        }, {
+            type: 'radio',
+            id: 'sun2',
+            label: 'Nautical Dawn And Dusk',
+            checked: false,
+            click: () => {
+
+                sunDefinitionIndex = constants.NAUTICAL_DAWN_AND_DUSK;
+                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+
+            }
+        }, {
+            type: 'radio',
+            id: 'sun3',
+            label: 'Astronomical Dawn And Dusk',
+            checked: false,
+            click: () => {
+
+                sunDefinitionIndex = constants.ASTRONOMICAL_DAWN_AND_DUSK;
+                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
 
             }
         }, {
@@ -812,7 +916,7 @@ ipcMain.on('set-expansion-bar-completed', (event, successCount, errorCount, erro
 
         expandProgressBar.detail = messageText;
 
-        setTimeout(function () {
+        setTimeout(() => {
 
             expandProgressBar.close();
             expandProgressBar = null;
@@ -941,7 +1045,7 @@ ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWri
 
         splitProgressBar.detail = messageText;
 
-        setTimeout(function () {
+        setTimeout(() => {
 
             splitProgressBar.close();
             splitProgressBar = null;
@@ -1070,7 +1174,7 @@ ipcMain.on('set-downsample-bar-completed', (event, successCount, errorCount, err
 
         downsampleProgressBar.detail = messageText;
 
-        setTimeout(function () {
+        setTimeout(() => {
 
             downsampleProgressBar.close();
             downsampleProgressBar = null;
@@ -1188,7 +1292,7 @@ ipcMain.on('set-summarise-bar-completed', (event, successCount, finaliseResult) 
 
         summariseProgressBar.detail = messageText;
 
-        setTimeout(function () {
+        setTimeout(() => {
 
             summariseProgressBar.close();
             summariseProgressBar = null;
@@ -1277,5 +1381,38 @@ ipcMain.on('set-custom-time-zone', (event, tz) => {
 ipcMain.on('request-custom-time-zone', (event) => {
 
     event.returnValue = customTimeZone;
+
+});
+
+ipcMain.on('request-sun-definition-index', (event) => {
+
+    event.returnValue = sunDefinitionIndex;
+
+});
+
+ipcMain.on('set-sun-definition-index', (event, index) => {
+
+    sunDefinitionIndex = index;
+
+    const menu = Menu.getApplicationMenu();
+    const sunDefinitionRadioButtons = [menu.getMenuItemById('sun0'), menu.getMenuItemById('sun1'), menu.getMenuItemById('sun2'), menu.getMenuItemById('sun3')];
+
+    sunDefinitionRadioButtons[sunDefinitionIndex].checked = true;
+
+});
+
+ipcMain.on('update-location-main-window', (event, latArray, lonArray) => {
+
+    mainWindow.webContents.send('update-location', latArray, lonArray);
+
+});
+
+ipcMain.on('update-location-sub-window', (event, lat, lon) => {
+
+    if (mapWindow) {
+
+        mapWindow.webContents.send('update-location-sub-window', lat, lon, false);
+
+    }
 
 });

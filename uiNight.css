@@ -39,3 +39,8 @@ select {
 .greyStart::first-letter, .allGrey {
   color: #404040;
 }
+
+.tab-pane {
+  background: #000000;
+  color: #FFFFFF;
+}

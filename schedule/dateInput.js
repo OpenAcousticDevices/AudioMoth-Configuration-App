@@ -63,7 +63,7 @@ function handleFocusOut (e) {
         input.style.border = '1px solid #0000ff';
         input.style.color = 'blue';
 
-        setTimeout(function () {
+        setTimeout(() => {
 
             if (!input.disabled) {
 

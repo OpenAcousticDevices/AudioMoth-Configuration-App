@@ -6,7 +6,7 @@
 
 'use strict';
 
-const DEFAULT_WIDTH = '90px';
+const DEFAULT_WIDTH = '75px';
 const DEFAULT_HEIGHT = '25px';
 
 const inputData = {};
@@ -41,30 +41,13 @@ exports.setEnabled = (div, setting) => {
 
     } else {
 
-        switch (process.platform) {
+        textInput.style.backgroundColor = 'EBEBE4';
+        textInput.style.border = '1px solid #cccccc';
 
-        case 'linux':
-        case 'win32':
-            textInput.style.backgroundColor = '#EBEBE4';
-            textInput.style.border = '1px solid #cccccc';
+        for (let i = 0; i < uiElements.length; i++) {
 
-            for (let i = 0; i < uiElements.length; i++) {
-
-                uiElements[i].classList.add('grey');
-                uiElements[i].style.backgroundColor = 'EBEBE4';
-
-            }
-
-            break;
-
-        case 'darwin':
-            for (let i = 0; i < uiElements.length; i++) {
-
-                uiElements[i].classList.add('grey');
-                uiElements[i].style.backgroundColor = 'white';
-
-            }
-            break;
+            uiElements[i].classList.add('grey');
+            uiElements[i].style.backgroundColor = 'EBEBE4';
 
         }
 
@@ -76,12 +59,12 @@ exports.setEnabled = (div, setting) => {
 
 /**
  * @param {Element} div Parent div element
- * @returns [degrees, minutes, direction]
+ * @returns [degrees, hundredths, direction]
  */
 exports.getValue = (div) => {
 
-    const inputValues = div.getAttribute('inputValues').split(',');
-    return [parseInt(inputValues[0]), parseInt(inputValues[1]), inputValues[2]];
+    const values = getInputValues(div);
+    return [parseInt(values[0]), parseInt(values[1]), values[2]];
 
 };
 
@@ -306,7 +289,7 @@ function getMaxValue (div) {
 
     } else if (selectedIndex === 1) {
 
-        maxValue = 59;
+        maxValue = 99;
 
         if (inputValues[0] === degreeMax) {
 
@@ -714,9 +697,10 @@ function highlightInput (div) {
  * @param {string} divName Name assigned to custom div
  * @param {boolean} isLat Is the element a latitude or longitude coordinate
  * @param {boolean} alternateImplementation Whether or not to use alternate implementation which allows leading zeroes
+ * @param {Function} focusOutFunction Function called when focusing away from input
  * @returns Parent div element
  */
-exports.create = (divName, isLat, alternateImplementation) => {
+exports.create = (divName, isLat, alternateImplementation, focusOutFunction) => {
 
     const customDiv = document.getElementById(divName);
 
@@ -751,8 +735,8 @@ exports.create = (divName, isLat, alternateImplementation) => {
 
     const numSpanStyle1 = 'display: inline-block; text-align: center; width: 7px;';
     const numSpanStyle2 = 'display: inline-block; text-align: center; width: 15px;';
+    const dotSpanStyle = 'display: inline-block; text-align: center; width: 4px;';
     const degreeSpanStyle = 'display: inline-block; text-align: center; width: 8px;';
-    const apostropheSpanStyle = 'display: inline-block; text-align: center; width: 6px;';
     const directionSpanStyle = 'display: inline-block; text-align: left; width: 12px;';
 
     const inputNode = document.createElement('input');
@@ -767,7 +751,8 @@ exports.create = (divName, isLat, alternateImplementation) => {
 
     const holderNode = document.createElement('div');
     holderNode.className = 'holder';
-    holderNode.style = 'position: absolute; top: 0px; margin-left: 20px; margin-top: 3px;';
+    const holderMarginLeft = isLat ? 9 : 7;
+    holderNode.style = 'position: absolute; top: 0px; margin-left: ' + holderMarginLeft + 'px; margin-top: 3px;';
 
     const coordSpanNode0 = document.createElement('span');
     coordSpanNode0.className = 'coord-span0';
@@ -779,20 +764,20 @@ exports.create = (divName, isLat, alternateImplementation) => {
     coordSpanNode1.innerText = '00';
     coordSpanNode1.style = numSpanStyle2;
 
-    const degreeSpanNode = document.createElement('span');
-    degreeSpanNode.className = 'degree-span';
-    degreeSpanNode.innerText = '°';
-    degreeSpanNode.style = degreeSpanStyle;
+    const dotSpanNode = document.createElement('span');
+    dotSpanNode.className = 'dot-span';
+    dotSpanNode.innerText = '.';
+    dotSpanNode.style = dotSpanStyle;
 
     const coordSpanNode2 = document.createElement('span');
     coordSpanNode2.className = 'coord-span2';
     coordSpanNode2.innerText = '00';
     coordSpanNode2.style = numSpanStyle2;
 
-    const apostropheSpanNode = document.createElement('span');
-    apostropheSpanNode.className = 'apostrophe-span';
-    apostropheSpanNode.innerText = '\'';
-    apostropheSpanNode.style = apostropheSpanStyle;
+    const degreeSpanNode = document.createElement('span');
+    degreeSpanNode.className = 'degree-span';
+    degreeSpanNode.innerText = '°';
+    degreeSpanNode.style = degreeSpanStyle;
 
     const directionSpanNode = document.createElement('span');
     directionSpanNode.className = 'direction-span';
@@ -801,9 +786,9 @@ exports.create = (divName, isLat, alternateImplementation) => {
 
     holderNode.appendChild(coordSpanNode0);
     holderNode.appendChild(coordSpanNode1);
-    holderNode.appendChild(degreeSpanNode);
+    holderNode.appendChild(dotSpanNode);
     holderNode.appendChild(coordSpanNode2);
-    holderNode.appendChild(apostropheSpanNode);
+    holderNode.appendChild(degreeSpanNode);
     holderNode.appendChild(directionSpanNode);
 
     blockerNode.appendChild(holderNode);
@@ -917,6 +902,20 @@ exports.create = (divName, isLat, alternateImplementation) => {
         highlightInput(div);
 
         updateGrey(div);
+
+        const inputValues = getInputValues(div);
+
+        if (inputValues[0] === 0 && inputValues[1] === 0 && inputValues[2] === false) {
+
+            setValue(div, 0, 0, true);
+
+        }
+
+        if (focusOutFunction) {
+
+            focusOutFunction();
+
+        }
 
     });
 

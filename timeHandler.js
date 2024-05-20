@@ -65,13 +65,13 @@ function shiftTime (time, toUTC) {
 
     timeZoneOffset = toUTC ? timeZoneOffset * -1 : timeZoneOffset;
 
-    time = (time + timeZoneOffset) % 1440;
+    time = (time + timeZoneOffset) % constants.MINUTES_IN_DAY;
 
     /* If time zone offset move time over midnight */
 
     if (time < 0) {
 
-        time += 1440;
+        time += constants.MINUTES_IN_DAY;
 
     }
 

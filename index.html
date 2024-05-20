@@ -4,12 +4,13 @@
     <head>
         <link rel="preload stylesheet" as="style" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
         <link rel="preload stylesheet" as="style" href="node_modules/bootstrap-slider/dist/css/bootstrap-slider.css">
+        <link rel="stylesheet" href="VerticalTabs/verticalTabs.css">
         <link rel="preload stylesheet" as="style" href="index.css">
         <link rel="preload stylesheet" as="style" id="uiCSS" href="ui.css">
     </head>
 
-    <body style="font-size: 10pt; overflow-x:hidden; font-family: Helvetica, Arial, sans-serif;">
-        <div class="container" style="padding: 8px;">
+    <body style="font-size: 10pt; overflow:hidden; font-family: Helvetica, Arial, sans-serif;">
+        <div class="container vtabs" style="padding: 8px; max-width: none;">
 
             <!-- Time -->
             <div class="row">
@@ -263,48 +264,177 @@
                     <!-- Schedule content -->
                     <div class="row" style="margin-top: 8px;">
                         <div class="col-12" style="text-align: center; margin-bottom: 0px; margin-top: 5px">
-                            <div id="canvas-holder" style="margin-bottom: 5px;">
-                                <canvas id="time-canvas" width="510px" height="25px" style="border:1px solid; vertical-align: bottom"></canvas>
+                            <div id="canvas-holder" style="margin-bottom: 5px; width: 510px; height: 25px; position: relative; left: 50%; transform: translateX(-255px);">
+                                <canvas id="sun-canvas" width="510px" height="25px" style="border:1px solid; vertical-align: bottom; position: absolute; top: 0px; left: 0px; display: none;"></canvas>
+                                <canvas id="time-canvas" width="510px" height="25px" style="border:1px solid; vertical-align: bottom; position: absolute; top: 0px; left: 0px;"></canvas>
                             </div>
                             <canvas id="label-canvas" width="540px" height="13px"></canvas>
                         </div>
                     </div>
                     
-                    <!-- Standard schedule UI -->
-                    
-                    <div style="border: #cdcdcd thin solid;">
-                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
-                    
-                            <div class="col-6">
-                                <div class="row" style="margin-left: 5px">
-                                    <div class="col-6" id="start-time-label" style="text-align: left; margin-top: 1%;">Start recording:</div>
-                                    <div class="col-6">
-                                        <div style="float: right;">
-                                            <div id="start-time-input"></div>
+                    <!-- Schedule UI -->
+
+                    <div class="row">
+
+                        <div class="col-1" style="padding-right: 0px;">
+                            <ul class="nav nav-tabs left-tabs" role="tablist">
+                                <li class="nav-item" role="presentation" style="margin-left: 1px; width: 35px;">
+                                    <div id="manual-tab-button" class="nav-link tab-clickable active" role="tab" data-bs-toggle="tab" data-bs-target="#manual-tab" aria-controls="manual-tab" aria-selected="true" style="padding-left: 8px;">
+                                        <div style="writing-mode: tb-rl; transform: rotate(-180deg);">Fixed</div>
+                                    </div>
+                                </li>
+                                <li class="nav-item" role="presentation" style="margin-left: 1px; width: 35px;">
+                                    <div id="sun-tab-button" class="nav-link tab-clickable" role="tab" data-bs-toggle="tab" data-bs-target="#sun-tab" aria-controls="sun-tab" aria-selected="false" style="padding-left: 8px;">
+                                        <div style="writing-mode: tb-rl; transform: rotate(-180deg);" id="sun-tab-button-text">Sunrise/sunset</div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="col-11 wider-col" style="padding-left: 0px; border-top: #cdcdcd thin solid; border-right: #cdcdcd thin solid; border-bottom: #cdcdcd thin solid; ">
+                            <div class="" style="width: 100%; height: 182px; padding: 0px; margin-left: 1px; margin-right: 0px;">
+                                <div id="accordion-left-tabs" class="tab-content accordion">
+
+                                    <div id="manual-tab" class="tab-pane fade show active accordion-item" role="tabpanel">
+
+                                        <div class="row" data-bs-parent="#accordion-left-tabs" style="margin-top: 12px; margin-bottom: 8px; padding-left: 13px;">
+
+                                            <div class="col-6">
+                                                <div class="row">
+                                                    <div class="col-6" id="start-time-label" style="text-align: left; margin-top: 1%;">Start recording:</div>
+                                                    <div class="col-6">
+                                                        <div style="float: right;">
+                                                            <div id="start-time-input"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="margin-top: 8px;">
+                                                    <div class="col-6" id="end-time-label" style="text-align: left; margin-top: 4px;">End recording:</div>
+                                                    <div class="col-6">
+                                                        <div style="float: right;">
+                                                            <div id="end-time-input"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" style="margin-top: 17px;">
+                                                    <div class="col-12">
+                                                        <button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt;">Add recording period</button>
+                                                        <button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt; margin-top: 10px;" disabled>Remove selected period</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                
+                                            <div class="col-6" style="text-align: right; padding-right: 0px;">
+                                                <select id="time-list" size="6" style="height: 110px; width: 220px; margin-right: 16px; text-align: center; overflow-y: auto;"></select>
+                                                <button id="clear-time-button" class="btn btn-primary" style="width: 220px; font-size: 11pt; margin-top: 8px; margin-right: 16px;" disabled>Clear all periods</button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row" style="margin-top: 8px; margin-left: 5px;">
-                                    <div class="col-6" id="end-time-label" style="text-align: left; margin-top: 4px;">End recording:</div>
-                                    <div class="col-6">
-                                        <div style="float: right;">
-                                            <div id="end-time-input"></div>
+                    
+                                    <div id="sun-tab" class="tab-pane fade accordion-item" role="tabpanel" style="width: 100%;">
+
+                                        <div class="row" data-bs-parent="#accordion-left-tabs" aria-labelledby="sun-left-tab">
+                                            
+                                            <div class="row" style="margin-top: 12px; padding-right: 0px;">
+
+                                                <div class="col-7" style="text-align: left; padding-left: 25px;">
+                                                    <span class="settings-text" id="coord-lat-label" style="vertical-align: middle;">Location (ddd.dd°):</span>
+                                                </div>
+                                                <div class="col-2" style="padding-right: 2px; padding-left: 0px;">
+                                                    <div style="float: right; margin-right: 3px;">
+                                                        <div id="coord-lat-input" latlon="lat" aria-label="Latitude co-ordinate"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-2" style="padding-right: 2px; padding-left: 0px;">
+                                                    <div style="float: right; margin-right: 3px;">
+                                                        <div id="coord-lon-input" latlon="lon" aria-label="Longitude co-ordinate"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-1" style="text-align: right; padding-left: 3px;">
+                                                    <button id="map-button" class="btn btn-secondary" style="width: 35px; height: 25px; padding: 1px;"><img id="geo-icon" class="button-icon" src="./resources/geo.svg" alt="Bootstrap"></button>
+                                                </div>
+                    
+                                            </div>
+
+                                            <div class="row" style="margin-top: 8px; padding-right: 0px;">
+
+                                                <div class="col-8" style="text-align: left; padding-left: 25px;">
+                                                    <span class="settings-text" id="sun-mode-label" style="vertical-align: middle;">Sun recording mode:</span>
+                                                </div>
+                                                <div class="col-4" style="padding-right: 2px;">
+                                                    <div style="float: right; margin-right: 3px;">
+                                                        <select class="form-select-sm" id="sun-mode-select" style="width: 185px;">
+                                                            <option value="0">Sunrise</option>
+                                                            <option value="1">Sunset</option>
+                                                            <option value="2" selected="selected">Sunrise and Sunset</option>
+                                                            <option value="3">Sunset to Sunrise</option>
+                                                            <option value="4">Sunrise to Sunset</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+    
+                                            <div class="row" style="margin-top: 8px; padding-right: 0px;">
+                                        
+                                                <div class="col-8" style="text-align: left; padding-left: 25px;">
+                                                    <span class="settings-text" id="sunrise-interval-label" style="vertical-align: middle;">Sunrise interval - before and after (mins):</span>
+                                                </div>
+                                                <div class="col-2" style="padding-right: 0px;">
+                                                    <div style="float: right;">
+                                                        <div id="sunrise-before-interval-input"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-2" style="padding-left: 0px; padding-right: 2px;">
+                                                    <span style="margin-left: 8px;">-</span>
+                                                    <div style="margin-right: 3px; float: right;">
+                                                        <div id="sunrise-after-interval-input"></div>
+                                                    </div>
+                                                </div>
+                                        
+                                            </div>
+                                        
+                                            <div class="row" style="margin-top: 8px; padding-right: 0px;">
+                                        
+                                                <div class="col-8" style="text-align: left; padding-left: 25px;">
+                                                    <span class="settings-text" id="sunset-interval-label" style="vertical-align: middle;">Sunset interval - before and after (mins):</span>
+                                                </div>
+
+                                                <div class="col-2" style="padding-right: 0px;">
+                                                    <div style="float: right;">
+                                                        <div id="sunset-before-interval-input"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-2" style="padding-left: 0px; padding-right: 2px;">
+                                                    <span style="margin-left: 8px;">-</span>
+                                                    <div style="margin-right: 3px; float: right;">
+                                                        <div id="sunset-after-interval-input"></div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            <div class="row" style="margin-top: 8px; padding-right: 0px;">
+                    
+                                                <div class="col-8" style="text-align: left; padding-left: 25px;">
+                                                    <label id="rounding-label" style="vertical-align: middle;">Sunrise/sunset rounding (mins):</label>
+                                                </div>
+                                                <div class="col-4" style="padding-right: 2px;">
+                                                    <div style="margin-right: 3px; float: right;">
+                                                        <div id="sun-rounding-input"></div>
+                                                    </div>
+                                                </div>
+                    
+                                            </div>
+
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="row" style="margin-top: 8px; margin-left: 5px;">
-                                    <div class="col-12">
-                                        <button id="add-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt;">Add recording period</button>
-                                        <button id="remove-time-button" class="btn btn-primary" style="width: 100%; font-size: 11pt; margin-top: 8px;" disabled>Remove selected period</button>
+
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-6" style="text-align: right;">
-                                <select id="time-list" size="6" style="max-height: 98px; width: 230px; margin-right: 16px; text-align: center;"></select>
-                                <button id="clear-time-button" class="btn btn-primary" style="width: 230px; font-size: 11pt; margin-top: 8px; margin-right: 16px;" disabled>Clear all periods</button>
-                            </div>
                         </div>
+
                     </div>
 
                     <!-- Schedule settings -->
@@ -774,9 +904,9 @@
                         </div>
                         <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
                             <div class="col-9" style="text-align: left;">
-                                <label for="gps-time-checkbox" style="margin-left: 17px; margin-bottom: 0px;">Enable GPS for time setting:</label>
+                                <label for="gps-time-checkbox" style="margin-left: 17px; margin-bottom: 0px;">Enable GPS for time and location setting:</label>
                             </div>
-                            <div class="col-3" style="text-align: right;" title="Whether the GPS can be used to update the device's clock.">
+                            <div class="col-3" style="text-align: right;" title="Whether the GPS can be used to update the device's clock and location.">
                                 <input id="gps-time-checkbox" name="GPSTimeSetting" type="checkbox" style="margin-right: 16px;">
                             </div>
                         </div>

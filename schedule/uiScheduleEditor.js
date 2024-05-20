@@ -4,12 +4,15 @@
  * November 2019
  *****************************************************************************/
 
+/* global Event */
+
 const electron = require('electron');
 
 const ariaSpeak = require('../ariaSpeak.js');
 
 const schedule = require('../schedule/schedule.js');
 const scheduleEditor = require('./scheduleEditor.js');
+const scheduleBar = require('../scheduleBar.js');
 const timeHandler = require('../timeHandler.js');
 const ui = require('../ui.js');
 const timeInput = require('./timeInput.js');
@@ -60,11 +63,13 @@ function addTimeOnClick () {
 
     ariaSpeak.speak(pad(startHours) + ':' + pad(startMins) + ' to ' + pad(endHours) + ':' + pad(endMins));
 
-    scheduleEditor.formatAndAddTime(startTimestamp, endTimestamp);
+    let timePeriods = schedule.getTimePeriods();
+    timePeriods = scheduleEditor.formatAndAddTime(startTimestamp, endTimestamp, timePeriods);
+    schedule.setTimePeriods(timePeriods);
 
-    scheduleEditor.updateScheduleBar();
+    scheduleBar.updateCanvas();
     updateTimeList();
-    scheduleEditor.clearSelectedPeriod();
+    scheduleBar.clearSelectedPeriod();
 
 }
 
@@ -78,7 +83,7 @@ function getTimePeriodFromList () {
     };
 
     /* Allows time list to display 24:00 as 0:00 */
-    timePeriod.endMins = (timePeriod.endMins === 0) ? 1440 : 0;
+    timePeriod.endMins = (timePeriod.endMins === 0) ? constants.MINUTES_IN_DAY : 0;
 
     return timePeriod;
 
@@ -107,10 +112,10 @@ function removeTimeOnClick () {
 
     schedule.setTimePeriods(timePeriods);
 
-    scheduleEditor.updateScheduleBar();
+    scheduleBar.updateCanvas();
     updateTimeList();
     removeTimeButton.disabled = true;
-    scheduleEditor.clearSelectedPeriod();
+    scheduleBar.clearSelectedPeriod();
 
 }
 
@@ -144,7 +149,7 @@ function updateTimeList () {
 
         const startMins = tp[i].startMins;
         let endMins = tp[i].endMins;
-        endMins = endMins === 0 ? 1440 : endMins;
+        endMins = endMins === 0 ? constants.MINUTES_IN_DAY : endMins;
 
         const timeZoneText = '(' + timeHandler.getTimeZoneText() + ')';
 
@@ -157,7 +162,7 @@ function updateTimeList () {
 
     /* Disable or enable action buttons in response to number time periods entered */
 
-    addTimeButton.disabled = (tp.length >= schedule.MAX_PERIODS);
+    addTimeButton.disabled = (tp.length >= constants.MAX_PERIODS);
     clearTimeButton.disabled = (tp.length === 0);
 
     updateLifeDisplayOnChange();
@@ -170,10 +175,11 @@ electron.ipcRenderer.on('update-schedule', updateTimeList);
 
 function clearTimesOnClick () {
 
-    scheduleEditor.clearTimes();
+    schedule.setTimePeriods([]);
+    scheduleBar.updateCanvas();
     updateTimeList();
     removeTimeButton.disabled = true;
-    scheduleEditor.clearSelectedPeriod();
+    scheduleBar.clearSelectedPeriod();
 
 }
 
@@ -199,11 +205,11 @@ exports.prepareUI = (changeFunction) => {
 
             const valueSplit = timeList.value.split(',');
             const selectedTimePeriod = {startMins: parseInt(valueSplit[0]), endMins: parseInt(valueSplit[1])};
-            scheduleEditor.setSelectedPeriod(selectedTimePeriod);
+            scheduleBar.setSelectedPeriod(selectedTimePeriod);
 
         } else {
 
-            scheduleEditor.clearSelectedPeriod();
+            scheduleBar.clearSelectedPeriod();
 
         }
 
@@ -212,3 +218,11 @@ exports.prepareUI = (changeFunction) => {
     timeInput.setValue(endTimeInput, 24, 0);
 
 };
+
+scheduleBar.prepareScheduleCanvas((selectedIndex) => {
+
+    timeList.options.selectedIndex = selectedIndex;
+    timeList.focus();
+    timeList.dispatchEvent(new Event('change'));
+
+});

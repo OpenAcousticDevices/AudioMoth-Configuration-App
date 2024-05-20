@@ -1,0 +1,10 @@
+$horizontal-tabs-min: 350px;
+
+$vertical-tabs-min: 400px;
+
+$fixed-tab-size: 92px;
+
+$left-tabs-text-align: left;
+$right-tabs-text-align: right;
+
+@import "../node_modules/bootstrap-5-vertical-tabs/scss/responsive-vertical-tabs";

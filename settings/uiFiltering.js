@@ -1488,42 +1488,36 @@ function prepareUI (changeFunction, checkRecordingDurationFunction, filterValueC
     bandPassFilterSlider.on('change', () => {
 
         updateFilterLabel();
-        ariaSpeak.speak(filterLabel.textContent.replace('kHz', 'kilohertz'));
 
     });
 
     lowPassFilterSlider.on('change', () => {
 
         updateFilterLabel();
-        ariaSpeak.speak(filterLabel.textContent.replace('kHz', 'kilohertz'));
 
     });
 
     highPassFilterSlider.on('change', () => {
 
         updateFilterLabel();
-        ariaSpeak.speak(filterLabel.textContent.replace('kHz', 'kilohertz'));
 
     });
 
     amplitudeThresholdSlider.on('change', () => {
 
         updateThresholdLabel();
-        ariaSpeak.speak(thresholdLabel.textContent.replace('kHz', 'kilohertz'));
 
     });
 
     goertzelThresholdSlider.on('change', () => {
 
         updateThresholdLabel();
-        ariaSpeak.speak(thresholdLabel.textContent.replace('kHz', 'kilohertz'));
 
     });
 
     goertzelFilterCentreSlider.on('change', () => {
 
         updateThresholdLabel();
-        ariaSpeak.speak(goertzelFilterLabel.textContent.replace('kHz', 'kilohertz'));
 
     });
 

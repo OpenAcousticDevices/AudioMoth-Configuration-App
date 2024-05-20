@@ -1,0 +1,268 @@
+/*
+ * Responsive vertical tabs for Bootstrap 5
+ *
+ * Main stylesheet. @import "custom-variables.sccss" before
+ * this file to compile into final CSS
+ *
+ * Copyright (c) 2020-2021 Tromgy (tromgy@yahoo.com)
+ *
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt). A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
+ *
+ */
+.right-tabs.sideways-tabs, .left-tabs.sideways-tabs {
+  margin-top: 5rem;
+  border: none;
+  position: relative;
+  margin-bottom: 0;
+}
+
+.right-tabs.sideways-tabs, .left-tabs.sideways-tabs, .right-tabs.nav-tabs, .left-tabs.nav-tabs {
+  height: 100%;
+  flex-direction: column;
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 0.5rem;
+}
+
+.vtabs .tab-clickable {
+  cursor: pointer;
+}
+
+.left-tabs.nav-tabs {
+  border-right: var(--bs-border-width) solid var(--bs-border-color);
+  border-bottom: none;
+}
+
+.left-tabs .nav-link {
+  border-top-left-radius: var(--bs-border-radius);
+  border-bottom-left-radius: var(--bs-border-radius);
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+  margin-right: -var(--bs-border-width);
+  text-align: left;
+}
+
+.left-tabs .nav-link:hover {
+  border-right: var(--bs-border-width) solid transparent;
+}
+
+.left-tabs .nav-link.active {
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+  border-right: var(--bs-border-width) solid transparent;
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+  border-left: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.right-tabs.nav-tabs {
+  border-left: var(--bs-border-width) solid var(--bs-border-color);
+  border-bottom: none;
+}
+
+.right-tabs .nav-link {
+  border-top-right-radius: var(--bs-border-radius);
+  border-bottom-right-radius: var(--bs-border-radius);
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  margin-left: -var(--bs-border-width);
+  text-align: right;
+}
+
+.right-tabs .nav-link:hover {
+  border-left: var(--bs-border-width) solid transparent;
+}
+
+.right-tabs .nav-link.active {
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+  border-right: var(--bs-border-width) solid var(--bs-border-color);
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+  border-left: var(--bs-border-width) solid transparent;
+}
+
+.left-tabs.sideways-tabs {
+  border-right: none;
+  left: -3.2rem;
+}
+
+.sideways-tabs.left-tabs .nav-item {
+  transform: rotate(-90deg);
+  height: 1rem;
+  margin-bottom: calc(92px - 1rem);
+}
+
+.sideways-tabs.left-tabs .nav-link {
+  width: 92px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top-right-radius: var(--bs-border-radius);
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: var(--bs-border-radius);
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.sideways-tabs.left-tabs .nav-link:hover {
+  border-right: var(--bs-border-width) solid #e9ecef;
+}
+
+.sideways-tabs.left-tabs .nav-link.active {
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+  border-right: var(--bs-border-width) solid var(--bs-border-color);
+  border-bottom: var(--bs-border-width) solid transparent;
+  border-left: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.right-tabs.sideways-tabs {
+  border-left: none;
+  right: 3.2rem;
+}
+
+.sideways-tabs.right-tabs .nav-item {
+  transform: rotate(90deg);
+  height: 1rem;
+  margin-bottom: calc(92px - 1rem);
+}
+
+.sideways-tabs.right-tabs .nav-link {
+  width: 92px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top-right-radius: var(--bs-border-radius);
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: var(--bs-border-radius);
+  border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.sideways-tabs.right-tabs .nav-link:hover {
+  border-left: var(--bs-border-width) solid #e9ecef;
+}
+
+.sideways-tabs.right-tabs .nav-link.active {
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+  border-right: var(--bs-border-width) solid var(--bs-border-color);
+  border-bottom: var(--bs-border-width) solid transparent;
+  border-left: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.vtabs .accordion-header {
+  display: none;
+}
+
+@media (max-width: 400px) {
+  .left-tabs.nav-tabs {
+    flex-direction: row;
+    border-right: none;
+    border-left: none;
+    min-width: 100%;
+    border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+    left: auto;
+    margin-top: auto;
+  }
+  .left-tabs .nav-link {
+    width: 92px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top-right-radius: var(--bs-border-radius);
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-left-radius: var(--bs-border-radius);
+    margin-right: 0;
+    margin-bottom: -var(--bs-border-width);
+  }
+  .left-tabs .nav-link.nav-link:hover {
+    border-right-color: var(--bs-border-color);
+    border-bottom-color: transparent;
+  }
+  .left-tabs .nav-link.active {
+    border-top-color: var(--bs-border-color);
+    border-right-color: var(--bs-border-color);
+    border-bottom-color: transparent;
+    border-left-color: var(--bs-border-color);
+  }
+  .sideways-tabs.left-tabs .nav-item,
+  .sideways-tabs.right-tabs .nav-item {
+    transform: none;
+    height: auto;
+    width: auto;
+    margin-bottom: 0;
+  }
+  .right-tabs.nav-tabs {
+    flex-direction: row;
+    border-right: none;
+    border-left: none;
+    min-width: 100%;
+    border-top: var(--bs-border-width) solid var(--bs-border-color);
+    right: auto;
+    margin-top: auto;
+  }
+  .sideways-tabs.right-tabs .nav-link,
+  .right-tabs .nav-link {
+    width: 92px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: var(--bs-border-radius);
+    border-bottom-left-radius: var(--bs-border-radius);
+    border-top-left-radius: 0;
+    margin-left: 0;
+    margin-top: -var(--bs-border-width);
+    border-bottom-color: transparent;
+  }
+  .right-tabs .nav-link:hover {
+    border-top-color: transparent;
+    border-left-color: var(--bs-border-color);
+    border-bottom-color: #e9ecef;
+  }
+  .sideways-tabs.right-tabs .nav-link.active,
+  .right-tabs .nav-link.active {
+    border-top-color: transparent;
+    border-right-color: var(--bs-border-color);
+    border-bottom-color: var(--bs-border-color);
+    border-left-color: var(--bs-border-color);
+  }
+}
+@media (max-width: 350px) {
+  .left-tabs.nav-tabs {
+    display: none;
+  }
+  .right-tabs.nav-tabs {
+    display: none;
+  }
+  .vtabs .tab-content > .tab-pane {
+    display: block !important;
+    opacity: 1;
+  }
+  .vtabs .accordion-header {
+    display: block;
+  }
+  .vtabs button.accordion-button:focus {
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
+}
+@media (min-width: 351px) {
+  .vtabs .accordion-item {
+    border: none;
+  }
+  .vtabs .accordion-body.collapse {
+    display: block;
+  }
+}
+
+/*# sourceMappingURL=verticalTabs.css.map */

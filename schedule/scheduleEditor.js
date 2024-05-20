@@ -6,18 +6,9 @@
 
 'use strict';
 
-/* global Event */
-
 const ui = require('../ui.js');
-const scheduleBar = require('../scheduleBar.js');
 const timeHandler = require('../timeHandler.js');
-const schedule = require('../schedule/schedule.js');
 const constants = require('../constants.js');
-
-const timeList = document.getElementById('time-list');
-
-exports.setSelectedPeriod = scheduleBar.setSelectedPeriod;
-exports.clearSelectedPeriod = scheduleBar.clearSelectedPeriod;
 
 /* Remove a time from the recording period data structure and update UI to reflect change */
 
@@ -40,27 +31,6 @@ function removeTime (timePeriod, tps) {
 }
 
 exports.removeTime = removeTime;
-
-/* Rebuild the schedule bar using current state of schedule */
-
-function updateScheduleBar () {
-
-    scheduleBar.updateCanvas();
-
-}
-
-exports.updateScheduleBar = updateScheduleBar;
-
-/* Remove all recordings periods and update UI */
-
-function clearTimes () {
-
-    schedule.clear();
-    updateScheduleBar();
-
-}
-
-exports.clearTimes = clearTimes;
 
 /* Check to see if two periods of time overlap */
 
@@ -115,13 +85,11 @@ function endOverlaps (startTime1, endTime1, startTime2, endTime2) {
 
 /* Add a new recording period to the data structure and update UI */
 
-function addTime (startMins, endMins) {
+function addTime (startMins, endMins, timePeriods) {
 
-    endMins = endMins === 1440 ? 0 : endMins;
+    endMins = endMins === constants.MINUTES_IN_DAY ? 0 : endMins;
 
-    let timePeriods, newStart, newEnd;
-
-    timePeriods = schedule.getTimePeriods();
+    let newStart, newEnd;
 
     if (startMins === endMins) {
 
@@ -132,9 +100,7 @@ function addTime (startMins, endMins) {
             endMins
         });
 
-        schedule.setTimePeriods(timePeriods);
-
-        return;
+        return timePeriods;
 
     }
 
@@ -142,7 +108,7 @@ function addTime (startMins, endMins) {
 
         const existingStartMins = timePeriods[i].startMins;
         let existingEndMins = timePeriods[i].endMins;
-        existingEndMins = existingEndMins === 1440 ? 0 : existingEndMins;
+        existingEndMins = existingEndMins === constants.MINUTES_IN_DAY ? 0 : existingEndMins;
 
         /* Check if the new period is just a time inside an existing period */
 
@@ -150,7 +116,7 @@ function addTime (startMins, endMins) {
 
             console.log('Subset');
 
-            return true;
+            return timePeriods;
 
         }
 
@@ -160,9 +126,9 @@ function addTime (startMins, endMins) {
 
             timePeriods = removeTime(timePeriods[i], timePeriods);
 
-            schedule.setTimePeriods(timePeriods);
+            timePeriods = addTime(startMins, endMins, timePeriods);
 
-            return addTime(startMins, endMins);
+            return timePeriods;
 
         }
 
@@ -172,9 +138,9 @@ function addTime (startMins, endMins) {
 
             timePeriods = removeTime(timePeriods[i], timePeriods);
 
-            schedule.setTimePeriods(timePeriods);
+            timePeriods = addTime(startMins, startMins, timePeriods);
 
-            return addTime(startMins, startMins);
+            return timePeriods;
 
         }
 
@@ -187,9 +153,9 @@ function addTime (startMins, endMins) {
 
             timePeriods = removeTime(timePeriods[i], timePeriods);
 
-            schedule.setTimePeriods(timePeriods);
+            timePeriods = addTime(newStart, newEnd, timePeriods);
 
-            return addTime(newStart, newEnd);
+            return timePeriods;
 
         }
 
@@ -202,9 +168,9 @@ function addTime (startMins, endMins) {
 
             timePeriods = removeTime(timePeriods[i], timePeriods);
 
-            schedule.setTimePeriods(timePeriods);
+            timePeriods = addTime(newStart, newEnd, timePeriods);
 
-            return addTime(newStart, newEnd);
+            return timePeriods;
 
         }
 
@@ -215,13 +181,11 @@ function addTime (startMins, endMins) {
         endMins
     });
 
-    schedule.setTimePeriods(timePeriods);
-
-    return true;
+    return timePeriods;
 
 }
 
-function formatAndAddTime (startTimestamp, endTimestamp) {
+function formatAndAddTime (startTimestamp, endTimestamp, timePeriods) {
 
     let utcPeriod;
 
@@ -235,8 +199,8 @@ function formatAndAddTime (startTimestamp, endTimestamp) {
     if (timeZoneMode === constants.TIME_ZONE_MODE_UTC) {
 
         utcPeriod = {
-            startMins: (timePeriod.startMins % 1440),
-            endMins: (timePeriod.endMins % 1440)
+            startMins: (timePeriod.startMins % constants.MINUTES_IN_DAY),
+            endMins: (timePeriod.endMins % constants.MINUTES_IN_DAY)
         };
 
     } else {
@@ -248,24 +212,11 @@ function formatAndAddTime (startTimestamp, endTimestamp) {
     startTimestamp = utcPeriod.startMins;
     endTimestamp = utcPeriod.endMins;
 
-    const added = addTime(startTimestamp, endTimestamp);
+    timePeriods = addTime(startTimestamp, endTimestamp, timePeriods);
 
-    /* Return success boolean (used to report failure when manually adding period) */
-
-    return added;
+    return timePeriods;
 
 }
 
 exports.addTime = addTime;
 exports.formatAndAddTime = formatAndAddTime;
-
-exports.getTimePeriods = schedule.getTimePeriods;
-exports.setTimePeriods = schedule.setTimePeriods;
-
-scheduleBar.prepareScheduleCanvas(function (selectedIndex) {
-
-    timeList.options.selectedIndex = selectedIndex;
-    timeList.focus();
-    timeList.dispatchEvent(new Event('change'));
-
-});

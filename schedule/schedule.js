@@ -4,8 +4,7 @@
  * November 2019
  *****************************************************************************/
 
-const MAX_PERIODS = 4;
-exports.MAX_PERIODS = MAX_PERIODS;
+const constants = require('../constants.js');
 
 let timePeriods = [];
 
@@ -44,7 +43,7 @@ exports.getTimePeriodsNoWrap = () => {
 
             noWrapTimePeriods.push({
                 startMins,
-                endMins: 1440
+                endMins: constants.MINUTES_IN_DAY
             });
 
             noWrapTimePeriods.push({
