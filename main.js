@@ -27,6 +27,7 @@ const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/buil
 const standardWindowSettings = {
     resizable: false,
     fullscreenable: false,
+    minimizable: false,
     autoHideMenuBar: true,
     icon: path.join(__dirname, iconLocation),
     useContentSize: true,

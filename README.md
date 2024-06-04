@@ -4,12 +4,12 @@ An Electron-based application capable of configuring the functionality of the Au
 For more details on the device itself, visit [www.openacousticdevices.info](http://www.openacousticdevices.info).
 
 ### Usage ###
-Once the repository has been cloned, install all required dependencies with:
+Once the repository has been cloned, you must either have electron-builder installed globally, or get it for the app specifically by running:
 ```
 npm install
 ```
 
-From then onwards, start the application with:
+From then onwards, or if you already had electron-builder installed, start the application with:
 ```
 npm run start 
 ```

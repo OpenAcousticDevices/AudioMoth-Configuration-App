@@ -1538,7 +1538,7 @@ configureButton.addEventListener('click', () => {
 
             let message = 'The ';
             message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise and sunset' : 'dawn and dusk';
-            message += ' recording periods have zero duration. This means the AudioMoth will not record when in CUSTOM mode.';
+            message += ' recording periods have zero duration. Extend both intervals to configure.';
 
             dialog.showMessageBoxSync({
                 type: 'error',
@@ -1552,11 +1552,13 @@ configureButton.addEventListener('click', () => {
 
         }
 
-        if ((sunMode === constants.MODE_BEFORE_SUNRISE_AFTER_SUNRISE || sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH) && noSunrise) {
+        if (sunMode === constants.MODE_BEFORE_SUNRISE_AFTER_SUNRISE && noSunrise) {
 
             let message = 'The ';
             message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise' : 'dawn';
-            message += ' recording period has zero duration. This means the AudioMoth will not record around sunrise when in CUSTOM mode.';
+            message += ' recording period has zero duration. Extend the ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise' : 'dawn';
+            message += ' interval to configure.';
 
             dialog.showMessageBoxSync({
                 type: 'error',
@@ -1570,11 +1572,95 @@ configureButton.addEventListener('click', () => {
 
         }
 
-        if ((sunMode === constants.MODE_BEFORE_SUNSET_AFTER_SUNSET || sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH) && noSunset) {
+        if (sunMode === constants.MODE_BEFORE_SUNSET_AFTER_SUNSET && noSunset) {
 
             let message = 'The ';
             message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunset' : 'dusk';
-            message += ' recording period has zero duration. This means the AudioMoth will not record around sunrise when in CUSTOM mode.';
+            message += ' recording period has zero duration. Extend the ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunset' : 'dusk';
+            message += ' interval to configure.';
+
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No recording periods',
+                message
+            });
+
+            console.log('Configuration cancelled');
+
+            return;
+
+        }
+
+        if (sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH && noSunrise) {
+
+            let message = 'The ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise' : 'dawn';
+            message += ' recording period has zero duration. Switch to "';
+            switch (sunDefinitionIndex) {
+
+            case constants.SUNRISE_AND_SUNSET:
+                message += 'Sunset';
+                break;
+
+            case constants.CIVIL_DAWN_AND_DUSK:
+                message += 'Civil Dusk';
+                break;
+
+            case constants.NAUTICAL_DAWN_AND_DUSK:
+                message += 'Nautical Dusk';
+                break;
+
+            case constants.ASTRONOMICAL_DAWN_AND_DUSK:
+                message += 'Astro Dusk';
+                break;
+
+            }
+
+            message += '" recording mode or extend the ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise' : 'dawn';
+            message += ' interval to configure.';
+
+            dialog.showMessageBoxSync({
+                type: 'error',
+                title: 'No recording periods',
+                message
+            });
+
+            console.log('Configuration cancelled');
+
+            return;
+
+        }
+
+        if (sunMode === constants.MODE_BEFORE_BOTH_AFTER_BOTH && noSunset) {
+
+            let message = 'The ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunset' : 'dusk';
+            message += ' recording period has zero duration. Switch to "';
+            switch (sunDefinitionIndex) {
+
+            case constants.SUNRISE_AND_SUNSET:
+                message += 'Sunrise';
+                break;
+
+            case constants.CIVIL_DAWN_AND_DUSK:
+                message += 'Civil Dawn';
+                break;
+
+            case constants.NAUTICAL_DAWN_AND_DUSK:
+                message += 'Nautical Dawn';
+                break;
+
+            case constants.ASTRONOMICAL_DAWN_AND_DUSK:
+                message += 'Astro Dawn';
+                break;
+
+            }
+
+            message += '" recording mode or extend the ';
+            message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunset' : 'dusk';
+            message += ' interval to configure.';
 
             dialog.showMessageBoxSync({
                 type: 'error',
@@ -1590,16 +1676,16 @@ configureButton.addEventListener('click', () => {
 
         if (sunRecordingPeriods.length === 0) {
 
-            let messageText = sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'Sunrise and sunset ' : 'Dawn and dusk';
-            messageText += 'calculation shows no recording periods for the ';
-            messageText += firstRecordingDateCheckbox.checked ? 'selected first recording date. ' : 'current date. ';
-            messageText += 'This means the AudioMoth may not record when in CUSTOM mode. Are you sure you wish to apply this configuration?';
+            let message = sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'Sunrise and sunset' : 'Dawn and dusk';
+            message += ' calculation shows no recording periods for the ';
+            message += firstRecordingDateCheckbox.checked ? 'selected first recording date' : 'current date';
+            message += '. This means the AudioMoth may not record when in CUSTOM mode. Are you sure you wish to apply this configuration?';
 
             const buttonIndex = dialog.showMessageBoxSync({
                 type: 'warning',
                 buttons: ['Yes', 'No'],
                 title: 'No recording periods',
-                message: messageText
+                message
             });
 
             if (buttonIndex === 1) {
