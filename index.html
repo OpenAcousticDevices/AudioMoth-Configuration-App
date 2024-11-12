@@ -76,20 +76,24 @@
             <div class="row" style="margin-top: 2px;">
 
                 <ul class="nav nav-tabs nav-justified" style="width: 100%; font-size: 10pt; font-family: Helvetica, Arial, sans-serif;" role="tablist">                    
-                    <li class="nav-item" style="margin-left: 10px; margin-right: 10px;">
+                    <li class="nav-item" style="margin-left: 8px; margin-right: 8px;">
                         <a class="nav-link active" data-bs-toggle="tab" data-bs-target="#settings-tab" id="settings-tab-link" aria-label="Recording tab" role="tab">Recording</a>
                     </li>
 
-                    <li class="nav-item" style="margin-right: 10px;">
+                    <li class="nav-item" style="margin-right: 8px;">
                         <a class="nav-link" data-bs-toggle="tab" data-bs-target="#schedule-tab" id="schedule-tab-link" aria-label="Schedule tab" role="tab">Schedule</a>
                     </li>
 
-                    <li class="nav-item" style="margin-right: 10px;">
+                    <li class="nav-item" style="margin-right: 8px;">
                         <a class="nav-link" data-bs-toggle="tab" data-bs-target="#filtering-tab" id="filter-tab-link" aria-label="Filter tab" role="tab">Filtering</a>
                     </li>
 
-                    <li class="nav-item" style="margin-right: 10px;">
+                    <li class="nav-item" style="margin-right: 8px;">
                         <a class="nav-link" data-bs-toggle="tab" data-bs-target="#advanced-tab" id="device-tab-link" aria-label="Advanced tab" role="tab">Advanced</a>
+                    </li>
+
+                    <li class="nav-item" style="margin-right: 8px;">
+                        <a class="nav-link" data-bs-toggle="tab" data-bs-target="#addons-tab" id="addons-tab-link" aria-label="GPS tab" role="tab">Add-ons</a>
                     </li>
                 </ul>
             </div>
@@ -851,7 +855,16 @@
                                 <input id="acoustic-config-checkbox" name="RequireChime" type="checkbox" style="margin-right: 16px;">
                             </div>
                         </div>
-                    
+
+                        <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
+                            <div class="col-9" style="text-align: left;">
+                                <label for="filename-device-id-checkbox" style="margin-left: 17px; margin-bottom: 0px;">Use device ID as prefix in WAV file name:</label>
+                            </div>
+                            <div class="col-3" style="text-align: right;" title="Whether the device ID is added to filenames as a prefix.">
+                                <input id="filename-device-id-checkbox" name="DeviceIDFilenames" type="checkbox" style="margin-right: 16px;">
+                            </div>
+                        </div>
+
                         <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
                             <div class="col-9" style="text-align: left;">
                                 <label for="daily-folder-checkbox" style="margin-left: 17px; margin-bottom: 0px;">Use daily folder for generated WAV files:</label>
@@ -893,6 +906,14 @@
                         </div>
                     </div>
                     
+                    <!-- Advanced content end -->
+
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade in" id="addons-tab" role="tabpanel" style="width: 100%;">
+
+                    <!-- Addon content start -->
+
                     <div style="border: #cdcdcd thin solid; margin-top: 8px;">
                         <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
                             <div class="col-9" style="text-align: left;">
@@ -902,19 +923,48 @@
                                 <input id="magnetic-delay-checkbox" name="MagneticSwitchDelayedStart" type="checkbox" style="margin-right: 16px;">
                             </div>
                         </div>
+                    </div>
+
+                    <div style="border: #cdcdcd thin solid; margin-top: 8px;">
                         <div class="row" style="margin-top: 8px; margin-bottom: 8px;">
                             <div class="col-9" style="text-align: left;">
                                 <label for="gps-time-checkbox" style="margin-left: 17px; margin-bottom: 0px;">Enable GPS for time and location setting:</label>
                             </div>
                             <div class="col-3" style="text-align: right;" title="Whether the GPS can be used to update the device's clock and location.">
-                                <input id="gps-time-checkbox" name="GPSTimeSetting" type="checkbox" style="margin-right: 16px;">
+                                <input id="gps-time-checkbox" type="checkbox" style="margin-right: 16px;">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 0px; margin-bottom: 8px;">
+                            <div class="col-7" style="text-align: left;">
+                                <label for="gps-before-after-select" style="margin-left: 17px; margin-bottom: 0px; color: grey; height: 100%; display: flex; align-items: center;" id="gps-before-after-label">Acquire GPS fix before and after:</label>
+                            </div>
+                            <div class="col-5" style="text-align: right; padding-right: 28px;" title="Whether to obtain a GPS fix between each recording within a period.">
+                                <select class="form-select" id="gps-before-after-select" style="max-height: 32px; font-size: 10pt; color: grey;" disabled>
+                                    <option selected value="period">Recording periods</option>
+                                    <option value="individual">Individual recordings</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 0px; margin-bottom: 8px;">
+                            <div class="col-9" style="text-align: left;">
+                                <label for="gps-time-select" style="margin-left: 17px; margin-bottom: 0px; color: grey; height: 100%; display: flex; align-items: center;" id="gps-time-label">GPS fix time (mins):</label>
+                            </div>
+                            <div class="col-3" style="text-align: right; padding-right: 28px;">
+                                <select class="form-select" id="gps-time-select" style="max-height: 32px; font-size: 10pt; color: grey;" disabled>
+                                    <option value="1">1</option>
+                                    <option selected value="2">2</option>
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Advanced content end -->
+
+                    <!-- Addon content end -->
+
                 </div>
-            
+
             </div>
 
             <div class="fixed-bottom" style="padding: 8px; padding-top: 8px;">

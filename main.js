@@ -21,7 +21,7 @@ require('electron-debug')({
     devToolsMode: 'undocked'
 });
 
-let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, timeZoneSelectionWindow, mapWindow;
+let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, alignWindow, timeZoneSelectionWindow, mapWindow;
 
 const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
 const standardWindowSettings = {
@@ -38,7 +38,7 @@ const standardWindowSettings = {
     }
 };
 
-let expandProgressBar, splitProgressBar, downsampleProgressBar, summariseProgressBar;
+let expandProgressBar, splitProgressBar, downsampleProgressBar, summariseProgressBar, alignProgressBar;
 
 const standardProgressBarSettings = {
     closeOnComplete: false,
@@ -353,6 +353,68 @@ function openSummariseWindow () {
 
 }
 
+function openAlignWindow () {
+
+    if (alignWindow) {
+
+        alignWindow.show();
+        return;
+
+    }
+
+    let windowWidth = 565;
+    const windowHeight = 422;
+
+    if (process.platform === 'linux') {
+
+        windowWidth = 560;
+
+    } else if (process.platform === 'darwin') {
+
+        windowWidth = 560;
+
+    }
+
+    const settings = generateSettings(windowWidth, windowHeight, 'Synchronise AudioMoth Files');
+    alignWindow = new BrowserWindow(settings);
+
+    alignWindow.setMenu(null);
+    alignWindow.loadURL(path.join('file://', __dirname, 'processing/aligning.html'));
+
+    require('@electron/remote/main').enable(alignWindow.webContents);
+
+    alignWindow.webContents.on('dom-ready', () => {
+
+        mainWindow.webContents.send('poll-night-mode');
+
+    });
+
+    ipcMain.on('night-mode-poll-reply', (e, nightMode) => {
+
+        if (alignWindow) {
+
+            alignWindow.webContents.send('night-mode', nightMode);
+
+        }
+
+    });
+
+    alignWindow.on('close', (e) => {
+
+        e.preventDefault();
+
+        if (alignProgressBar) {
+
+            return;
+
+        }
+
+        alignWindow.hide();
+
+    });
+
+}
+
 function openAboutWindow () {
 
     if (aboutWindow) {
@@ -528,7 +590,7 @@ function toggleNightMode () {
 
     mainWindow.webContents.send('night-mode');
 
-    const subwindows = [aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, timeZoneSelectionWindow];
+    const subwindows = [aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, alignWindow, timeZoneSelectionWindow];
 
     for (let index = 0; index < subwindows.length; index++) {
 
@@ -539,6 +601,39 @@ function toggleNightMode () {
         }
 
     }
+
+}
+
+function updateAmplitudeThreshold (index) {
+
+    const menu = Menu.getApplicationMenu();
+
+    for (let i = 0; i < 3; i++) {
+
+        const menuItem = menu.getMenuItemById('scale_' + i);
+
+        menuItem.checked = i === index;
+
+    }
+
+    mainWindow.webContents.send('amplitude-threshold-scale', index);
+
+}
+
+function updateSunDefinition (index) {
+
+    const menu = Menu.getApplicationMenu();
+
+    for (let i = 0; i < 4; i++) {
+
+        const menuItem = menu.getMenuItemById('sun_' + i);
+
+        menuItem.checked = i === index;
+
+    }
+
+    sunDefinitionIndex = index;
+    mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
 
 }
 
@@ -618,79 +713,75 @@ app.on('ready', () => {
         }, {
             type: 'separator'
         }, {
-            type: 'radio',
-            id: 'scale1',
+            type: 'checkbox',
+            id: 'scale_1',
             label: '16-Bit Amplitude Threshold Scale',
             checked: false,
             click: () => {
 
-                mainWindow.webContents.send('amplitude-threshold-scale', 1);
+                updateAmplitudeThreshold(1);
 
             }
         }, {
-            type: 'radio',
-            id: 'scale2',
+            type: 'checkbox',
+            id: 'scale_2',
             label: 'Decibel Amplitude Threshold Scale',
             checked: false,
             click: () => {
 
-                mainWindow.webContents.send('amplitude-threshold-scale', 2);
+                updateAmplitudeThreshold(2);
 
             }
         }, {
-            type: 'radio',
-            id: 'scale0',
+            type: 'checkbox',
+            id: 'scale_0',
             label: 'Percentage Amplitude Threshold Scale',
             checked: true,
             click: () => {
 
-                mainWindow.webContents.send('amplitude-threshold-scale', 0);
+                updateAmplitudeThreshold(0);
 
             }
         }, {
             type: 'separator'
         }, {
-            type: 'radio',
-            id: 'sun0',
+            type: 'checkbox',
+            id: 'sun_0',
             label: 'Sunrise And Sunset',
             checked: true,
             click: () => {
 
-                sunDefinitionIndex = constants.SUNRISE_AND_SUNSET;
-                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+                updateSunDefinition(constants.SUNRISE_AND_SUNSET);
 
             }
         }, {
-            type: 'radio',
-            id: 'sun1',
+            type: 'checkbox',
+            id: 'sun_1',
             label: 'Civil Dawn And Dusk',
             checked: false,
             click: () => {
 
-                sunDefinitionIndex = constants.CIVIL_DAWN_AND_DUSK;
-                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+                updateSunDefinition(constants.CIVIL_DAWN_AND_DUSK);
 
             }
         }, {
-            type: 'radio',
-            id: 'sun2',
+            type: 'checkbox',
+            id: 'sun_2',
             label: 'Nautical Dawn And Dusk',
             checked: false,
             click: () => {
 
-                sunDefinitionIndex = constants.NAUTICAL_DAWN_AND_DUSK;
-                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+                updateSunDefinition(constants.NAUTICAL_DAWN_AND_DUSK);
 
             }
         }, {
-            type: 'radio',
-            id: 'sun3',
+            type: 'checkbox',
+            id: 'sun_3',
             label: 'Astronomical Dawn And Dusk',
             checked: false,
             click: () => {
 
-                sunDefinitionIndex = constants.ASTRONOMICAL_DAWN_AND_DUSK;
-                mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
+                updateSunDefinition(constants.ASTRONOMICAL_DAWN_AND_DUSK);
 
             }
         }, {
@@ -710,7 +801,7 @@ app.on('ready', () => {
         label: 'Time',
         submenu: [{
             type: 'checkbox',
-            id: 'timeZone0',
+            id: 'timeZone_0',
             label: 'UTC',
             checked: true,
             click: () => {
@@ -723,7 +814,7 @@ app.on('ready', () => {
             }
         }, {
             type: 'checkbox',
-            id: 'timeZone1',
+            id: 'timeZone_1',
             label: 'Local',
             checked: false,
             click: () => {
@@ -736,7 +827,7 @@ app.on('ready', () => {
             }
         }, {
             type: 'checkbox',
-            id: 'timeZone2',
+            id: 'timeZone_2',
             label: 'Custom',
             checked: false,
             click: () => {
@@ -760,6 +851,11 @@ app.on('ready', () => {
         }, {
             label: 'Downsample AudioMoth WAV Files',
             click: openDownsamplingWindow
+        }, {
+            type: 'separator'
+        }, {
+            label: 'Synchronise AudioMoth WAV Files Using GPS Data',
+            click: openAlignWindow
         }, {
             type: 'separator'
         }, {
@@ -1324,13 +1420,143 @@ ipcMain.on('poll-summarise-cancelled', (event) => {
 
 });
 
+/* Aligning progress bar functions */
+
+ipcMain.on('start-align-bar', (event, fileCount) => {
+
+    if (alignProgressBar) {
+
+        return;
+
+    }
+
+    let detail = 'Starting to synchronise file';
+    detail += (fileCount > 1) ? 's' : '';
+    detail += '.';
+
+    const settings = generateProgressBarSettings('AudioMoth Configuration App - Synchronising', 'Synchronising files...', detail, fileCount, alignWindow);
+
+    alignProgressBar = new ProgressBar(settings);
+
+    alignProgressBar.on('aborted', () => {
+
+        if (alignProgressBar) {
+
+            alignProgressBar.close();
+            alignProgressBar = null;
+
+        }
+
+    });
+
+});
+
+ipcMain.on('set-align-bar-progress', (event, fileNum, progress) => {
+
+    if (alignProgressBar) {
+
+        alignProgressBar.value = (fileNum * 100) + progress;
+
+    }
+
+});
+
+ipcMain.on('set-align-bar-file', (event, fileNum, name) => {
+
+    if (alignProgressBar) {
+
+        const index = fileNum + 1;
+        const fileCount = alignProgressBar.getOptions().maxValue / 100;
+
+        alignProgressBar.detail = 'Synchronising ' + name + ' (' + index + ' of ' + fileCount + ').';
+
+    }
+
+});
+
+ipcMain.on('set-align-bar-initialise-error', (event, error) => {
+
+    if (alignProgressBar) {
+
+        alignProgressBar.detail = 'Error when initialising: ' + error;
+
+    }
+
+});
+
+ipcMain.on('set-align-bar-file-error', (event, name) => {
+
+    if (alignProgressBar) {
+
+        alignProgressBar.detail = 'Error when synchronising ' + name + '.';
+
+    }
+
+});
+
+ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
+
+    if (alignProgressBar) {
+
+        let messageText;
+
+        alignProgressBar.setCompleted();
+
+        if (errorCount > 0) {
+
+            messageText = 'Errors occurred in ' + errorCount + ' file';
+            messageText += (errorCount === 1 ? '' : 's');
+            messageText += '.<br>';
+            messageText += 'See ERRORS.TXT for details.';
+
+        } else {
+
+            messageText = 'Successfully synchronised ' + successCount + ' file';
+            messageText += (successCount === 1 ? '' : 's');
+            messageText += '.';
+
+        }
+
+        alignProgressBar.detail = messageText;
+
+        setTimeout(() => {
+
+            alignProgressBar.close();
+            alignProgressBar = null;
+
+            if (alignWindow) {
+
+                alignWindow.send('align-summary-closed');
+
+            }
+
+        }, 5000);
+
+    }
+
+});
+
+ipcMain.on('poll-align-cancelled', (event) => {
+
+    if (alignProgressBar) {
+
+        event.returnValue = false;
+
+    } else {
+
+        event.returnValue = true;
+
+    }
+
+});
+
 /* Update which amplitude threshold scale option is checked in menu */
 
 ipcMain.on('set-amplitude-threshold-scale', (event, index) => {
 
     const menu = Menu.getApplicationMenu();
 
-    const scaleMenuItems = [menu.getMenuItemById('scale0'), menu.getMenuItemById('scale1'), menu.getMenuItemById('scale2')];
+    const scaleMenuItems = [menu.getMenuItemById('scale_0'), menu.getMenuItemById('scale_1'), menu.getMenuItemById('scale_2')];
 
     scaleMenuItems[index].checked = true;
 
@@ -1342,7 +1568,7 @@ function updateTimeZoneMenuCheckbox () {
 
     const menu = Menu.getApplicationMenu();
 
-    const timeZoneMenuItems = [menu.getMenuItemById('timeZone0'), menu.getMenuItemById('timeZone1'), menu.getMenuItemById('timeZone2')];
+    const timeZoneMenuItems = [menu.getMenuItemById('timeZone_0'), menu.getMenuItemById('timeZone_1'), menu.getMenuItemById('timeZone_2')];
 
     for (let i = 0; i < timeZoneMenuItems.length; i++) {
 
@@ -1396,7 +1622,7 @@ ipcMain.on('set-sun-definition-index', (event, index) => {
     sunDefinitionIndex = index;
 
     const menu = Menu.getApplicationMenu();
-    const sunDefinitionRadioButtons = [menu.getMenuItemById('sun0'), menu.getMenuItemById('sun1'), menu.getMenuItemById('sun2'), menu.getMenuItemById('sun3')];
+    const sunDefinitionRadioButtons = [menu.getMenuItemById('sun_0'), menu.getMenuItemById('sun_1'), menu.getMenuItemById('sun_2'), menu.getMenuItemById('sun_3')];
 
     sunDefinitionRadioButtons[sunDefinitionIndex].checked = true;
 

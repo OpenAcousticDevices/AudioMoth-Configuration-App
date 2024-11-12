@@ -26,8 +26,6 @@ const currentWindow = getCurrentWindow();
 const MAX_LENGTHS = [1, 5, 10, 15, 30, 60, 300, 600, 3600];
 const MAX_LENGTH_STRINGS = ['1 second', '5 seconds', '10 seconds', '15 seconds', '30 seconds', '1 minute', '5 minutes', '10 minutes', '1 hour'];
 
-const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\dT.WAV$/;
-
 const durationTabButton = document.getElementById('duration-tab-link');
 const eventTabButton = document.getElementById('event-tab-link');
 
@@ -569,7 +567,7 @@ updateOverviewPanel();
 updateFileMaxLengthUI('duration-max-length-ui', durationMaxLengthCheckbox);
 updateFileMaxLengthUI('event-max-length-ui', eventMaxLengthCheckbox);
 
-/* Whenever tthe file/folder radio button changes, reset the UI */
+/* Whenever the file/folder radio button changes, reset the UI */
 
 selectionRadios[0].addEventListener('change', resetUI);
 selectionRadios[1].addEventListener('change', resetUI);
@@ -578,7 +576,9 @@ selectionRadios[1].addEventListener('change', resetUI);
 
 fileButton.addEventListener('click', () => {
 
-    files = uiInput.selectRecordings(FILE_REGEX);
+    const fileRegex = audiomothUtils.getFilenameRegex(audiomothUtils.EXPAND);
+
+    files = uiInput.selectRecordings(fileRegex);
 
     updateInputDirectoryDisplay(files);
 

@@ -1,6 +1,6 @@
 {
   "name": "AudioMoth-Config",
-  "version": "1.11.1",
+  "version": "1.12.0",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "author": "openacousticdevices.info",
@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "clean-css-cli": "^5.6.3",
-    "electron": "25.3.2",
+    "electron": "^25.9.8",
     "electron-builder": "^24.6.3",
     "eslint": "^8.45.0",
     "eslint-config-standard": "^17.1.0",
@@ -74,7 +74,7 @@
     "@electron/remote": "^2.0.10",
     "@popperjs/core": "^2.11.8",
     "audiomoth-hid": "^2.3.0",
-    "audiomoth-utils": "^1.5.0",
+    "audiomoth-utils": "^1.7.0",
     "bootstrap": "5.3.1",
     "bootstrap-5-vertical-tabs": "^2.0.1",
     "bootstrap-slider": "^11.0.2",

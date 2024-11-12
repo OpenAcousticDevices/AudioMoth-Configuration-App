@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS = {
     firstRecordingDateEnabled: false,
     lastRecordingDateEnabled: false,
     dutyEnabled: true,
+    filenameWithDeviceIDEnabled: false,
     passFiltersEnabled: false,
     lowerFilter: 6000,
     higherFilter: 18000,
@@ -45,6 +46,8 @@ const DEFAULT_SETTINGS = {
     lowGainRangeEnabled: false,
     disable48DCFilter: false,
     timeSettingFromGPSEnabled: false,
+    acquireGpsFixBeforeAfter: 'period',
+    gpsFixTime: 2,
     magneticSwitchEnabled: false,
     sunScheduleEnabled: false,
     latitude: {
@@ -68,36 +71,11 @@ const DEFAULT_SETTINGS = {
     sunDefinition: 0
 };
 
-/* Compare two semantic versions and return true if older */
-
-function isOlderSemanticVersion (aVersion, bVersion) {
-
-    for (let i = 0; i < aVersion.length; i++) {
-
-        const aVersionNum = parseInt(aVersion[i]);
-        const bVersionNum = parseInt(bVersion[i]);
-
-        if (aVersionNum > bVersionNum) {
-
-            return false;
-
-        } else if (aVersionNum < bVersionNum) {
-
-            return true;
-
-        }
-
-    }
-
-    return false;
-
-}
-
 /* Save configuration settings in UI to .config file */
 
 function saveConfiguration (currentConfig, callback) {
 
-    const sampleRate = constants.configurations[currentConfig.sampleRateIndex].trueSampleRate * 1000;
+    const sampleRate = constants.CONFIGURATIONS[currentConfig.sampleRateIndex].trueSampleRate * 1000;
 
     const filterType = currentConfig.filterType;
 
@@ -143,6 +121,7 @@ function saveConfiguration (currentConfig, callback) {
     configuration += currentConfig.lastRecordingDateEnabled ? '"lastRecordingDate": \"' + currentConfig.lastRecordingDate + '\",\r\n' : '';
 
     configuration += '"dutyEnabled": ' + currentConfig.dutyEnabled + ',\r\n';
+    configuration += '"filenameWithDeviceIDEnabled": ' + currentConfig.filenameWithDeviceIDEnabled + ',\r\n';
     configuration += '"passFiltersEnabled": ' + currentConfig.passFiltersEnabled + ',\r\n';
 
     configuration += '"filterType": \"' + filterType + '\",\r\n';
@@ -166,6 +145,8 @@ function saveConfiguration (currentConfig, callback) {
     configuration += '"disable48DCFilter": ' + currentConfig.disable48DCFilter + ',\r\n';
     configuration += '"lowGainRangeEnabled": ' + currentConfig.lowGainRangeEnabled + ',\r\n';
     configuration += '"timeSettingFromGPSEnabled": ' + currentConfig.timeSettingFromGPSEnabled + ',\r\n';
+    configuration += '"gpsFixTime": ' + currentConfig.gpsFixTime + ',\r\n';
+    configuration += '"acquireGpsFixBeforeAfter": \"' + currentConfig.acquireGpsFixBeforeAfter + '\",\r\n';
     configuration += '"magneticSwitchEnabled": ' + currentConfig.magneticSwitchEnabled + ',\r\n';
 
     configuration += '"sunScheduleEnabled": ' + currentConfig.sunScheduleEnabled;
@@ -231,9 +212,9 @@ function getSampleRateIndex (jsonSampleRateIndex, jsonSampleRate, replacementSam
         let minDistance = -1;
         let closestIndex = 0;
 
-        for (let i = 0; i < constants.configurations.length; i++) {
+        for (let i = 0; i < constants.CONFIGURATIONS.length; i++) {
 
-            const distance = Math.abs(constants.configurations[i].trueSampleRate - sampleRate);
+            const distance = Math.abs(constants.CONFIGURATIONS[i].trueSampleRate - sampleRate);
 
             if (minDistance === -1 || distance < minDistance) {
 
@@ -345,6 +326,9 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     dutyEnabled: {
                         type: 'boolean'
                     },
+                    filenameWithDeviceIDEnabled: {
+                        type: 'boolean'
+                    },
                     passFiltersEnabled: {
                         type: 'boolean'
                     },
@@ -407,6 +391,12 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     },
                     timeSettingFromGPSEnabled: {
                         type: 'boolean'
+                    },
+                    gpsFixTime: {
+                        type: 'integer'
+                    },
+                    acquireGpsFixBeforeAfter: {
+                        type: 'string'
                     },
                     magneticSwitchEnabled: {
                         type: 'boolean'
@@ -475,6 +465,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.batteryLevelCheckEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.gain === 'undefined');
             isMissingValues |= (typeof jsonObj.dutyEnabled === 'undefined');
+            isMissingValues |= (typeof jsonObj.filenameWithDeviceIDEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.sleepDuration === 'undefined');
             isMissingValues |= (typeof jsonObj.recordDuration === 'undefined');
             isMissingValues |= (typeof jsonObj.passFiltersEnabled === 'undefined');
@@ -495,6 +486,8 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.disable48DCFilter === 'undefined');
             isMissingValues |= (typeof jsonObj.lowGainRangeEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.timeSettingFromGPSEnabled === 'undefined');
+            isMissingValues |= (typeof jsonObj.gpsFixTime === 'undefined');
+            isMissingValues |= (typeof jsonObj.acquireGpsFixBeforeAfter === 'undefined');
             isMissingValues |= (typeof jsonObj.magneticSwitchEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.sunScheduleEnabled === 'undefined');
 
@@ -502,10 +495,13 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             let version = (typeof jsonObj.version === 'undefined') ? '0.0.0' : jsonObj.version;
             const versionArray = version.split('.');
+            const major = parseInt(versionArray[0]);
+            const minor = parseInt(versionArray[1]);
+            const patch = parseInt(versionArray[2]);
 
             const appVersionArray = app.getVersion().split('.');
 
-            if (isOlderSemanticVersion(appVersionArray, versionArray)) {
+            if (constants.isOlderSemanticVersion(appVersionArray, major, minor, patch)) {
 
                 console.error('Cannot open configuration files created by future app versions');
 
@@ -565,6 +561,8 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             gain = (typeof gain === 'undefined') ? replacementValues.gain : gain;
 
             const dutyEnabled = (typeof jsonObj.dutyEnabled === 'undefined') ? replacementValues.dutyEnabled : jsonObj.dutyEnabled;
+
+            const filenameWithDeviceIDEnabled = (typeof jsonObj.filenameWithDeviceIDEnabled === 'undefined') ? replacementValues.filenameWithDeviceIDEnabled : jsonObj.filenameWithDeviceIDEnabled;
 
             const sleepDuration = (typeof jsonObj.sleepDuration === 'undefined') ? replacementValues.sleepDuration : jsonObj.sleepDuration;
 
@@ -733,6 +731,10 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             const timeSettingFromGPSEnabled = (typeof jsonObj.timeSettingFromGPSEnabled === 'undefined') ? replacementValues.timeSettingFromGPSEnabled : jsonObj.timeSettingFromGPSEnabled;
 
+            const gpsFixTime = (typeof jsonObj.gpsFixTime === 'undefined') ? replacementValues.gpsFixTime : jsonObj.gpsFixTime;
+
+            const acquireGpsFixBeforeAfter = (typeof jsonObj.acquireGpsFixBeforeAfter === 'undefined') ? replacementValues.acquireGpsFixBeforeAfter : jsonObj.acquireGpsFixBeforeAfter;
+
             const magneticSwitchEnabled = (typeof jsonObj.magneticSwitchEnabled === 'undefined') ? replacementValues.magneticSwitchEnabled : jsonObj.magneticSwitchEnabled;
 
             let sunScheduleEnabled = (typeof jsonObj.sunScheduleEnabled === 'undefined') ? replacementValues.sunScheduleEnabled : jsonObj.sunScheduleEnabled;
@@ -768,7 +770,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             callback(timePeriods,
                 ledEnabled, batteryLevelCheckEnabled,
-                sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration,
+                sampleRateIndex, gain, dutyEnabled, filenameWithDeviceIDEnabled, recordDuration, sleepDuration,
                 localTime, customTimeZoneOffset,
                 firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate,
                 passFiltersEnabled, filterType, lowerFilter, higherFilter,
@@ -776,7 +778,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                 frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold,
                 requireAcousticConfig, displayVoltageRange,
                 minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex,
-                energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders,
+                energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, acquireGpsFixBeforeAfter, gpsFixTime, magneticSwitchEnabled, dailyFolders,
                 sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition);
 
             version = version === '0.0.0' ? '< 1.5.0' : version;

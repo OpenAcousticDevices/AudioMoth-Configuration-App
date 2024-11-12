@@ -6,7 +6,7 @@
 
 /* Setting parameters */
 
-exports.configurations = [{
+exports.CONFIGURATIONS = [{
     trueSampleRate: 8,
     clockDivider: 4,
     acquisitionCycles: 16,
@@ -99,7 +99,7 @@ exports.configurations = [{
 /* Configuration settings to be used when a device is on firmware < 1.4.4 */
 /* Only sent to devices. Not used in energy calculations */
 
-exports.oldConfigurations = [{
+exports.OLD_CONFIGURATIONS = [{
     trueSampleRate: 8,
     clockDivider: 4,
     acquisitionCycles: 16,
@@ -124,31 +124,33 @@ exports.oldConfigurations = [{
 
 /* GPS energy consumption */
 
-exports.GPS_FIX_TIME = 1.0 / 60.0;
+exports.GPS_FIX_TIME = 0.5 / 60.0;
 exports.GPS_FIX_CONSUMPTION = 30.0;
+
+exports.MINIMUM_GPS_FIX_TIME = 30;
 
 /* Packet lengths for each version */
 
-exports.packetLengthVersions = [{
-    firmwareVersion: '0.0.0',
+exports.PACKET_LENGTH_VERSIONS = [{
+    firmwareVersion: [0, 0, 0],
     packetLength: 39
 }, {
-    firmwareVersion: '1.2.0',
+    firmwareVersion: [1, 2, 0],
     packetLength: 40
 }, {
-    firmwareVersion: '1.2.1',
+    firmwareVersion: [1, 2, 1],
     packetLength: 42
 }, {
-    firmwareVersion: '1.2.2',
+    firmwareVersion: [1, 2, 2],
     packetLength: 43
 }, {
-    firmwareVersion: '1.4.0',
+    firmwareVersion: [1, 4, 0],
     packetLength: 58
 }, {
-    firmwareVersion: '1.5.0',
+    firmwareVersion: [1, 5, 0],
     packetLength: 59
 }, {
-    firmwareVersion: '1.6.0',
+    firmwareVersion: [1, 6, 0],
     packetLength: 62
 }];
 
@@ -194,10 +196,80 @@ exports.getFirmwareClassification = (desc) => {
 
 };
 
+/**
+ * @returns -1: A < B, 0: A === B, 1: A > B
+ */
+function compareSemanticVersion (version, major, minor, patch) {
+
+    for (let i = 0; i < 3; i++) {
+
+        const versionNumber = parseInt(version[i]);
+
+        const comparator = i === 0 ? major : i === 1 ? minor : patch;
+
+        if (versionNumber > comparator) {
+
+            return 1;
+
+        } else if (versionNumber < comparator) {
+
+            return -1;
+
+        }
+
+    }
+
+    return 0;
+
+}
+
+exports.compareSemanticVersion = compareSemanticVersion;
+
+exports.isOlderSemanticVersion = (version, major, minor, patch) => {
+
+    return compareSemanticVersion(version, major, minor, patch) === -1;
+
+};
+
+exports.isNewerSemanticVersion = (version, major, minor, patch) => {
+
+    return compareSemanticVersion(version, major, minor, patch) === 1;
+
+};
+
+exports.isSameSemanticVersion = (version, major, minor, patch) => {
+
+    return compareSemanticVersion(version, major, minor, patch) === 0;
+
+};
+
+exports.isOlderOrEqualSemanticVersion = (version, major, minor, patch) => {
+
+    const comparisonResult = compareSemanticVersion(version, major, minor, patch);
+
+    return comparisonResult === -1 || comparisonResult === 0;
+
+};
+
+exports.isNewerOrEqualSemanticVersion = (version, major, minor, patch) => {
+
+    const comparisonResult = compareSemanticVersion(version, major, minor, patch);
+
+    return comparisonResult === 0 || comparisonResult === 1;
+
+};
+
 /* Version number for the latest firmware */
 
-exports.latestFirmwareVersionArray = ['1', '10', '0'];
-exports.latestFirmwareVersionString = '1.10.0';
+const LATEST_FIRMWARE_VERSION_MAJOR = 1;
+const LATEST_FIRMWARE_VERSION_MINOR = 11;
+const LATEST_FIRMWARE_VERSION_PATCH = 0;
+
+exports.LATEST_FIRMWARE_VERSION_MAJOR = LATEST_FIRMWARE_VERSION_MAJOR;
+exports.LATEST_FIRMWARE_VERSION_MINOR = LATEST_FIRMWARE_VERSION_MINOR;
+exports.LATEST_FIRMWARE_VERSION_PATCH = LATEST_FIRMWARE_VERSION_PATCH;
+exports.LATEST_FIRMWARE_VERSION_ARRAY = [LATEST_FIRMWARE_VERSION_MAJOR, LATEST_FIRMWARE_VERSION_MINOR, LATEST_FIRMWARE_VERSION_PATCH];
+exports.LATEST_FIRMWARE_VERSION_STRING = LATEST_FIRMWARE_VERSION_MAJOR.toString() + '.' + LATEST_FIRMWARE_VERSION_MINOR.toString() + '.' + LATEST_FIRMWARE_VERSION_PATCH.toString();
 
 /* Time zone modes */
 

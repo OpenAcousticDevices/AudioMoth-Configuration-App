@@ -11,6 +11,7 @@ const constants = require('../constants.js');
 
 const uiFiltering = require('./uiFiltering.js');
 const uiAdvanced = require('./uiAdvanced.js');
+const uiAddons = require('./uiAddons.js');
 const splitDurationInput = require('./splitDurationInput.js');
 
 /* UI components */
@@ -55,7 +56,7 @@ function addRadioButtonListeners (changeFunction) {
         sampleRadioButtons[i].addEventListener('change', () => {
 
             const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
-            const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+            const sampleRate = constants.CONFIGURATIONS[sampleRateIndex].trueSampleRate * 1000;
 
             // If a Goertzel value has been changed, don't rescale the values to defaults as sample rate changes
             const passFiltersObserved = uiFiltering.getPassFiltersObserved();
@@ -156,7 +157,7 @@ exports.prepareUI = (changeFunction) => {
     uiFiltering.prepareUI(changeFunction, checkRecordingDuration, () => {
 
         const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
-        const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+        const sampleRate = constants.CONFIGURATIONS[sampleRateIndex].trueSampleRate * 1000;
 
         // If a Goertzel value has been changed, don't rescale the values to defaults as sample rate changes
         const passFiltersObserved = uiFiltering.getPassFiltersObserved();
@@ -166,6 +167,7 @@ exports.prepareUI = (changeFunction) => {
     });
 
     uiAdvanced.prepareUI(changeFunction);
+    uiAddons.prepareUI(changeFunction);
 
     splitDurationInput.setTotalValue(sleepDurationInput, 5);
     splitDurationInput.setTotalValue(recordingDurationInput, 55);
@@ -184,6 +186,7 @@ exports.getSettings = () => {
         sampleRateIndex: parseInt(getSelectedRadioValue('sample-rate-radio')),
         gain: parseInt(getSelectedRadioValue('gain-radio')),
         dutyEnabled: dutyCheckBox.checked,
+        filenameWithDeviceIDEnabled: uiAdvanced.isFilenameWithDeviceIDEnabled(),
         recordDuration: splitDurationInput.getValue(recordingDurationInput),
         sleepDuration: splitDurationInput.getValue(sleepDurationInput),
         passFiltersEnabled: uiFiltering.filteringIsEnabled(),
@@ -205,8 +208,10 @@ exports.getSettings = () => {
         energySaverModeEnabled: uiAdvanced.isEnergySaverModeEnabled(),
         lowGainRangeEnabled: uiAdvanced.isLowGainRangeEnabled(),
         disable48DCFilter: uiAdvanced.is48DCFilterDisabled(),
-        timeSettingFromGPSEnabled: uiAdvanced.isTimeSettingFromGPSEnabled(),
-        magneticSwitchEnabled: uiAdvanced.isMagneticSwitchEnabled(),
+        timeSettingFromGPSEnabled: uiAddons.isTimeSettingFromGPSEnabled(),
+        acquireGpsFixBeforeAfter: uiAddons.gpsFixesBeforeAfterSetting(),
+        gpsFixTime: uiAddons.getGpsFixTime(),
+        magneticSwitchEnabled: uiAddons.isMagneticSwitchEnabled(),
         sunScheduleEnabled: sunTab.classList.contains('active')
     };
 
@@ -233,7 +238,7 @@ exports.fillUI = (settings) => {
     updateDutyCycleUI();
 
     const sampleRateIndex = getSelectedRadioValue('sample-rate-radio');
-    const sampleRate = constants.configurations[sampleRateIndex].trueSampleRate * 1000;
+    const sampleRate = constants.CONFIGURATIONS[sampleRateIndex].trueSampleRate * 1000;
 
     // If a Goertzel value has been changed, don't rescale the values to defaults as sample rate changes
     const passFiltersObserved = uiFiltering.getPassFiltersObserved();
@@ -268,10 +273,17 @@ exports.fillUI = (settings) => {
     splitDurationInput.setTotalValue(recordingDurationInput, settings.recordDuration);
 
     uiAdvanced.fillUI(settings);
+    uiAddons.fillUI(settings);
 
-    if (settings.timeSettingFromGPSEnabled || settings.magneticSwitchEnabled) {
+    if (settings.timeSettingFromGPSEnabled) {
 
-        uiAdvanced.displayAdditionalHardwareWarning();
+        uiAddons.displayGpsHardwareWarning();
+
+    }
+
+    if (settings.magneticSwitchEnabled) {
+
+        uiAddons.displayMagneticSwitchHardwareWarning();
 
     }
 

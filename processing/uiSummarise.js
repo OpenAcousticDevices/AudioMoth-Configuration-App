@@ -48,7 +48,11 @@ function enableUI () {
     fileButton.disabled = false;
     summariseButton.disabled = false;
 
-    outputButton.disabled = false;
+    if (outputCheckbox.checked) {
+
+        outputButton.disabled = false;
+
+    }
 
     summarising = false;
 
@@ -58,9 +62,14 @@ function enableUI () {
 
 function updateInputDirectoryDisplay (directoryArray) {
 
-    if (!directoryArray || directoryArray.length === 0) {
+    if (!directoryArray) {
 
         fileLabel.innerHTML = 'No folder selected.';
+        summariseButton.disabled = true;
+
+    } else if (directoryArray.length === 0) {
+
+        fileLabel.innerHTML = 'No files found.';
         summariseButton.disabled = true;
 
     } else {
@@ -112,7 +121,11 @@ outputButton.addEventListener('click', () => {
         properties: ['openDirectory']
     });
 
-    outputDir = (destinationName !== undefined) ? destinationName[0] : '';
+    if (destinationName !== undefined) {
+
+        outputDir = destinationName[0];
+
+    }
 
     updateOutputLabel();
 

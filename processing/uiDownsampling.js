@@ -25,8 +25,6 @@ const currentWindow = getCurrentWindow();
 
 const SAMPLE_RATES = [8000, 16000, 32000, 48000, 96000, 192000, 250000, 384000];
 
-const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\d.WAV$/;
-
 const sampleRateRadioHolder = document.getElementById('sample-rate-holder');
 const disabledSampleRateRadioHolder = document.getElementById('disabled-sample-rate-holder');
 
@@ -340,7 +338,9 @@ selectionRadios[1].addEventListener('change', resetUI);
 
 fileButton.addEventListener('click', () => {
 
-    files = uiInput.selectRecordings(FILE_REGEX);
+    const fileRegex = audiomothUtils.getFilenameRegex(audiomothUtils.DOWNSAMPLE);
+
+    files = uiInput.selectRecordings(fileRegex);
 
     updateInputDirectoryDisplay(files);
 

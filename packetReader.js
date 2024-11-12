@@ -71,11 +71,9 @@ function formatPercentage (mantissa, exponent) {
 
 /*
 
-#define MAX_START_STOP_PERIODS              5
-
 typedef struct {
     uint16_t startMinutes;
-    uint16_t stopMinutes;
+    uint16_t endMinutes;
 } recordingPeriod_t;
 
 typedef struct {
@@ -97,8 +95,8 @@ typedef struct {
         struct {
             uint8_t sunRecordingMode : 3;
             uint8_t sunRecordingEvent : 2;
-            int16_t latitudeMinutes;
-            int16_t longitudeMinutes;
+            int16_t latitude;
+            int16_t longitude;
             uint8_t sunRoundingMinutes;
             uint16_t beforeSunriseMinutes : 10;
             uint16_t afterSunriseMinutes : 10;
@@ -106,27 +104,30 @@ typedef struct {
             uint16_t afterSunsetMinutes : 10;
         };
     };
-    int8_t timeZoneHours;
+    int8_t timezoneHours;
     uint8_t enableLowVoltageCutoff;
     uint8_t disableBatteryLevelDisplay;
-    int8_t timeZoneMinutes;
-    uint8_t disableSleepRecordCycle;
+    int8_t timezoneMinutes;
+    uint8_t disableSleepRecordCycle : 1;
+    uint8_t enableFilenameWithDeviceID : 1;
+    uint8_t enableTimeSettingBeforeAndAfterRecordings: 1;
+    uint8_t gpsTimeSettingPeriod: 4;
     uint32_t earliestRecordingTime;
     uint32_t latestRecordingTime;
     uint16_t lowerFilterFreq;
     uint16_t higherFilterFreq;
     union {
         uint16_t amplitudeThreshold;
-        uint16_t goertzelFilterFrequency;
+        uint16_t frequencyTriggerCentreFrequency;
     };
     uint8_t requireAcousticConfiguration : 1;
     AM_batteryLevelDisplayType_t batteryLevelDisplayType : 1;
     uint8_t minimumTriggerDuration : 6;
     union {
         struct {
-            uint8_t goertzelFilterWindowLengthShift : 4;
-            uint8_t goertzelFilterThresholdPercentageMantissa : 4;
-            int8_t goertzelFilterThresholdPercentageExponent : 3;
+            uint8_t frequencyTriggerWindowLengthShift : 4;
+            uint8_t frequencyTriggerThresholdPercentageMantissa : 4;
+            int8_t frequencyTriggerThresholdPercentageExponent : 3;
         };
         struct {
             uint8_t enableAmplitudeThresholdDecibelScale : 1;
@@ -141,7 +142,7 @@ typedef struct {
     uint8_t enableTimeSettingFromGPS : 1;
     uint8_t enableMagneticSwitch : 1;
     uint8_t enableLowGainRange : 1;
-    uint8_t enableGoertzelFilter : 1;
+    uint8_t enableFrequencyTrigger : 1;
     uint8_t enableDailyFolders : 1;
     uint8_t enableSunRecording : 1;
 } configSettings_t;
@@ -284,7 +285,15 @@ exports.read = (packet) => {
 
     const timeZoneMinutes = packet[42] > 127 ? packet[42] - 256 : packet[42];
 
-    const disableSleepRecordCycle = packet[43];
+    const packedByte5 = packet[43];
+
+    const disableSleepRecordCycle = packedByte5 & 1;
+
+    const filenameWithDeviceIDEnabled = (packedByte5 >> 1) & 1;
+
+    const acquireGpsFixBeforeAfter = ((packedByte5 >> 2) & 1) === 1 ? 'individual' : 'period';
+
+    const gpsFixTime = (packedByte5 >> 3) & 0b1111;
 
     const earliestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 44);
     const latestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 48);
@@ -390,6 +399,7 @@ exports.read = (packet) => {
     console.log('Sample rate divider:', sampleRateDivider);
 
     console.log('Enable sleep/record cyclic recording:', disableSleepRecordCycle === 0);
+    console.log('Enable file name with device ID:', filenameWithDeviceIDEnabled === 1);
     console.log('Sleep duration:', sleepDuration);
     console.log('Recording duration:', recordDuration);
 
@@ -506,6 +516,10 @@ exports.read = (packet) => {
     console.log('48 Hz DC blocking filter disabled:', disable48DCFilter === 1);
 
     console.log('GPS clock setting enabled:', timeSettingFromGPSEnabled === 1);
+
+    console.log('GPS fixes between recordings enabled:', acquireGpsFixBeforeAfter);
+
+    console.log('Time before recording/period for GPS fix:', gpsFixTime);
 
     console.log('Magnetic switch delay enabled:', magneticSwitchEnabled === 1);
 

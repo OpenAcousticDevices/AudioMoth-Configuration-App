@@ -33,12 +33,15 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
     let totalPrepTime = 0;
 
     const recordingTimes = [];
+    const periodRecordingTimes = [];
 
     let totalSleepTime = 0;
 
     let containsTruncatedRecording = false;
 
     for (let i = 0; i < timePeriods.length; i += 1) {
+
+        const currentPeriodRecordingTimes = [];
 
         const startMins = timePeriods[i].startMins;
         const endMins = timePeriods[i].endMins;
@@ -79,11 +82,13 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
                     /* Prep time cuts into recording time */
 
                     recordingTimes.push(recSecs - 1);
+                    currentPeriodRecordingTimes.push(recSecs - 1);
                     periodSecs -= recSecs - 1;
 
                 } else {
 
                     recordingTimes.push(recSecs);
+                    currentPeriodRecordingTimes.push(recSecs);
                     periodSecs -= recSecs;
 
                     /* Prep time cuts into sleep time */
@@ -102,6 +107,7 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
                 const truncatedRecordingLength = Math.min(recSecs, periodSecs);
                 recordingTimes.push(truncatedRecordingLength);
+                currentPeriodRecordingTimes.push(truncatedRecordingLength);
                 periodSecs -= truncatedRecordingLength;
 
                 totalSleepTime += Math.min(periodSecs, sleepSecs);
@@ -119,11 +125,16 @@ function getDailyCounts (timePeriods, recSecs, sleepSecs) {
 
         }
 
+        /* Record how many recordings occur and in which period */
+
+        periodRecordingTimes.push(currentPeriodRecordingTimes);
+
     }
 
     return {
         prepTime: totalPrepTime,
         recordingTimes,
+        periodRecordingTimes,
         sleepTime: totalSleepTime,
         containsTruncatedRecording
     };
@@ -162,9 +173,137 @@ function getFileSize (sampleRate, sampleRateDivider, secs) {
 
 }
 
+function calculateLengthMins (startMins, endMins) {
+
+    let length;
+
+    if (startMins < endMins) {
+
+        length = endMins - startMins;
+
+    } else if (startMins === endMins) {
+
+        length = constants.MINUTES_IN_DAY;
+
+    } else if (startMins > endMins) {
+
+        length = (constants.MINUTES_IN_DAY - startMins) + endMins;
+
+    }
+
+    return length;
+
+}
+
+function calculateGpsEnergyUsage (schedule, acquireGpsFixBeforeAfter, waitMinsBeforeRecording, dutyEnabled, recSecs, sleepSecs) {
+
+    const waitSecsBeforeRecording = waitMinsBeforeRecording * constants.SECONDS_IN_MINUTE;
+
+    let fixCount = 0;
+
+    for (let i = 0; i < schedule.length; i++) {
+
+        /* Gap between current period and next one */
+
+        let gapLength = 0;
+
+        /* Calculate the gaps between recordings */
+
+        let timeToAddToNextGap = 0;
+
+        if (acquireGpsFixBeforeAfter === 'individual' && dutyEnabled) {
+
+            const periodStart = schedule[i].startMins;
+            let periodEnd = schedule[i].endMins;
+            periodEnd += periodStart > periodEnd ? constants.MINUTES_IN_DAY : 0;
+
+            const periodLengthSecs = (periodEnd - periodStart) * constants.SECONDS_IN_MINUTE;
+
+            const completeCycleCount = Math.floor(periodLengthSecs / (recSecs + sleepSecs));
+
+            const overflow = periodLengthSecs % (recSecs + sleepSecs);
+
+            let gapCount = 0;
+
+            if (overflow === 0) {
+
+                /* Record + sleep cycles fit into the period */
+
+                gapCount = completeCycleCount > 0 ? completeCycleCount - 1 : 0;
+
+                timeToAddToNextGap = sleepSecs;
+
+            } else if (overflow <= recSecs) {
+
+                /* The end of the period occurs on a record phase */
+
+                gapCount = completeCycleCount;
+
+            } else {
+
+                /* The end of the period occurs on a sleep phase */
+
+                gapCount = completeCycleCount;
+
+                timeToAddToNextGap = overflow - recSecs;
+
+            }
+
+            fixCount += sleepSecs > waitSecsBeforeRecording ? 2 * gapCount : sleepSecs > constants.MINIMUM_GPS_FIX_TIME ? gapCount : 0;
+
+            timeToAddToNextGap /= constants.SECONDS_IN_MINUTE;
+
+        }
+
+        // console.log('\tFixes after adding fixes inside period', fixCount);
+
+        /* Calculate gap between periods */
+
+        const gapStart = schedule[i].endMins;
+
+        /* The next period could be the current period if only 1 exists */
+
+        let gapEnd = schedule[(i + 1) % schedule.length].startMins;
+        gapEnd += gapStart > gapEnd ? 1440 : 0;
+
+        gapLength += gapEnd - gapStart;
+
+        gapLength += timeToAddToNextGap;
+
+        // console.log('Time added from inside period:', timeToAddToNextGap);
+        // console.log('Gap length:', gapLength);
+
+        if (gapLength > waitMinsBeforeRecording) {
+
+            /* If the gap between periods is longer than waitSecsBeforeRecording, then the period gets 2 GPS fixes */
+
+            fixCount += 2;
+
+        } else if (gapLength >= constants.MINIMUM_GPS_FIX_TIME / constants.SECONDS_IN_MINUTE) {
+
+            /* If the gap is more than MINIMUM_GPS_FIX_TIME and less than waitSecsBeforeRecording, the period gets 1 GPS fix */
+
+            fixCount += 1;
+
+        }
+
+        /* Otherwise, 0 GPS fixes */
+
+        // console.log('\tFixes after adding fixes between period and next one', fixCount);
+        // console.log('-');
+
+    }
+
+    // console.log('GPS fix count:', fixCount);
+    // console.log('-------');
+
+    return fixCount * constants.GPS_FIX_CONSUMPTION * constants.GPS_FIX_TIME;
+
+}
+
 /* Update storage and energy usage values in life display box */
 
-exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, frequencyTriggerEnabled, dutyEnabled, energySaverChecked, gpsEnabled) => {
+exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, amplitudeThresholdingEnabled, frequencyTriggerEnabled, dutyEnabled, energySaverChecked, gpsEnabled, acquireGpsFixBeforeAfter, timeBeforeRecording) => {
 
     const thresholdingEnabled = amplitudeThresholdingEnabled || frequencyTriggerEnabled;
 
@@ -237,25 +376,11 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
             const startMins = schedule[i].startMins;
             const endMins = schedule[i].endMins;
 
-            let length;
-
-            if (startMins < endMins) {
-
-                length = endMins - startMins;
-
-            } else if (startMins === endMins) {
-
-                length = constants.MINUTES_IN_DAY;
-
-            } else if (startMins > endMins) {
-
-                length = (constants.MINUTES_IN_DAY - startMins) + endMins;
-
-            }
+            const lengthMins = calculateLengthMins(startMins, endMins);
 
             preparationInstances += 1;
 
-            const recordingLength = (length * 60) - 1;
+            const recordingLength = (lengthMins * 60) - 1;
             recordingTimes.push(recordingLength);
 
             /* If the periods differ in size, include 'up to' when describing the file size. If amplitude thresholding is enabled, it already will include this */
@@ -265,7 +390,7 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
                 const prevPeriod = schedule[i - 1];
                 const prevLength = prevPeriod.endMins - prevPeriod.startMins;
 
-                if (length !== prevLength) {
+                if (lengthMins !== prevLength) {
 
                     upToFile = true;
 
@@ -380,7 +505,7 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
     if (gpsEnabled) {
 
-        gpsEnergyUsage = schedule.length * constants.GPS_FIX_TIME * constants.GPS_FIX_CONSUMPTION;
+        gpsEnergyUsage = calculateGpsEnergyUsage(schedule, acquireGpsFixBeforeAfter, timeBeforeRecording, dutyEnabled, recLength, sleepLength);
 
     }
 

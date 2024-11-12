@@ -93,37 +93,15 @@ const DEFAULT_RETRY_INTERVAL = 100;
 
 const MAXIMUM_SECONDS_DRIFT_IN_ONE_DAY = 600;
 
-const MAXIMUM_ALLOWABLE_AUDIOMOTH_TIME_ERROR = 2;
+const MINIMUM_ALLOWABLE_AUDIOMOTH_TIME_ERROR = 4;
 
 let displayedClockError = false;
 
 let connectionComputerTime = null;
+
 let connectionAudioMothTime = null;
 
-/* Compare two semantic versions and return true if older */
-
-function isOlderSemanticVersion (aVersion, bVersion) {
-
-    for (let i = 0; i < aVersion.length; i++) {
-
-        const aVersionNum = parseInt(aVersion[i]);
-        const bVersionNum = parseInt(bVersion[i]);
-
-        if (aVersionNum > bVersionNum) {
-
-            return false;
-
-        } else if (aVersionNum < bVersionNum) {
-
-            return true;
-
-        }
-
-    }
-
-    return false;
-
-}
+let sendingConfigurationPacket = false;
 
 /* Utility functions */
 
@@ -199,8 +177,15 @@ async function getAudioMothPacket () {
 
         const date = await callWithRetry(getTime, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
 
-        const nowComputerTime = new Date(); 
+        const nowComputerTime = new Date();
         const nowAudioMothTime = date;
+
+        if ((connectionComputerTime === null || connectionAudioMothTime === null) && sendingConfigurationPacket === false) {
+
+            connectionComputerTime = nowComputerTime;
+            connectionAudioMothTime = date;
+
+        }
 
         const id = await callWithRetry(getID, null, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
 
@@ -212,14 +197,7 @@ async function getAudioMothPacket () {
 
         /* Compare current date/time object with previous time to make sure clock isn't running too slow/fast */
 
-        if (communicating === false && displayedClockError === false) {
-
-            if (connectionComputerTime === null || connectionAudioMothTime === null) {
-
-                connectionComputerTime = nowComputerTime;
-                connectionAudioMothTime = date;
-    
-            }
+        if (connectionComputerTime !== null && connectionAudioMothTime !== null && communicating === false && displayedClockError === false) {
 
             const computerTimeDiff = nowComputerTime - connectionComputerTime;
 
@@ -229,14 +207,14 @@ async function getAudioMothPacket () {
 
             const measuredAudioMothDrift = Math.round((computerTimeDiff - audioMothTimeDiff) / constants.MILLISECONDS_IN_SECOND);
 
-            if (Math.abs(measuredAudioMothDrift) > MAXIMUM_ALLOWABLE_AUDIOMOTH_TIME_ERROR && Math.abs(measuredAudioMothDrift) > maximumAllowableDrift) {
+            if (Math.abs(measuredAudioMothDrift) > MINIMUM_ALLOWABLE_AUDIOMOTH_TIME_ERROR && Math.abs(measuredAudioMothDrift) > maximumAllowableDrift) {
 
-                const direction = measuredAudioMothDrift < 0 ? "fast" : "slow";
+                const direction = measuredAudioMothDrift < 0 ? 'fast' : 'slow';
 
                 dialog.showMessageBoxSync(BrowserWindow.getFocusedWindow(), {
                     type: 'warning',
                     title: 'Device clock too ' + direction,
-                    message: 'The clock on the connected AudioMoth seems to be running ' + direction + '. This may be a hardware problem.'
+                    message: 'The clock on the connected AudioMoth seems to be running ' + direction + '. Compare the time displayed in the Configuration App to your computer clock to check that your AudioMoth is keeping correct time.'
                 });
 
                 displayedClockError = true;
@@ -290,6 +268,7 @@ async function getAudioMothPacket () {
         displayedClockError = false;
 
         connectionComputerTime = null;
+
         connectionAudioMothTime = null;
 
     }
@@ -336,7 +315,7 @@ function checkVersionCompatibility () {
     case constants.FIRMWARE_OFFICIAL_RELEASE_CANDIDATE:
 
         versionWarningTitle = 'Firmware update recommended';
-        versionWarningText = 'Update to at least version ' + constants.latestFirmwareVersionString + ' of AudioMoth-Firmware-Basic firmware to use all the features of this version of the AudioMoth Configuration App.';
+        versionWarningText = 'Update to at least version ' + constants.LATEST_FIRMWARE_VERSION_STRING + ' of AudioMoth-Firmware-Basic firmware to use all the features of this version of the AudioMoth Configuration App.';
 
         break;
 
@@ -375,7 +354,7 @@ function checkVersionCompatibility () {
 
     /* If OFFICIAL_RELEASE, OFFICIAL_RELEASE_CANDIDATE or CUSTOM_EQUIVALENT */
 
-    if (isOlderSemanticVersion(trueVersionArr, constants.latestFirmwareVersionArray)) {
+    if (constants.isOlderSemanticVersion(trueVersionArr, constants.LATEST_FIRMWARE_VERSION_MAJOR, constants.LATEST_FIRMWARE_VERSION_MINOR, constants.LATEST_FIRMWARE_VERSION_PATCH)) {
 
         if (classification === constants.FIRMWARE_OFFICIAL_RELEASE || classification === constants.FIRMWARE_OFFICIAL_RELEASE_CANDIDATE) updateRecommended = true;
 
@@ -437,7 +416,7 @@ function getTrueFirmwareVersion () {
 
     if (classification === constants.FIRMWARE_UNSUPPORTED) {
 
-        trueFirmwareVersion = constants.latestFirmwareVersionArray;
+        trueFirmwareVersion = constants.LATEST_FIRMWARE_VERSION_ARRAY;
 
         console.log('Unsupported firmware, treating firmware as latest version');
 
@@ -474,17 +453,17 @@ async function sendAudioMothPacket (packet) {
 
         const trueFirmwareVersion = getTrueFirmwareVersion();
 
-        for (let k = 0; k < constants.packetLengthVersions.length; k++) {
+        for (let k = 0; k < constants.PACKET_LENGTH_VERSIONS.length; k++) {
 
-            const possibleFirmwareVersion = constants.packetLengthVersions[k].firmwareVersion;
+            const possibleFirmwareVersion = constants.PACKET_LENGTH_VERSIONS[k].firmwareVersion;
 
-            if (isOlderSemanticVersion(trueFirmwareVersion, possibleFirmwareVersion.split('.'))) {
+            if (constants.isOlderSemanticVersion(trueFirmwareVersion, possibleFirmwareVersion[0], possibleFirmwareVersion[1], possibleFirmwareVersion[2])) {
 
                 break;
 
             }
 
-            packetLength = constants.packetLengthVersions[k].packetLength;
+            packetLength = constants.PACKET_LENGTH_VERSIONS[k].packetLength;
 
         }
 
@@ -557,7 +536,7 @@ function configureDevice () {
 
     /* Packet length is only increased with updates, so take the size of the latest firmware version packet */
 
-    const maxPacketLength = constants.packetLengthVersions.slice(-1)[0].packetLength;
+    const maxPacketLength = constants.PACKET_LENGTH_VERSIONS.slice(-1)[0].packetLength;
 
     const packet = new Uint8Array(maxPacketLength);
 
@@ -582,7 +561,7 @@ function configureDevice () {
 
     const trueFirmwareVersion = getTrueFirmwareVersion();
 
-    const configurations = (isOlderSemanticVersion(trueFirmwareVersion, ['1', '4', '4']) && settings.sampleRateIndex < 3) ? constants.oldConfigurations : constants.configurations;
+    const configurations = (constants.isOlderSemanticVersion(trueFirmwareVersion, 1, 4, 4) && settings.sampleRateIndex < 3) ? constants.OLD_CONFIGURATIONS : constants.CONFIGURATIONS;
 
     const sampleRateConfiguration = configurations[settings.sampleRateIndex];
 
@@ -639,7 +618,7 @@ function configureDevice () {
 
         let timePeriods;
 
-        if (isOlderSemanticVersion(trueFirmwareVersion, ['1', '9', '0'])) {
+        if (constants.isOlderSemanticVersion(trueFirmwareVersion, 1, 9, 0)) {
 
             /* If AudioMoth is using a firmware version older than 1.9.0, split any periods which wrap around */
 
@@ -696,9 +675,27 @@ function configureDevice () {
 
     packet[index++] = offsetMins;
 
-    /* Duty cycle disabled (default value = 0) */
+    /* Duty cycle disabled (default value = 0) and filename with device ID */
 
-    packet[index++] = settings.dutyEnabled ? 0 : 1;
+    /* Duty cycle setting is inverted because setting on device is "duty cycle disabled" but having a negative checkbox would make the UI confusing */
+
+    let packedValue4 = !settings.dutyEnabled ? 1 : 0;
+
+    if (constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 11, 0)) {
+
+        packedValue4 |= settings.filenameWithDeviceIDEnabled ? (1 << 1) : 0;
+
+        if (settings.timeSettingFromGPSEnabled) {
+
+            packedValue4 |= settings.acquireGpsFixBeforeAfter === 'individual' ? (1 << 2) : 0;
+
+            packedValue4 |= (settings.gpsFixTime & 0b1111) << 3;
+
+        }
+
+    }
+
+    packet[index++] = packedValue4;
 
     /* Start/stop dates */
 
@@ -818,7 +815,7 @@ function configureDevice () {
 
         thresholdUnionValue = amplitudeThreshold;
 
-    } else if (settings.frequencyTriggerEnabled && !isOlderSemanticVersion(trueFirmwareVersion, ['1', '8', '0'])) {
+    } else if (settings.frequencyTriggerEnabled && constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 8, 0)) {
 
         thresholdUnionValue = settings.frequencyTriggerCentreFrequency / 100;
 
@@ -833,14 +830,6 @@ function configureDevice () {
     writeLittleEndianBytes(packet, index, 2, thresholdUnionValue);
     index += 2;
 
-    /* Pack values into a single byte */
-
-    /* Whether or not deployment ID is required */
-    const requireAcousticConfig = settings.requireAcousticConfig ? 1 : 0;
-
-    /* Whether to use NiMH/LiPo voltage range for battery level indication */
-    const displayVoltageRange = settings.displayVoltageRange ? 1 : 0;
-
     /* Minimum threshold duration, voltage range and whether acoustic configuration is required before deployment */
 
     let minimumThresholdDuration;
@@ -850,7 +839,7 @@ function configureDevice () {
 
         minimumThresholdDuration = minimumThresholdDurations[settings.minimumAmplitudeThresholdDuration];
 
-    } else if (settings.frequencyTriggerEnabled && !isOlderSemanticVersion(trueFirmwareVersion, ['1', '8', '0'])) {
+    } else if (settings.frequencyTriggerEnabled && constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 8, 0)) {
 
         minimumThresholdDuration = minimumThresholdDurations[settings.minimumFrequencyTriggerDuration];
 
@@ -860,8 +849,8 @@ function configureDevice () {
 
     }
 
-    let packedValue0 = requireAcousticConfig & 0b1;
-    packedValue0 |= (displayVoltageRange & 0b1) << 1;
+    let packedValue0 = settings.requireAcousticConfig ? 1 : 0;
+    packedValue0 |= settings.displayVoltageRange ? (1 << 1) : 0;
     packedValue0 |= (minimumThresholdDuration & 0b111111) << 2;
 
     packet[index++] = packedValue0;
@@ -923,9 +912,7 @@ function configureDevice () {
 
         packet[index++] = packedValue2;
 
-    } else if (settings.frequencyTriggerEnabled && !isOlderSemanticVersion(trueFirmwareVersion, ['1', '8', '0'])) {
-
-        /* If firmware is older than 1.8.0, then frequency thresholding isn't supported, so just send zeroes */
+    } else if (settings.frequencyTriggerEnabled && constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 8, 0)) {
 
         const frequencyTriggerWindowLength = Math.log2(settings.frequencyTriggerWindowLength);
         const frequencyTriggerThreshold = uiSettings.getFrequencyFilterThresholdExponentMantissa();
@@ -941,44 +928,36 @@ function configureDevice () {
 
     } else {
 
+        /* If firmware is older than 1.8.0, then frequency thresholding isn't supported, so just send zeroes */
+
         packet[index++] = 0;
         packet[index++] = 0;
 
     }
 
     /* Whether to use NiMH/LiPo voltage range for battery level indication */
-    const energySaverModeEnabled = settings.energySaverModeEnabled ? 1 : 0;
+    let packedByte3 = settings.energySaverModeEnabled ? 1 : 0;
 
     /* Whether to turn off the 48Hz DC blocking filter which is on by default */
-    const disable48DCFilter = settings.disable48DCFilter ? 1 : 0;
+    packedByte3 |= settings.disable48DCFilter ? (1 << 1) : 0;
 
     /* Whether to allow the time to be updated via GPS */
-    const timeSettingFromGPSEnabled = settings.timeSettingFromGPSEnabled ? 1 : 0;
+    packedByte3 |= settings.timeSettingFromGPSEnabled ? (1 << 2) : 0;
 
     /* Whether to check the magnetic switch to start a delayed schedule */
-    const magneticSwitchEnabled = settings.magneticSwitchEnabled ? 1 : 0;
+    packedByte3 |= settings.magneticSwitchEnabled ? (1 << 3) : 0;
 
     /* Whether to enable the low gain range */
-    const lowGainRangeEnabled = settings.lowGainRangeEnabled ? 1 : 0;
+    packedByte3 |= settings.lowGainRangeEnabled ? (1 << 4) : 0;
 
     /* Whether to enable the Goertzel frequency filter */
-    const enableFrequencyFilter = settings.frequencyTriggerEnabled ? 1 : 0;
+    packedByte3 |= settings.enableFrequencyFilter ? (1 << 5) : 0;
 
     /* Whether to create a new folder each day to store files */
-    const dailyFolders = settings.dailyFolders ? 1 : 0;
+    packedByte3 |= settings.dailyFolders ? (1 << 6) : 0;
 
     /* Whether to enable sunrise/sunset scheduling */
-
-    const sunScheduleEnabled = settings.sunScheduleEnabled ? 1 : 0;
-
-    let packedByte3 = (energySaverModeEnabled & 0b1) & 1;
-    packedByte3 |= (disable48DCFilter & 0b1) << 1;
-    packedByte3 |= (timeSettingFromGPSEnabled & 0b1) << 2;
-    packedByte3 |= (magneticSwitchEnabled & 0b1) << 3;
-    packedByte3 |= (lowGainRangeEnabled & 0b1) << 4;
-    packedByte3 |= (enableFrequencyFilter & 0b1) << 5;
-    packedByte3 |= (dailyFolders & 0b1) << 6;
-    packedByte3 |= (sunScheduleEnabled & 0b1) << 7;
+    packedByte3 |= settings.sunScheduleEnabled ? (1 << 7) : 0;
 
     packet[index++] = packedByte3;
 
@@ -1001,6 +980,8 @@ function configureDevice () {
     communicating = true;
 
     ui.disableTimeDisplay();
+
+    sendingConfigurationPacket = true;
 
     configureButton.disabled = true;
 
@@ -1026,13 +1007,17 @@ function configureDevice () {
 
         sendAudioMothPacket(packet);
 
+        sendingConfigurationPacket = false;
+
     } else {
 
         console.log('Sending in', sendTimeDiff);
 
         setTimeout(() => {
-    
+
             sendAudioMothPacket(packet);
+
+            sendingConfigurationPacket = false;
 
         }, sendTimeDiff);
 
@@ -1178,7 +1163,7 @@ function updateLifeDisplayOnChange () {
 
     const settings = getCurrentConfiguration();
 
-    lifeDisplay.updateLifeDisplay(recordingPeriods, constants.configurations[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.frequencyTriggerEnabled, settings.dutyEnabled, settings.energySaverModeEnabled, settings.timeSettingFromGPSEnabled);
+    lifeDisplay.updateLifeDisplay(recordingPeriods, constants.CONFIGURATIONS[settings.sampleRateIndex], settings.recordDuration, settings.sleepDuration, settings.amplitudeThresholdingEnabled, settings.frequencyTriggerEnabled, settings.dutyEnabled, settings.energySaverModeEnabled, settings.timeSettingFromGPSEnabled, settings.acquireGpsFixBeforeAfter, settings.gpsFixTime);
 
 }
 
@@ -1230,6 +1215,7 @@ function getCurrentConfiguration () {
     config.recordDuration = settings.recordDuration;
     config.sleepDuration = settings.sleepDuration;
     config.dutyEnabled = settings.dutyEnabled;
+    config.filenameWithDeviceIDEnabled = settings.filenameWithDeviceIDEnabled;
 
     config.passFiltersEnabled = settings.passFiltersEnabled;
     config.filterType = settings.filterType;
@@ -1268,6 +1254,10 @@ function getCurrentConfiguration () {
 
     config.timeSettingFromGPSEnabled = settings.timeSettingFromGPSEnabled;
 
+    config.acquireGpsFixBeforeAfter = settings.acquireGpsFixBeforeAfter;
+
+    config.gpsFixTime = settings.gpsFixTime;
+
     config.magneticSwitchEnabled = settings.magneticSwitchEnabled;
 
     return config;
@@ -1300,7 +1290,7 @@ electron.ipcRenderer.on('load', () => {
 
     const currentConfig = getCurrentConfiguration();
 
-    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, magneticSwitchEnabled, dailyFolders, sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition) => {
+    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, filenameWithDeviceIDEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, acquireGpsFixBeforeAfter, gpsFixTime, magneticSwitchEnabled, dailyFolders, sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition) => {
 
         document.activeElement.blur();
 
@@ -1379,6 +1369,7 @@ electron.ipcRenderer.on('load', () => {
             sampleRateIndex,
             gain,
             dutyEnabled,
+            filenameWithDeviceIDEnabled,
             recordDuration,
             sleepDuration,
             passFiltersEnabled,
@@ -1401,6 +1392,8 @@ electron.ipcRenderer.on('load', () => {
             disable48DCFilter,
             lowGainRangeEnabled,
             timeSettingFromGPSEnabled,
+            acquireGpsFixBeforeAfter,
+            gpsFixTime,
             magneticSwitchEnabled,
             sunRounding,
             sunDefinition
@@ -1516,7 +1509,7 @@ configureButton.addEventListener('click', () => {
 
         const sunDefinitionIndex = ipcRenderer.sendSync('request-sun-definition-index');
 
-        if (isOlderSemanticVersion(firmwareVersion.split('.'), [1, 10, 0])) {
+        if (constants.isOlderSemanticVersion(firmwareVersion.split('.'), 1, 10, 0)) {
 
             let message = 'The firmware on the connected AudioMoth does not support ';
             message += sunDefinitionIndex === constants.SUNRISE_AND_SUNSET ? 'sunrise/sunset' : 'dawn/dusk';

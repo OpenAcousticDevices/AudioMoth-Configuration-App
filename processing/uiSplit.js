@@ -25,8 +25,6 @@ const currentWindow = getCurrentWindow();
 
 const MAX_LENGTHS = [1, 5, 10, 15, 30, 60, 300, 600, 3600];
 
-const FILE_REGEX = /^(\d\d\d\d\d\d\d\d_)?\d\d\d\d\d\d.WAV$/;
-
 const maxLengthRadios = document.getElementsByName('max-length-radio');
 
 const selectionRadios = document.getElementsByName('selection-radio');
@@ -344,7 +342,9 @@ selectionRadios[1].addEventListener('change', resetUI);
 
 fileButton.addEventListener('click', () => {
 
-    files = uiInput.selectRecordings(FILE_REGEX);
+    const fileRegex = audiomothUtils.getFilenameRegex(audiomothUtils.SPLIT);
+
+    files = uiInput.selectRecordings(fileRegex);
 
     updateInputDirectoryDisplay(files);
 

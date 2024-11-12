@@ -10,13 +10,17 @@ const currentWindow = getCurrentWindow();
 const path = require('path');
 const fs = require('fs');
 
+const selectionRadios = document.getElementsByName('selection-radio');
+
+let previousSelection = [];
+
 function getSelectedRadioValue (radioName) {
 
     return parseInt(document.querySelector('input[name="' + radioName + '"]:checked').value);
 
 }
 
-/* Open dialog and set files to be expanded */
+/* Open dialog and set files to be processed */
 
 exports.selectRecordings = (fileRegex) => {
 
@@ -30,14 +34,19 @@ exports.selectRecordings = (fileRegex) => {
 
     const filters = (selectionType === 0) ? [{name: 'wav', extensions: ['wav']}] : [];
 
+    const openPath = previousSelection.length > 0 ? path.dirname(previousSelection[0]) : '';
+
     const selection = dialog.showOpenDialogSync(currentWindow, {
         title: 'Select recording file or folder containing recordings',
         nameFieldLabel: 'Recordings',
         properties,
-        filters
+        filters,
+        defaultPath: openPath
     });
 
     if (selection) {
+
+        previousSelection = selection;
 
         recordings = [];
 
@@ -48,7 +57,7 @@ exports.selectRecordings = (fileRegex) => {
                 filePath = selection[i];
                 fileName = path.basename(filePath);
 
-                /* Check if wav files match a given regex and thus can be expanded/split */
+                /* Check if wav files match a given regex */
 
                 if (fileName.charAt(0) !== '.' && fileRegex.test(fileName.toUpperCase())) {
 
@@ -184,3 +193,16 @@ function updateFilesInFolder (selection) {
 }
 
 exports.updateFilesInFolder = updateFilesInFolder;
+
+function resetPreviousSelection () {
+
+    previousSelection = [];
+
+}
+
+if (selectionRadios.length > 0) {
+
+    selectionRadios[0].addEventListener('change', resetPreviousSelection);
+    selectionRadios[1].addEventListener('change', resetPreviousSelection);
+
+}

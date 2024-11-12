@@ -85,10 +85,15 @@ outputButton.addEventListener('click', () => {
         title: 'Select Destination',
         nameFieldLabel: 'Destination',
         multiSelections: false,
-        properties: ['openDirectory']
+        properties: ['openDirectory'],
+        defaultPath: outputDir
     });
 
-    outputDir = (destinationName !== undefined) ? destinationName[0] : '';
+    if (destinationName !== undefined) {
+
+        outputDir = destinationName[0];
+
+    }
 
     updateOutputLabel();
 
@@ -183,7 +188,11 @@ exports.enableOutputCheckbox = () => {
 
 exports.enableOutputButton = () => {
 
-    outputButton.disabled = false;
+    if (outputCheckbox.checked) {
+
+        outputButton.disabled = false;
+
+    }
 
 };
 
