@@ -951,7 +951,7 @@ function configureDevice () {
     packedByte3 |= settings.lowGainRangeEnabled ? (1 << 4) : 0;
 
     /* Whether to enable the Goertzel frequency filter */
-    packedByte3 |= settings.enableFrequencyFilter ? (1 << 5) : 0;
+    packedByte3 |= settings.frequencyTriggerEnabled ? (1 << 5) : 0;
 
     /* Whether to create a new folder each day to store files */
     packedByte3 |= settings.dailyFolders ? (1 << 6) : 0;
