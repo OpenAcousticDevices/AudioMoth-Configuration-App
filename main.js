@@ -493,6 +493,8 @@ function openMapWindow (event, lat, lon) {
     settings.resizable = true;
     mapWindow = new BrowserWindow(settings);
 
+    mapWindow.webContents.userAgent = 'AudioMoth Configuration App/1.12.2 (+https://openacousticdevices.info; contact: theteam@openacousticdevices.info)';
+
     mapWindow.setMenu(null);
     mapWindow.loadURL(path.join('file://', __dirname, '/map.html'));
 

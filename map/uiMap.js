@@ -75,7 +75,7 @@ function setUpMap () {
     }
 
     const attributionElement = document.getElementsByClassName('leaflet-control-attribution')[0];
-    attributionElement.innerHTML = '<span>Open Street Map</span>';
+    attributionElement.innerHTML = '<span>&copy; <a href="https://openstreetmap.org/copyright" onclick="require(\'electron\').shell.openExternal(\'https://openstreetmap.org/copyright\'); return false;">Open Street Map</a></span>';
 
     map.doubleClickZoom.disable();
 
@@ -94,7 +94,7 @@ function setUpMap () {
 
     });
 
-    const osm = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {minZoom: 1, maxZoom: 17, attribution: ''});
+    const osm = new L.TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {minZoom: 1, maxZoom: 17, attribution: ''});
 
     const lat = 0;
     const lng = 0;
