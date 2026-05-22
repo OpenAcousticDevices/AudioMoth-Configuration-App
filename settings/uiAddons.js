@@ -6,6 +6,7 @@
 
 const {dialog} = require('@electron/remote');
 
+const ignoreExternalMicrophoneForAcousticChimeCheckbox = document.getElementById('ignore-external-microphone-for-acoustic-chime-checkbox');
 const magneticDelayCheckbox = document.getElementById('magnetic-delay-checkbox');
 const gpsFixTimeCheckbox = document.getElementById('gps-time-checkbox');
 const gpsBeforeAfterSelect = document.getElementById('gps-before-after-select');
@@ -40,6 +41,12 @@ exports.getGpsFixTime = () => {
 
 };
 
+exports.isExternalMicrophoneIgnoredForAcousticChime = () => {
+
+    return ignoreExternalMicrophoneForAcousticChimeCheckbox.checked;
+
+};
+
 function updateGpsUI () {
 
     gpsBeforeAfterSelect.disabled = !gpsFixTimeCheckbox.checked;
@@ -53,6 +60,8 @@ function updateGpsUI () {
 }
 
 exports.fillUI = (settings) => {
+
+    ignoreExternalMicrophoneForAcousticChimeCheckbox.checked = settings.ignoreExternalMicrophoneForAcousticChime;
 
     magneticDelayCheckbox.checked = settings.magneticSwitchEnabled;
 
@@ -122,6 +131,19 @@ function displayMagneticSwitchHardwareWarning () {
 
 exports.displayMagneticSwitchHardwareWarning = displayMagneticSwitchHardwareWarning;
 
+function displayIgnoreExternalMicrophoneForAcousticChimeHardwareWarning () {
+
+    dialog.showMessageBox({
+        type: 'warning',
+        buttons: ['OK'],
+        title: 'Ignore external microphone for acoustic chime',
+        message: 'This option is supported by all AudioMoth Dev models and versions 1.2.1 and greater of the standard AudioMoth.'
+    });
+
+}
+
+exports.displayIgnoreExternalMicrophoneForAcousticChimeHardwareWarning = displayIgnoreExternalMicrophoneForAcousticChimeHardwareWarning;
+
 gpsFixTimeCheckbox.addEventListener('change', () => {
 
     if (gpsFixTimeCheckbox.checked) {
@@ -139,6 +161,16 @@ magneticDelayCheckbox.addEventListener('change', () => {
     if (magneticDelayCheckbox.checked) {
 
         displayMagneticSwitchHardwareWarning();
+
+    }
+
+});
+
+ignoreExternalMicrophoneForAcousticChimeCheckbox.addEventListener('change', () => {
+
+    if (ignoreExternalMicrophoneForAcousticChimeCheckbox.checked) {
+
+        displayIgnoreExternalMicrophoneForAcousticChimeHardwareWarning();
 
     }
 

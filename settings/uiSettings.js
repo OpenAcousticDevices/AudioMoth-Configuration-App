@@ -201,6 +201,10 @@ exports.getSettings = () => {
         minimumFrequencyTriggerDuration: uiFiltering.getMinimumFrequencyTriggerDuration(),
         frequencyTriggerThreshold: uiFiltering.getFrequencyTrigger(),
         requireAcousticConfig: uiAdvanced.isAcousticConfigRequired(),
+        requireLocationInChime: uiAdvanced.isLocationInChimeEnabled(),
+        useTimeZoneInChime: uiAdvanced.isTimeZoneInChimeEnabled(),
+        adjustScheduleUsingTimezoneFromAcousticChime: uiAdvanced.isAdjustScheduleUsingTimezoneFromAcousticChimeEnabled(),
+        prerecordingPrepTime: uiAdvanced.getPrerecordingPrepTime(),
         dailyFolders: uiAdvanced.isDailyFolderEnabled(),
         displayVoltageRange: voltageRangeCheckBox.checked,
         minimumAmplitudeThresholdDuration: uiFiltering.getMinimumAmplitudeThresholdDuration(),
@@ -211,6 +215,7 @@ exports.getSettings = () => {
         timeSettingFromGPSEnabled: uiAddons.isTimeSettingFromGPSEnabled(),
         acquireGpsFixBeforeAfter: uiAddons.gpsFixesBeforeAfterSetting(),
         gpsFixTime: uiAddons.getGpsFixTime(),
+        ignoreExternalMicrophoneForAcousticChime: uiAddons.isExternalMicrophoneIgnoredForAcousticChime(),
         magneticSwitchEnabled: uiAddons.isMagneticSwitchEnabled(),
         sunScheduleEnabled: sunTab.classList.contains('active')
     };
@@ -284,6 +289,12 @@ exports.fillUI = (settings) => {
     if (settings.magneticSwitchEnabled) {
 
         uiAddons.displayMagneticSwitchHardwareWarning();
+
+    }
+
+    if (settings.ignoreExternalMicrophoneForAcousticChime) {
+
+        uiAddons.displayIgnoreExternalMicrophoneForAcousticChimeHardwareWarning();
 
     }
 

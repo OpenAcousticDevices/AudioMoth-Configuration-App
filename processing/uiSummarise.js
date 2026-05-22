@@ -25,6 +25,8 @@ const outputLabel = document.getElementById('output-label');
 
 const summariseButton = document.getElementById('summarise-button');
 
+let filesResponse = {};
+
 let files = [];
 let outputDir = '';
 let sourceDir = '';
@@ -235,12 +237,14 @@ summariseButton.addEventListener('click', () => {
 
     }
 
-    const response = uiInput.updateFilesInFolder(selection);
+    const fr = uiInput.updateFilesInFolder(selection);
 
-    if (response) {
+    if (fr) {
 
-        files = response.files;
-        sourceDir = response.folder;
+        filesResponse = fr;
+
+        files = fr.files;
+        sourceDir = fr.folder;
 
         updateInputDirectoryDisplay(files);
 
@@ -251,6 +255,8 @@ summariseButton.addEventListener('click', () => {
         setTimeout(summariseFiles, 2000);
 
     } else {
+
+        filesResponse = null;
 
         dialog.showMessageBoxSync({
             type: 'error',
@@ -271,3 +277,23 @@ summariseButton.addEventListener('click', () => {
 /* When the progress bar is complete and the summary window at the end has been displayed for a fixed amount of time, it will close and this re-enables the UI */
 
 electron.ipcRenderer.on('summarise-summary-closed', enableUI);
+
+/* Release hold of selected files */
+
+electron.ipcRenderer.on('summarise-close', () => {
+
+    if (filesResponse) {
+
+        uiInput.close(filesResponse);
+
+    }
+
+    uiInput.resetPreviousSelection();
+
+    files = [];
+    sourceDir = '';
+    selection = [];
+
+    updateInputDirectoryDisplay(files);
+
+});

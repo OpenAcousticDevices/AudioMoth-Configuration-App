@@ -77,53 +77,69 @@
 
             </div>
 
-            <div class="row" id="disabled-sample-rate-holder">
-                <div style="border: #cdcdcd thin solid; margin-left: 12px; width: 543px; display: none;">
-                    <div class="col-12" style="padding: 0px;">
-                        <div style="margin-left: 8px; margin-right: 4px">
-                            <table class="table" style="margin-bottom: 8px;">
-                                <tr class="settings-text grey" style="font-size: 12px;" title="Sample rate used when making recordings.">
+            <div class="row" id="disabled-sample-rate-holder" style="margin-bottom: 8px; display: none;">
+
+                <div class="col-12" style="padding-bottom: 0px; padding-top: 0px; padding-left: 12px; padding-right: 12px;">
+
+                    <div style="border: #cdcdcd thin solid;">
+
+                        <div style="margin-left: 12px; margin-right: 8px">
+
+                            <table class="table" style="margin-top: 12px; margin-bottom: 8px;">
+                                <tr class="settings-text" style="font-size: 12px;" title="Sample rate used when making recordings.">
                                     <td align="center" style="padding: 0px;"></td>
-                                    <td align="center" style="padding: 0px;">8</td>
-                                    <td align="center" style="padding: 0px;">16</td>
-                                    <td align="center" style="padding: 0px;">32</td>
-                                    <td align="center" style="padding: 0px;">48</td>
-                                    <td align="center" style="padding: 0px;">96</td>
-                                    <td align="center" style="padding: 0px;">192</td>
-                                    <td align="center" style="padding: 0px;">250</td>
-                                    <td align="center" style="padding: 0px;">384</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">8</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">16</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">32</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">48</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">96</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">192</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">250</td>
+                                    <td align="center" style="padding: 0px; color: grey;" name="disabled-sample-rate-label">384</td>
                                 </tr>
-                                <tr class="settings-text grey" title="Sample rate used when making recordings.">
-                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px;">Sample rate (kHz):</td>
+                                <tr class="settings-text" aria-hidden="true" title="Sample rate used when making recordings.">
+                                    <td align="left" style="padding-top: 0px; padding-bottom: 0px; color: grey;">Sample rate (kHz):</td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="0" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio0">8 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="0" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio0" disabled>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="1" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio1">16 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="1" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio1" disabled>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="2" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio2">32 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="2" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio2" disabled>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="3" name="disabled-sample-rate-radio" disabled checked>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio3">48 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="3" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio3" disabled checked>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="4" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio4">96 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="4" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio4" disabled>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="5" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio5">192 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="5" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio5" disabled>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="6" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio6">250 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="6" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio6" disabled>
                                     </td>
                                     <td align="center" style="padding-top: 0px; padding-bottom: 0px">
-                                        <input class="settings-inputs" type="radio" value="7" name="disabled-sample-rate-radio" disabled>
+                                        <label class="visually-hidden" for="disabled-sample-rate-radio7">384 kilohertz sample rate</label>
+                                        <input class="settings-inputs" type="radio" value="7" name="disabled-sample-rate-radio" id="disabled-sample-rate-radio7" disabled>
                                     </td>
                                 </tr>
                             </table>
+                        
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
 
             <div class="row">

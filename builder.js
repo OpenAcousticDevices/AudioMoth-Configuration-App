@@ -45,6 +45,20 @@ case 'mac':
 case 'linux':
     console.log('Using build configuration to Linux (64-bit).');
     target = Platform.LINUX.createTarget();
+    config = {
+        linux: {
+            target: [
+                {
+                    target: 'deb',
+                    arch: 'x64'
+                },
+                {
+                    target: 'appimage',
+                    arch: 'x64'
+                }
+            ]
+        }
+    };
     break;
 default:
     console.error('ERROR - Build target not recognised. Accepted targets: win, win32, mac, linux.');

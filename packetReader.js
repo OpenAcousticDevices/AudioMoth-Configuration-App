@@ -106,12 +106,17 @@ typedef struct {
     };
     int8_t timezoneHours;
     uint8_t enableLowVoltageCutoff;
-    uint8_t disableBatteryLevelDisplay;
+    uint8_t disableBatteryLevelDisplay : 1;
+    uint8_t requireAcousticLocation : 1;
+    uint8_t enableTimezoneFromAcousticChime: 1;
+    uint8_t adjustScheduleUsingTimezoneFromAcousticChime: 1;
+    uint8_t preparationPeriodBuffer: 4;
     int8_t timezoneMinutes;
     uint8_t disableSleepRecordCycle : 1;
     uint8_t enableFilenameWithDeviceID : 1;
     uint8_t enableTimeSettingBeforeAndAfterRecordings: 1;
     uint8_t gpsTimeSettingPeriod: 4;
+    uint8_t ignoreExternalMicrophoneForAcousticChime : 1;
     uint32_t earliestRecordingTime;
     uint32_t latestRecordingTime;
     uint16_t lowerFilterFreq;
@@ -210,23 +215,23 @@ exports.read = (packet) => {
 
     /* Read advanced settings */
 
-    const packedByte3 = packet[61];
+    const packedByte0 = packet[61];
 
-    const energySaverModeEnabled = packedByte3 & 1;
+    const energySaverModeEnabled = packedByte0 & 1;
 
-    const disable48DCFilter = (packedByte3 >> 1) & 1;
+    const disable48DCFilter = (packedByte0 >> 1) & 1;
 
-    const timeSettingFromGPSEnabled = (packedByte3 >> 2) & 1;
+    const timeSettingFromGPSEnabled = (packedByte0 >> 2) & 1;
 
-    const magneticSwitchEnabled = (packedByte3 >> 3) & 1;
+    const magneticSwitchEnabled = (packedByte0 >> 3) & 1;
 
-    const lowGainRangeEnabled = (packedByte3 >> 4) & 1;
+    const lowGainRangeEnabled = (packedByte0 >> 4) & 1;
 
-    const enableFrequencyFilter = (packedByte3 >> 5) & 1;
+    const enableFrequencyFilter = (packedByte0 >> 5) & 1;
 
-    const dailyFolders = (packedByte3 >> 6) & 1;
+    const dailyFolders = (packedByte0 >> 6) & 1;
 
-    const sunRecordingEnabled = (packedByte3 >> 7) & 1;
+    const sunRecordingEnabled = (packedByte0 >> 7) & 1;
 
     /* Read recording schedule or sunrise/sunset settings */
 
@@ -240,10 +245,10 @@ exports.read = (packet) => {
 
     if (sunRecordingEnabled) {
 
-        const packedByte4 = packet[18];
+        const packedByte1 = packet[18];
 
-        sunMode = packedByte4 & 0b111;
-        sunEvent = (packedByte4 >> 3) & 0b11;
+        sunMode = packedByte1 & 0b111;
+        sunEvent = (packedByte1 >> 3) & 0b11;
 
         latitude = convertCoordMinsToObject(twoBytesToSignedNumber(packet, 19));
         longitude = convertCoordMinsToObject(twoBytesToSignedNumber(packet, 21));
@@ -281,19 +286,30 @@ exports.read = (packet) => {
 
     // const enableLowVoltageCutoff = packet[40];
 
-    const disableBatteryLevelDisplay = packet[41];
+    const packedByte2 = packet[41];
+
+    const disableBatteryLevelDisplay = packedByte2 & 1;
+
+    const requireLocationInChime = (packedByte2 >> 1) & 1;
+
+    const useTimeZoneInChime = (packedByte2 >> 2) & 1;
+    const adjustScheduleUsingTimezoneFromAcousticChime = (packedByte2 >> 3) & 1;
+
+    const preparationPeriodBuffer = (packedByte2 >> 4) & 0b1111;
 
     const timeZoneMinutes = packet[42] > 127 ? packet[42] - 256 : packet[42];
 
-    const packedByte5 = packet[43];
+    const packedByte3 = packet[43];
 
-    const disableSleepRecordCycle = packedByte5 & 1;
+    const disableSleepRecordCycle = packedByte3 & 1;
 
-    const filenameWithDeviceIDEnabled = (packedByte5 >> 1) & 1;
+    const filenameWithDeviceIDEnabled = (packedByte3 >> 1) & 1;
 
-    const acquireGpsFixBeforeAfter = ((packedByte5 >> 2) & 1) === 1 ? 'individual' : 'period';
+    const acquireGpsFixBeforeAfter = ((packedByte3 >> 2) & 1) === 1 ? 'individual' : 'period';
 
-    const gpsFixTime = (packedByte5 >> 3) & 0b1111;
+    const gpsFixTime = (packedByte3 >> 3) & 0b1111;
+
+    const ignoreExternalMicrophoneForAcousticChime = (packedByte3 >> 7) & 1;
 
     const earliestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 44);
     const latestRecordingTime = audiomoth.convertFourBytesFromBufferToDate(packet, 48);
@@ -301,18 +317,18 @@ exports.read = (packet) => {
     const lowerFilterFreq = twoBytesToNumber(packet, 52);
     const higherFilterFreq = twoBytesToNumber(packet, 54);
 
-    const packedByte0 = packet[58];
+    const packedByte4 = packet[58];
 
-    const requireAcousticConfig = packedByte0 & 1;
+    const requireAcousticConfig = packedByte4 & 1;
 
-    const displayVoltageRange = (packedByte0 >> 1) & 1;
+    const displayVoltageRange = (packedByte4 >> 1) & 1;
 
-    const minimumTriggerDuration = (packedByte0 >> 2) & 0b111111;
+    const minimumTriggerDuration = (packedByte4 >> 2) & 0b111111;
 
     /* Indices contain either amplitude or frequency threshold, so use enableFrequencyFilter to tell which is which */
 
-    const packedByte1 = packet[59];
-    const packedByte2 = packet[60];
+    const packedByte5 = packet[59];
+    const packedByte6 = packet[60];
 
     let amplitudeThreshold = 0;
     let goertzelFilterFrequency = 0;
@@ -329,12 +345,12 @@ exports.read = (packet) => {
 
         /* Frequency threshold */
 
-        goertzelFilterWindowLengthShift = packedByte1 & 0b1111;
+        goertzelFilterWindowLengthShift = packedByte5 & 0b1111;
         goertzelFilterWindowLengthShift = 1 << goertzelFilterWindowLengthShift;
 
-        goertzelFilterThresholdPercentageMantissa = (packedByte1 >> 4) & 0b1111;
+        goertzelFilterThresholdPercentageMantissa = (packedByte5 >> 4) & 0b1111;
 
-        goertzelFilterThresholdPercentageExponent = packedByte2 & 0b111;
+        goertzelFilterThresholdPercentageExponent = packedByte6 & 0b111;
         goertzelFilterThresholdPercentageExponent = goertzelFilterThresholdPercentageExponent < 0b100 ? goertzelFilterThresholdPercentageExponent : goertzelFilterThresholdPercentageExponent - 0b1000;
 
         goertzelFilterThresholdPercentage = goertzelFilterThresholdPercentageMantissa * Math.pow(10, goertzelFilterThresholdPercentageExponent);
@@ -347,21 +363,21 @@ exports.read = (packet) => {
 
         /* Read bottom 7 bits */
 
-        enableAmplitudeThresholdDecibelScale = packedByte1 & 1;
+        enableAmplitudeThresholdDecibelScale = packedByte5 & 1;
 
-        amplitudeThresholdDecibel = -1 * ((packedByte1 >> 1) & 0b1111111);
+        amplitudeThresholdDecibel = -1 * ((packedByte5 >> 1) & 0b1111111);
 
         /* Amplitude threshold percentage scale */
 
-        enableAmplitudeThresholdPercentageScale = packedByte2 & 1;
+        enableAmplitudeThresholdPercentageScale = packedByte6 & 1;
 
         /* Read the percentage value as a 4-bit mantissa and a 3-bit exponent */
 
-        amplitudeThresholdPercentageMantissa = (packedByte2 >> 1) & 0b1111;
+        amplitudeThresholdPercentageMantissa = (packedByte6 >> 1) & 0b1111;
 
         /* Read final 3 bits and read as 3-bit two's complement */
 
-        amplitudeThresholdPercentageExponent = (packedByte2 >> 5) & 0b111;
+        amplitudeThresholdPercentageExponent = (packedByte6 >> 5) & 0b111;
         amplitudeThresholdPercentageExponent = amplitudeThresholdPercentageExponent < 0b100 ? amplitudeThresholdPercentageExponent : amplitudeThresholdPercentageExponent - 0b1000;
 
         amplitudeThresholdPercentage = formatPercentage(amplitudeThresholdPercentageMantissa, amplitudeThresholdPercentageExponent) + '%';
@@ -509,6 +525,14 @@ exports.read = (packet) => {
 
     console.log('Acoustic configuration required:', requireAcousticConfig === 1);
 
+    console.log('\tLocation in acoustic chime required:', requireLocationInChime === 1);
+
+    console.log('Time zone in acoustic chime enabled:', useTimeZoneInChime === 1);
+
+    console.log('\tAdjust schedule using time zone from acoustic chime enabled:', adjustScheduleUsingTimezoneFromAcousticChime === 1);
+
+    console.log('Preparation period buffer time (secs):', preparationPeriodBuffer);
+
     console.log('Use NiMH/LiPo voltage range for battery level indication:', displayVoltageRange === 1);
 
     console.log('Energy saver mode enabled:', energySaverModeEnabled === 1);
@@ -520,6 +544,8 @@ exports.read = (packet) => {
     console.log('GPS fixes between recordings enabled:', acquireGpsFixBeforeAfter);
 
     console.log('Time before recording/period for GPS fix:', gpsFixTime);
+
+    console.log('Ignore external microphone for acoustic chime:', ignoreExternalMicrophoneForAcousticChime === 1);
 
     console.log('Magnetic switch delay enabled:', magneticSwitchEnabled === 1);
 

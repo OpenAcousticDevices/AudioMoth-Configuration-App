@@ -13,10 +13,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 48,
-    recordCurrent: 9.22,
-    energySaverRecordCurrent: 5.92,
-    listenCurrent: 8.59,
-    energySaverListenCurrent: 5.41
+    recordCurrent: 8.5,
+    energySaverRecordCurrent: 5.5,
+    listenCurrent: 8.1,
+    energySaverListenCurrent: 5.1
 }, {
     trueSampleRate: 16,
     clockDivider: 4,
@@ -24,10 +24,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 24,
-    recordCurrent: 9.83,
-    energySaverRecordCurrent: 6.63,
-    listenCurrent: 8.72,
-    energySaverListenCurrent: 5.54
+    recordCurrent: 9.0,
+    energySaverRecordCurrent: 6.0,
+    listenCurrent: 8.1,
+    energySaverListenCurrent: 5.2
 }, {
     trueSampleRate: 32,
     clockDivider: 4,
@@ -35,10 +35,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 12,
-    recordCurrent: 11.3,
-    energySaverRecordCurrent: 8.04,
-    listenCurrent: 8.95,
-    energySaverListenCurrent: 5.78
+    recordCurrent: 10.0,
+    energySaverRecordCurrent: 7.0,
+    listenCurrent: 8.2,
+    energySaverListenCurrent: 5.4
 }, {
     trueSampleRate: 48,
     clockDivider: 4,
@@ -46,10 +46,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 8,
-    recordCurrent: 12.3,
-    energySaverRecordCurrent: 8.93,
-    listenCurrent: 9.14,
-    energySaverListenCurrent: 5.98
+    recordCurrent: 10.5,
+    energySaverRecordCurrent: 7.5,
+    listenCurrent: 8.4,
+    energySaverListenCurrent: 5.6
 }, {
     trueSampleRate: 96,
     clockDivider: 4,
@@ -57,10 +57,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 4,
-    recordCurrent: 15.8,
-    energySaverRecordCurrent: 15.8,
-    listenCurrent: 10.0,
-    energySaverListenCurrent: 10.0
+    recordCurrent: 13.5,
+    energySaverRecordCurrent: 13.5,
+    listenCurrent: 9.0,
+    energySaverListenCurrent: 9.0
 }, {
     trueSampleRate: 192,
     clockDivider: 4,
@@ -68,10 +68,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 2,
-    recordCurrent: 24.1,
-    energySaverRecordCurrent: 24.1,
-    listenCurrent: 11.5,
-    energySaverListenCurrent: 11.5
+    recordCurrent: 20.0,
+    energySaverRecordCurrent: 20.0,
+    listenCurrent: 10.5,
+    energySaverListenCurrent: 10.5
 }, {
     trueSampleRate: 250,
     clockDivider: 4,
@@ -79,10 +79,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 250000,
     sampleRateDivider: 1,
-    recordCurrent: 26.4,
-    energySaverRecordCurrent: 26.4,
-    listenCurrent: 10.6,
-    energySaverListenCurrent: 10.6
+    recordCurrent: 17.0,
+    energySaverRecordCurrent: 17.0,
+    listenCurrent: 10.0,
+    energySaverListenCurrent: 10.0
 }, {
     trueSampleRate: 384,
     clockDivider: 4,
@@ -90,10 +90,10 @@ exports.CONFIGURATIONS = [{
     oversampleRate: 1,
     sampleRate: 384000,
     sampleRateDivider: 1,
-    recordCurrent: 38.5,
-    energySaverRecordCurrent: 38.5,
-    listenCurrent: 12.7,
-    energySaverListenCurrent: 12.7
+    recordCurrent: 24.0,
+    energySaverRecordCurrent: 24.0,
+    listenCurrent: 12.5,
+    energySaverListenCurrent: 12.5
 }];
 
 /* Configuration settings to be used when a device is on firmware < 1.4.4 */
@@ -262,7 +262,7 @@ exports.isNewerOrEqualSemanticVersion = (version, major, minor, patch) => {
 /* Version number for the latest firmware */
 
 const LATEST_FIRMWARE_VERSION_MAJOR = 1;
-const LATEST_FIRMWARE_VERSION_MINOR = 11;
+const LATEST_FIRMWARE_VERSION_MINOR = 12;
 const LATEST_FIRMWARE_VERSION_PATCH = 0;
 
 exports.LATEST_FIRMWARE_VERSION_MAJOR = LATEST_FIRMWARE_VERSION_MAJOR;
@@ -327,3 +327,16 @@ exports.ASTRONOMICAL_DAWN_AND_DUSK = 3;
 
 exports.MIN_FIRST_LAST_DATE = '2020-01-01';
 exports.MAX_FIRST_LAST_DATE = '2029-12-31';
+
+/* Valid settings */
+
+exports.VALID_GAIN_VALUES = [0, 1, 2, 3, 4];
+exports.MAX_SLEEP_DURATION = 43200;
+exports.MAX_RECORD_DURATION = 43200;
+exports.MIN_CUSTOM_TIME_ZONE_OFFSET = -720;
+exports.MAX_CUSTOM_TIME_ZONE_OFFSET = 840
+exports.MAX_AMPLITUDE_THRESHOLD_PERCENTAGE = 100;
+exports.MAX_AMPLITUDE_THRESHOLD_16BIT = 32768;
+exports.MIN_AMPLITUDE_THRESHOLD_DECIBEL = -100;
+exports.MAX_AMPLITUDE_THRESHOLD_DECIBEL = 0;
+exports.VALID_GPS_FIX_TIMES = [1, 2, 5, 10, 15];

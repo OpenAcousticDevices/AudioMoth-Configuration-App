@@ -200,6 +200,33 @@ function resetPreviousSelection () {
 
 }
 
+exports.resetPreviousSelection = resetPreviousSelection;
+
+exports.close = (results) => {
+
+    console.log(results);
+
+    if (results && results.files) {
+
+        results.files.forEach((filePath) => {
+
+            try {
+
+                console.log(`Closing file ${filePath}`);
+                fs.closeSync(fs.openSync(filePath, 'r'));
+
+            } catch (err) {
+
+                console.error(`Error closing file ${filePath}:`, err);
+
+            }
+
+        });
+
+    }
+
+};
+
 if (selectionRadios.length > 0) {
 
     selectionRadios[0].addEventListener('change', resetPreviousSelection);

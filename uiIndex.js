@@ -88,6 +88,7 @@ let communicating = false;
 
 const MAXIMUM_RETRIES = 10;
 const DEFAULT_RETRY_INTERVAL = 100;
+const DEFAULT_REQUEST_OFFSET = 100;
 
 /* Used for checking clock speed */
 
@@ -277,7 +278,7 @@ async function getAudioMothPacket () {
 
     const milliseconds = Date.now() % constants.MILLISECONDS_IN_SECOND;
 
-    let delay = constants.MILLISECONDS_IN_SECOND / 2 - milliseconds;
+    let delay = DEFAULT_REQUEST_OFFSET - milliseconds;
 
     if (delay < 0) delay += constants.MILLISECONDS_IN_SECOND;
 
@@ -544,7 +545,7 @@ function configureDevice () {
 
     const sendTime = new Date();
 
-    let delay = constants.MILLISECONDS_IN_SECOND - sendTime.getMilliseconds() - USB_LAG;
+    let delay = constants.MILLISECONDS_IN_SECOND - sendTime.getMilliseconds();
 
     if (delay < MINIMUM_DELAY) delay += constants.MILLISECONDS_IN_SECOND;
 
@@ -586,10 +587,10 @@ function configureDevice () {
 
     if (settings.sunScheduleEnabled) {
 
-        let packedValue3 = settings.sunMode & 0b111;
-        packedValue3 |= (settings.sunDefinition & 0b11) << 3;
+        let packedValue0 = settings.sunMode & 0b111;
+        packedValue0 |= (settings.sunDefinition & 0b11) << 3;
 
-        packet[index++] = packedValue3;
+        packet[index++] = packedValue0;
 
         let latitude = settings.latitude.degrees * 100 + settings.latitude.hundredths;
         latitude *= settings.latitude.positiveDirection ? 1 : -1;
@@ -669,7 +670,29 @@ function configureDevice () {
 
     packet[index++] = 1;
 
-    packet[index++] = batteryLevelCheckbox.checked ? 0 : 1;
+    let packedValue1 = (batteryLevelCheckbox.checked ? 0 : 1);
+
+    if (constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 12, 0)) {
+
+        if (settings.requireAcousticConfig) {
+
+            packedValue1 |= (settings.requireLocationInChime ? (1 << 1) : 0);
+
+        }
+
+        packedValue1 |= (settings.useTimeZoneInChime ? (1 << 2) : 0);
+
+        if (settings.useTimeZoneInChime) {
+
+            packedValue1 |= (settings.adjustScheduleUsingTimezoneFromAcousticChime ? (1 << 3) : 0);
+
+        }
+
+        packedValue1 |= (settings.prerecordingPrepTime & 0b1111) << 4;
+
+    }
+
+    packet[index++] = packedValue1;
 
     /* For non-integer timeZones */
 
@@ -679,23 +702,29 @@ function configureDevice () {
 
     /* Duty cycle setting is inverted because setting on device is "duty cycle disabled" but having a negative checkbox would make the UI confusing */
 
-    let packedValue4 = !settings.dutyEnabled ? 1 : 0;
+    let packedValue2 = !settings.dutyEnabled ? 1 : 0;
 
     if (constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 11, 0)) {
 
-        packedValue4 |= settings.filenameWithDeviceIDEnabled ? (1 << 1) : 0;
+        packedValue2 |= settings.filenameWithDeviceIDEnabled ? (1 << 1) : 0;
 
         if (settings.timeSettingFromGPSEnabled) {
 
-            packedValue4 |= settings.acquireGpsFixBeforeAfter === 'individual' ? (1 << 2) : 0;
+            packedValue2 |= settings.acquireGpsFixBeforeAfter === 'individual' ? (1 << 2) : 0;
 
-            packedValue4 |= (settings.gpsFixTime & 0b1111) << 3;
+            packedValue2 |= (settings.gpsFixTime & 0b1111) << 3;
 
         }
 
     }
 
-    packet[index++] = packedValue4;
+    if (constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 12, 0)) {
+
+        packedValue2 |= settings.ignoreExternalMicrophoneForAcousticChime ? (1 << 7) : 0;
+
+    }
+
+    packet[index++] = packedValue2;
 
     /* Start/stop dates */
 
@@ -830,8 +859,6 @@ function configureDevice () {
     writeLittleEndianBytes(packet, index, 2, thresholdUnionValue);
     index += 2;
 
-    /* Minimum threshold duration, voltage range and whether acoustic configuration is required before deployment */
-
     let minimumThresholdDuration;
     const minimumThresholdDurations = [0, 1, 2, 5, 10, 15, 30, 60];
 
@@ -849,11 +876,11 @@ function configureDevice () {
 
     }
 
-    let packedValue0 = settings.requireAcousticConfig ? 1 : 0;
-    packedValue0 |= settings.displayVoltageRange ? (1 << 1) : 0;
-    packedValue0 |= (minimumThresholdDuration & 0b111111) << 2;
+    let packedValue3 = settings.requireAcousticConfig ? 1 : 0;
+    packedValue3 |= settings.displayVoltageRange ? (1 << 1) : 0;
+    packedValue3 |= (minimumThresholdDuration & 0b111111) << 2;
 
-    packet[index++] = packedValue0;
+    packet[index++] = packedValue3;
 
     if (settings.amplitudeThresholdingEnabled) {
 
@@ -883,10 +910,10 @@ function configureDevice () {
 
         const amplitudeThresholdDecibels = (amplitudeThresholdScaleIndex === THRESHOLD_SCALE_DECIBEL) ? Math.abs(uiSettings.getDecibelAmplitudeThreshold()) : 0;
 
-        let packedValue1 = enableAmplitudeThresholdDecibelScale & 0b1;
-        packedValue1 |= (amplitudeThresholdDecibels & 0b1111111) << 1;
+        let packedValue4 = enableAmplitudeThresholdDecibelScale & 0b1;
+        packedValue4 |= (amplitudeThresholdDecibels & 0b1111111) << 1;
 
-        packet[index++] = packedValue1;
+        packet[index++] = packedValue4;
 
         /* Percentage-scale amplitude threshold */
 
@@ -906,25 +933,25 @@ function configureDevice () {
 
         }
 
-        let packedValue2 = enableAmplitudeThresholdPercentageScale & 0b1;
-        packedValue2 |= (amplitudeThresholdPercentageMantissa & 0b1111) << 1;
-        packedValue2 |= (amplitudeThresholdPercentageExponent & 0b111) << 5;
+        let packedValue5 = enableAmplitudeThresholdPercentageScale & 0b1;
+        packedValue5 |= (amplitudeThresholdPercentageMantissa & 0b1111) << 1;
+        packedValue5 |= (amplitudeThresholdPercentageExponent & 0b111) << 5;
 
-        packet[index++] = packedValue2;
+        packet[index++] = packedValue5;
 
     } else if (settings.frequencyTriggerEnabled && constants.isNewerOrEqualSemanticVersion(trueFirmwareVersion, 1, 8, 0)) {
 
         const frequencyTriggerWindowLength = Math.log2(settings.frequencyTriggerWindowLength);
         const frequencyTriggerThreshold = uiSettings.getFrequencyFilterThresholdExponentMantissa();
 
-        let packedValue1 = frequencyTriggerWindowLength & 0b1111;
-        packedValue1 |= (frequencyTriggerThreshold.mantissa & 0b1111) << 4;
+        let packedValue6 = frequencyTriggerWindowLength & 0b1111;
+        packedValue6 |= (frequencyTriggerThreshold.mantissa & 0b1111) << 4;
 
-        packet[index++] = packedValue1;
+        packet[index++] = packedValue6;
 
-        const packedValue2 = frequencyTriggerThreshold.exponent & 0b111;
+        const packedValue7 = frequencyTriggerThreshold.exponent & 0b111;
 
-        packet[index++] = packedValue2;
+        packet[index++] = packedValue7;
 
     } else {
 
@@ -936,30 +963,30 @@ function configureDevice () {
     }
 
     /* Whether to use NiMH/LiPo voltage range for battery level indication */
-    let packedByte3 = settings.energySaverModeEnabled ? 1 : 0;
+    let packedValue8 = settings.energySaverModeEnabled ? 1 : 0;
 
     /* Whether to turn off the 48Hz DC blocking filter which is on by default */
-    packedByte3 |= settings.disable48DCFilter ? (1 << 1) : 0;
+    packedValue8 |= settings.disable48DCFilter ? (1 << 1) : 0;
 
     /* Whether to allow the time to be updated via GPS */
-    packedByte3 |= settings.timeSettingFromGPSEnabled ? (1 << 2) : 0;
+    packedValue8 |= settings.timeSettingFromGPSEnabled ? (1 << 2) : 0;
 
     /* Whether to check the magnetic switch to start a delayed schedule */
-    packedByte3 |= settings.magneticSwitchEnabled ? (1 << 3) : 0;
+    packedValue8 |= settings.magneticSwitchEnabled ? (1 << 3) : 0;
 
     /* Whether to enable the low gain range */
-    packedByte3 |= settings.lowGainRangeEnabled ? (1 << 4) : 0;
+    packedValue8 |= settings.lowGainRangeEnabled ? (1 << 4) : 0;
 
     /* Whether to enable the Goertzel frequency filter */
-    packedByte3 |= settings.frequencyTriggerEnabled ? (1 << 5) : 0;
+    packedValue8 |= settings.frequencyTriggerEnabled ? (1 << 5) : 0;
 
     /* Whether to create a new folder each day to store files */
-    packedByte3 |= settings.dailyFolders ? (1 << 6) : 0;
+    packedValue8 |= settings.dailyFolders ? (1 << 6) : 0;
 
     /* Whether to enable sunrise/sunset scheduling */
-    packedByte3 |= settings.sunScheduleEnabled ? (1 << 7) : 0;
+    packedValue8 |= settings.sunScheduleEnabled ? (1 << 7) : 0;
 
-    packet[index++] = packedByte3;
+    packet[index++] = packedValue8;
 
     console.log('Packet length: ', index);
 
@@ -973,7 +1000,7 @@ function configureDevice () {
 
     const now = new Date();
 
-    const sendTimeDiff = sendTime.getTime() - now.getTime();
+    const sendTimeDiff = sendTime.getTime() - now.getTime() - USB_LAG;
 
     /* Calculate when to re-enable time display */
 
@@ -991,7 +1018,7 @@ function configureDevice () {
 
     displayedClockError = false;
 
-    const updateDelay = sendTimeDiff <= 0 ? constants.MILLISECONDS_IN_SECOND : sendTimeDiff;
+    const updateDelay = sendTimeDiff <= 0 ? constants.MILLISECONDS_IN_SECOND / 2 : sendTimeDiff + constants.MILLISECONDS_IN_SECOND / 2;
 
     setTimeout(() => {
 
@@ -1003,7 +1030,7 @@ function configureDevice () {
 
     if (sendTimeDiff <= 0) {
 
-        console.log('Sending...');
+        console.log('Sending now.');
 
         sendAudioMothPacket(packet);
 
@@ -1011,7 +1038,7 @@ function configureDevice () {
 
     } else {
 
-        console.log('Sending in', sendTimeDiff);
+        console.log('Sending in', sendTimeDiff,'ms.');
 
         setTimeout(() => {
 
@@ -1239,6 +1266,11 @@ function getCurrentConfiguration () {
     config.lastRecordingDate = uiSchedule.getLastRecordingDate();
 
     config.requireAcousticConfig = settings.requireAcousticConfig;
+    config.requireLocationInChime = settings.requireLocationInChime;
+    config.useTimeZoneInChime = settings.useTimeZoneInChime;
+    config.adjustScheduleUsingTimezoneFromAcousticChime = settings.adjustScheduleUsingTimezoneFromAcousticChime;
+
+    config.prerecordingPrepTime = settings.prerecordingPrepTime;
 
     config.dailyFolders = settings.dailyFolders;
 
@@ -1257,6 +1289,8 @@ function getCurrentConfiguration () {
     config.acquireGpsFixBeforeAfter = settings.acquireGpsFixBeforeAfter;
 
     config.gpsFixTime = settings.gpsFixTime;
+
+    config.ignoreExternalMicrophoneForAcousticChime = settings.ignoreExternalMicrophoneForAcousticChime;
 
     config.magneticSwitchEnabled = settings.magneticSwitchEnabled;
 
@@ -1290,7 +1324,7 @@ electron.ipcRenderer.on('load', () => {
 
     const currentConfig = getCurrentConfiguration();
 
-    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, filenameWithDeviceIDEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, acquireGpsFixBeforeAfter, gpsFixTime, magneticSwitchEnabled, dailyFolders, sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition) => {
+    saveLoad.loadConfiguration(currentConfig, (timePeriods, ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, filenameWithDeviceIDEnabled, recordDuration, sleepDuration, localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate, passFiltersEnabled, filterType, lowerFilter, higherFilter, amplitudeThresholdingEnabled, amplitudeThreshold, frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold, requireAcousticConfig, requireLocationInChime, useTimeZoneInChime, adjustScheduleUsingTimezoneFromAcousticChime, prerecordingPrepTime, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, acquireGpsFixBeforeAfter, gpsFixTime, ignoreExternalMicrophoneForAcousticChime, magneticSwitchEnabled, dailyFolders, sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition) => {
 
         document.activeElement.blur();
 
@@ -1384,6 +1418,10 @@ electron.ipcRenderer.on('load', () => {
             minimumFrequencyTriggerDuration,
             frequencyTriggerThreshold,
             requireAcousticConfig,
+            requireLocationInChime,
+            useTimeZoneInChime,
+            adjustScheduleUsingTimezoneFromAcousticChime,
+            prerecordingPrepTime,
             dailyFolders,
             displayVoltageRange,
             minimumAmplitudeThresholdDuration,
@@ -1394,6 +1432,7 @@ electron.ipcRenderer.on('load', () => {
             timeSettingFromGPSEnabled,
             acquireGpsFixBeforeAfter,
             gpsFixTime,
+            ignoreExternalMicrophoneForAcousticChime,
             magneticSwitchEnabled,
             sunRounding,
             sunDefinition

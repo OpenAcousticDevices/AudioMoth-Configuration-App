@@ -38,6 +38,10 @@ const DEFAULT_SETTINGS = {
     minimumFrequencyTriggerDuration: 0,
     frequencyTriggerThreshold: 0.001,
     requireAcousticConfig: false,
+    requireLocationInChime: false,
+    useTimeZoneInChime: false,
+    adjustScheduleUsingTimezoneFromAcousticChime: false,
+    prerecordingPrepTime: 2,
     dailyFolders: false,
     displayVoltageRange: false,
     minimumAmplitudeThresholdDuration: 0,
@@ -48,6 +52,7 @@ const DEFAULT_SETTINGS = {
     timeSettingFromGPSEnabled: false,
     acquireGpsFixBeforeAfter: 'period',
     gpsFixTime: 2,
+    ignoreExternalMicrophoneForAcousticChime: false,
     magneticSwitchEnabled: false,
     sunScheduleEnabled: false,
     latitude: {
@@ -137,6 +142,10 @@ function saveConfiguration (currentConfig, callback) {
     configuration += '"minimumFrequencyTriggerDuration": ' + currentConfig.minimumFrequencyTriggerDuration + ',\r\n';
     configuration += '"frequencyTriggerThreshold": ' + currentConfig.frequencyTriggerThreshold + ',\r\n';
     configuration += '"requireAcousticConfig": ' + currentConfig.requireAcousticConfig + ',\r\n';
+    configuration += '"requireLocationInChime": ' + currentConfig.requireLocationInChime + ',\r\n';
+    configuration += '"useTimeZoneInChime": ' + currentConfig.useTimeZoneInChime + ',\r\n';
+    configuration += '"adjustScheduleUsingTimezoneFromAcousticChime": ' + currentConfig.adjustScheduleUsingTimezoneFromAcousticChime + ',\r\n';
+    configuration += '"prerecordingPrepTime": ' + currentConfig.prerecordingPrepTime + ',\r\n';
     configuration += '"dailyFolders": ' + currentConfig.dailyFolders + ',\r\n';
     configuration += '"displayVoltageRange": ' + currentConfig.displayVoltageRange + ',\r\n';
     configuration += '"amplitudeThresholdScale": \"' + amplitudeThresholdScale + '\",\r\n';
@@ -146,6 +155,7 @@ function saveConfiguration (currentConfig, callback) {
     configuration += '"lowGainRangeEnabled": ' + currentConfig.lowGainRangeEnabled + ',\r\n';
     configuration += '"timeSettingFromGPSEnabled": ' + currentConfig.timeSettingFromGPSEnabled + ',\r\n';
     configuration += '"gpsFixTime": ' + currentConfig.gpsFixTime + ',\r\n';
+    configuration += '"ignoreExternalMicrophoneForAcousticChime": ' + currentConfig.ignoreExternalMicrophoneForAcousticChime + ',\r\n';
     configuration += '"acquireGpsFixBeforeAfter": \"' + currentConfig.acquireGpsFixBeforeAfter + '\",\r\n';
     configuration += '"magneticSwitchEnabled": ' + currentConfig.magneticSwitchEnabled + ',\r\n';
 
@@ -365,6 +375,18 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     requireAcousticConfig: {
                         type: 'boolean'
                     },
+                    requireLocationInChime: {
+                        type: 'boolean'
+                    },
+                    useTimeZoneInChime: {
+                        type: 'boolean'
+                    },
+                    adjustScheduleUsingTimezoneFromAcousticChime: {
+                        type: 'boolean'
+                    },
+                    prerecordingPrepTime: {
+                        type: 'integer'
+                    },
                     dailyFolders: {
                         type: 'boolean'
                     },
@@ -394,6 +416,9 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                     },
                     gpsFixTime: {
                         type: 'integer'
+                    },
+                    ignoreExternalMicrophoneForAcousticChime: {
+                        type: 'boolean'
                     },
                     acquireGpsFixBeforeAfter: {
                         type: 'string'
@@ -478,6 +503,10 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.minimumFrequencyTriggerDuration === 'undefined');
             isMissingValues |= (typeof jsonObj.frequencyTriggerThreshold === 'undefined');
             isMissingValues |= (typeof jsonObj.requireAcousticConfig === 'undefined');
+            isMissingValues |= (typeof jsonObj.requireLocationInChime === 'undefined');
+            isMissingValues |= (typeof jsonObj.useTimeZoneInChime === 'undefined');
+            isMissingValues |= (typeof jsonObj.adjustScheduleUsingTimezoneFromAcousticChime === 'undefined');
+            isMissingValues |= (typeof jsonObj.prerecordingPrepTime === 'undefined');
             isMissingValues |= (typeof jsonObj.dailyFolders === 'undefined');
             isMissingValues |= (typeof jsonObj.displayVoltageRange === 'undefined');
             isMissingValues |= (typeof jsonObj.minimumAmplitudeThresholdDuration === 'undefined');
@@ -487,6 +516,7 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
             isMissingValues |= (typeof jsonObj.lowGainRangeEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.timeSettingFromGPSEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.gpsFixTime === 'undefined');
+            isMissingValues |= (typeof jsonObj.ignoreExternalMicrophoneForAcousticChime === 'undefined');
             isMissingValues |= (typeof jsonObj.acquireGpsFixBeforeAfter === 'undefined');
             isMissingValues |= (typeof jsonObj.magneticSwitchEnabled === 'undefined');
             isMissingValues |= (typeof jsonObj.sunScheduleEnabled === 'undefined');
@@ -538,235 +568,367 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
             }
 
-            const timePeriods = (typeof jsonObj.timePeriods === 'undefined') ? replacementValues.timePeriods : jsonObj.timePeriods;
+            let timePeriods;
+            let ledEnabled, batteryLevelCheckEnabled, sampleRateIndex, gain, dutyEnabled, filenameWithDeviceIDEnabled;
+            let recordDuration, sleepDuration;
+            let localTime, customTimeZoneOffset, firstRecordingDateEnabled, firstRecordingDate, lastRecordingDateEnabled, lastRecordingDate;
+            let passFiltersEnabled, filterType, lowerFilter, higherFilter;
+            let amplitudeThresholdingEnabled, amplitudeThreshold;
+            let frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold;
+            let requireAcousticConfig, requireLocationInChime, useTimeZoneInChime, adjustScheduleUsingTimezoneFromAcousticChime, prerecordingPrepTime;
+            let dailyFolders, displayVoltageRange, minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex, energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled;
+            let timeSettingFromGPSEnabled, gpsFixTime, ignoreExternalMicrophoneForAcousticChime, acquireGpsFixBeforeAfter;
+            let magneticSwitchEnabled, sunScheduleEnabled;
+            let latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition;
 
-            /* If startTime or endTime === 1440, read it as 0 */
+            try {
 
-            for (let i = 0; i < timePeriods.length; i++) {
+                timePeriods = (typeof jsonObj.timePeriods === 'undefined') ? replacementValues.timePeriods : jsonObj.timePeriods;
 
-                timePeriods[i].startMins = timePeriods[i].startMins === constants.MINUTES_IN_DAY ? 0 : timePeriods[i].startMins;
-                timePeriods[i].endMins = timePeriods[i].endMins === constants.MINUTES_IN_DAY ? 0 : timePeriods[i].endMins;
+                /* If startTime or endTime === 1440, read it as 0 */
 
-            }
+                for (let i = 0; i < timePeriods.length; i++) {
 
-            const ledEnabled = (typeof jsonObj.ledEnabled === 'undefined') ? replacementValues.ledEnabled : jsonObj.ledEnabled;
-
-            const batteryLevelCheckEnabled = (typeof jsonObj.batteryLevelCheckEnabled === 'undefined') ? replacementValues.batteryLevelCheckEnabled : jsonObj.batteryLevelCheckEnabled;
-
-            const sampleRateIndex = getSampleRateIndex(jsonObj.sampleRateIndex, jsonObj.sampleRate, replacementValues.sampleRate);
-
-            /* If gain is undefined, it's either missing and should be replaced, or using the old gainIndex name */
-
-            let gain = (typeof jsonObj.gain === 'undefined') ? jsonObj.gainIndex : jsonObj.gain;
-            gain = (typeof gain === 'undefined') ? replacementValues.gain : gain;
-
-            const dutyEnabled = (typeof jsonObj.dutyEnabled === 'undefined') ? replacementValues.dutyEnabled : jsonObj.dutyEnabled;
-
-            const filenameWithDeviceIDEnabled = (typeof jsonObj.filenameWithDeviceIDEnabled === 'undefined') ? replacementValues.filenameWithDeviceIDEnabled : jsonObj.filenameWithDeviceIDEnabled;
-
-            const sleepDuration = (typeof jsonObj.sleepDuration === 'undefined') ? replacementValues.sleepDuration : jsonObj.sleepDuration;
-
-            let recordDuration = (typeof jsonObj.recordDuration === 'undefined') ? jsonObj.recDuration : jsonObj.recordDuration;
-            recordDuration = (typeof recordDuration === 'undefined') ? replacementValues.recordDuration : recordDuration;
-
-            /* Try to find time zone mode. If loading an older file try to parse the localTime setting */
-
-            let localTime;
-            let customTimeZoneOffset;
-
-            if (typeof jsonObj.customTimeZoneOffset === 'undefined') {
-
-                localTime = (typeof jsonObj.localTime === 'undefined') ? replacementValues.localTime : jsonObj.localTime;
-
-            } else {
-
-                localTime = false;
-
-                customTimeZoneOffset = jsonObj.customTimeZoneOffset;
-
-            }
-
-            /* In older versions of the app, whether or not the first/last date is enabled was specified in the save file by just the presence of the date */
-
-            let firstRecordingDateEnabled;
-
-            if (typeof jsonObj.firstRecordingDateEnabled === 'undefined') {
-
-                if (typeof jsonObj.firstRecordingDate === 'undefined') {
-
-                    firstRecordingDateEnabled = false;
-
-                } else {
-
-                    firstRecordingDateEnabled = true;
+                    timePeriods[i].startMins = timePeriods[i].startMins === constants.MINUTES_IN_DAY ? 0 : timePeriods[i].startMins;
+                    timePeriods[i].endMins = timePeriods[i].endMins === constants.MINUTES_IN_DAY ? 0 : timePeriods[i].endMins;
 
                 }
 
-            } else {
+                ledEnabled = (typeof jsonObj.ledEnabled === 'undefined') ? replacementValues.ledEnabled : jsonObj.ledEnabled;
 
-                firstRecordingDateEnabled = jsonObj.firstRecordingDateEnabled;
+                batteryLevelCheckEnabled = (typeof jsonObj.batteryLevelCheckEnabled === 'undefined') ? replacementValues.batteryLevelCheckEnabled : jsonObj.batteryLevelCheckEnabled;
 
-            }
+                sampleRateIndex = getSampleRateIndex(jsonObj.sampleRateIndex, jsonObj.sampleRate, replacementValues.sampleRate);
+                const sampleRate = constants.CONFIGURATIONS[sampleRateIndex].trueSampleRate;
 
-            let lastRecordingDateEnabled;
+                /* If gain is undefined, it's either missing and should be replaced, or using the old gainIndex name */
 
-            // In older versions of the app, whether or not the first/last date is enabled was specified in the save file by just the presence of the date
+                gain = (typeof jsonObj.gain === 'undefined') ? jsonObj.gainIndex : jsonObj.gain;
+                gain = (typeof gain === 'undefined') ? replacementValues.gain : gain;
 
-            if (typeof jsonObj.lastRecordingDateEnabled === 'undefined') {
+                if (!constants.VALID_GAIN_VALUES.includes(gain)) {
 
-                if (typeof jsonObj.lastRecordingDate === 'undefined') {
-
-                    lastRecordingDateEnabled = false;
-
-                } else {
-
-                    lastRecordingDateEnabled = true;
+                    throw new Error('Gain value can only be 0, 1, 2, 3 or 4.');
 
                 }
 
-            } else {
+                dutyEnabled = (typeof jsonObj.dutyEnabled === 'undefined') ? replacementValues.dutyEnabled : jsonObj.dutyEnabled;
 
-                lastRecordingDateEnabled = jsonObj.lastRecordingDateEnabled;
+                filenameWithDeviceIDEnabled = (typeof jsonObj.filenameWithDeviceIDEnabled === 'undefined') ? replacementValues.filenameWithDeviceIDEnabled : jsonObj.filenameWithDeviceIDEnabled;
 
-            }
+                sleepDuration = (typeof jsonObj.sleepDuration === 'undefined') ? replacementValues.sleepDuration : jsonObj.sleepDuration;
 
-            let replacementFirstRecordingDate;
+                if (sleepDuration > constants.MAX_SLEEP_DURATION || sleepDuration < 0) {
 
-            if (typeof replacementValues.firstRecordingDate === 'undefined' || replacementValues.firstRecordingDate === '') {
-
-                replacementFirstRecordingDate = '';
-
-            } else {
-
-                replacementFirstRecordingDate = replacementValues.firstRecordingDate;
-
-            }
-
-            const firstRecordingDate = (typeof jsonObj.firstRecordingDate === 'undefined') ? replacementFirstRecordingDate : jsonObj.firstRecordingDate;
-
-            let replacementLastRecordingDate;
-
-            if (typeof replacementValues.lastRecordingDate === 'undefined' || replacementValues.lastRecordingDate === '') {
-
-                replacementLastRecordingDate = '';
-
-            } else {
-
-                replacementLastRecordingDate = replacementValues.lastRecordingDate;
-
-            }
-
-            const lastRecordingDate = (typeof jsonObj.lastRecordingDate === 'undefined') ? replacementLastRecordingDate : jsonObj.lastRecordingDate;
-
-            const passFiltersEnabled = (typeof jsonObj.passFiltersEnabled === 'undefined') ? replacementValues.passFiltersEnabled : jsonObj.passFiltersEnabled;
-
-            let filterType = (typeof jsonObj.filterType === 'undefined') ? replacementValues.filterType : jsonObj.filterType;
-
-            // With older versions of the config app, filter type didn't exist
-            filterType = !passFiltersEnabled ? 'none' : filterType;
-
-            const lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? replacementValues.lowerFilter : jsonObj.lowerFilter;
-            const higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? replacementValues.higherFilter : jsonObj.higherFilter;
-
-            let amplitudeThresholdingEnabled;
-
-            if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
-
-                amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
-
-            } else if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
-
-                amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
-
-            } else {
-
-                amplitudeThresholdingEnabled = replacementValues.amplitudeThresholdingEnabled;
-
-            }
-
-            const amplitudeThreshold = (typeof jsonObj.amplitudeThreshold === 'undefined') ? replacementValues.amplitudeThreshold : jsonObj.amplitudeThreshold;
-
-            const frequencyTriggerEnabled = (typeof jsonObj.frequencyTriggerEnabled === 'undefined') ? replacementValues.frequencyTriggerEnabled : jsonObj.frequencyTriggerEnabled;
-            const frequencyTriggerWindowLength = (typeof jsonObj.frequencyTriggerWindowLength === 'undefined') ? replacementValues.frequencyTriggerWindowLength : jsonObj.frequencyTriggerWindowLength;
-            const frequencyTriggerCentreFrequency = (typeof jsonObj.frequencyTriggerCentreFrequency === 'undefined') ? replacementValues.frequencyTriggerCentreFrequency : jsonObj.frequencyTriggerCentreFrequency;
-            const minimumFrequencyTriggerDuration = (typeof jsonObj.minimumFrequencyTriggerDuration === 'undefined') ? replacementValues.minimumFrequencyTriggerDuration : jsonObj.minimumFrequencyTriggerDuration;
-            const frequencyTriggerThreshold = (typeof jsonObj.frequencyTriggerThreshold === 'undefined') ? replacementValues.frequencyTriggerThreshold : jsonObj.frequencyTriggerThreshold;
-
-            const requireAcousticConfig = (typeof jsonObj.requireAcousticConfig === 'undefined') ? replacementValues.requireAcousticConfig : jsonObj.requireAcousticConfig;
-
-            const dailyFolders = (typeof jsonObj.dailyFolders === 'undefined') ? replacementValues.dailyFolders : jsonObj.dailyFolders;
-
-            const displayVoltageRange = (typeof jsonObj.displayVoltageRange === 'undefined') ? replacementValues.displayVoltageRange : jsonObj.displayVoltageRange;
-
-            const minimumAmplitudeThresholdDuration = (typeof jsonObj.minimumAmplitudeThresholdDuration === 'undefined') ? replacementValues.minimumAmplitudeThresholdDuration : jsonObj.minimumAmplitudeThresholdDuration;
-
-            const amplitudeThresholdScale = (typeof jsonObj.amplitudeThresholdScale === 'undefined') ? replacementValues.amplitudeThresholdScale : jsonObj.amplitudeThresholdScale;
-
-            let amplitudeThresholdingScaleIndex;
-
-            /* Previous versions of the app used 0 - 32768 as the amplitude threshold scale. If the scale index isn't in the save file, assume it's from an older app version and match threshold and scale to old range */
-
-            switch (amplitudeThresholdScale) {
-
-            case 'percentage':
-                amplitudeThresholdingScaleIndex = 0;
-                break;
-            case '16bit':
-                amplitudeThresholdingScaleIndex = 1;
-                break;
-            case 'decibel':
-                amplitudeThresholdingScaleIndex = 2;
-                break;
-            default:
-                amplitudeThresholdingScaleIndex = 1;
-                break;
-
-            }
-
-            const energySaverModeEnabled = (typeof jsonObj.energySaverModeEnabled === 'undefined') ? replacementValues.energySaverModeEnabled : jsonObj.energySaverModeEnabled;
-
-            const disable48DCFilter = (typeof jsonObj.disable48DCFilter === 'undefined') ? replacementValues.disable48DCFilter : jsonObj.disable48DCFilter;
-
-            const lowGainRangeEnabled = (typeof jsonObj.lowGainRangeEnabled === 'undefined') ? replacementValues.lowGainRangeEnabled : jsonObj.lowGainRangeEnabled;
-
-            const timeSettingFromGPSEnabled = (typeof jsonObj.timeSettingFromGPSEnabled === 'undefined') ? replacementValues.timeSettingFromGPSEnabled : jsonObj.timeSettingFromGPSEnabled;
-
-            const gpsFixTime = (typeof jsonObj.gpsFixTime === 'undefined') ? replacementValues.gpsFixTime : jsonObj.gpsFixTime;
-
-            const acquireGpsFixBeforeAfter = (typeof jsonObj.acquireGpsFixBeforeAfter === 'undefined') ? replacementValues.acquireGpsFixBeforeAfter : jsonObj.acquireGpsFixBeforeAfter;
-
-            const magneticSwitchEnabled = (typeof jsonObj.magneticSwitchEnabled === 'undefined') ? replacementValues.magneticSwitchEnabled : jsonObj.magneticSwitchEnabled;
-
-            let sunScheduleEnabled = (typeof jsonObj.sunScheduleEnabled === 'undefined') ? replacementValues.sunScheduleEnabled : jsonObj.sunScheduleEnabled;
-
-            if (typeof jsonObj.sunScheduleEnabled === 'undefined') {
-
-                if (timePeriods.length > 0) {
-
-                    sunScheduleEnabled = false;
-
-                } else {
-
-                    sunScheduleEnabled = replacementValues.sunScheduleEnabled;
+                    throw new Error('Sleep duration must be between 0 and ' + constants.MAX_SLEEP_DURATION + '.');
 
                 }
 
-            } else {
+                recordDuration = (typeof jsonObj.recordDuration === 'undefined') ? jsonObj.recDuration : jsonObj.recordDuration;
+                recordDuration = (typeof recordDuration === 'undefined') ? replacementValues.recordDuration : recordDuration;
 
-                sunScheduleEnabled = jsonObj.sunScheduleEnabled;
+                if (recordDuration > constants.MAX_RECORD_DURATION || recordDuration < 0) {
+
+                    throw new Error('Record duration must be between 0 and ' + constants.MAX_RECORD_DURATION + '.');
+
+                }
+
+                /* Try to find time zone mode. If loading an older file try to parse the localTime setting */
+
+                if (typeof jsonObj.customTimeZoneOffset === 'undefined') {
+
+                    localTime = (typeof jsonObj.localTime === 'undefined') ? replacementValues.localTime : jsonObj.localTime;
+
+                } else {
+
+                    localTime = false;
+
+                    customTimeZoneOffset = jsonObj.customTimeZoneOffset;
+
+                    if (customTimeZoneOffset < constants.MIN_CUSTOM_TIME_ZONE_OFFSET || customTimeZoneOffset > constants.MAX_CUSTOM_TIME_ZONE_OFFSET) {
+
+                        throw new Error('Custom time zone offset must be between ' + constants.MIN_CUSTOM_TIME_ZONE_OFFSET + ' and ' + constants.MAX_CUSTOM_TIME_ZONE_OFFSET + '.');
+
+                    }
+
+                    if (customTimeZoneOffset % 15 !== 0) {
+
+                        throw new Error('Custom time zone offset must be divisible by 15.');
+
+                    }
+
+                }
+
+                /* In older versions of the app, whether or not the first/last date is enabled was specified in the save file by just the presence of the date */
+
+                if (typeof jsonObj.firstRecordingDateEnabled === 'undefined') {
+
+                    if (typeof jsonObj.firstRecordingDate === 'undefined') {
+
+                        firstRecordingDateEnabled = false;
+
+                    } else {
+
+                        firstRecordingDateEnabled = true;
+
+                    }
+
+                } else {
+
+                    firstRecordingDateEnabled = jsonObj.firstRecordingDateEnabled;
+
+                }
+
+                // In older versions of the app, whether or not the first/last date is enabled was specified in the save file by just the presence of the date
+
+                if (typeof jsonObj.lastRecordingDateEnabled === 'undefined') {
+
+                    if (typeof jsonObj.lastRecordingDate === 'undefined') {
+
+                        lastRecordingDateEnabled = false;
+
+                    } else {
+
+                        lastRecordingDateEnabled = true;
+
+                    }
+
+                } else {
+
+                    lastRecordingDateEnabled = jsonObj.lastRecordingDateEnabled;
+
+                }
+
+                let replacementFirstRecordingDate;
+
+                if (typeof replacementValues.firstRecordingDate === 'undefined' || replacementValues.firstRecordingDate === '') {
+
+                    replacementFirstRecordingDate = '';
+
+                } else {
+
+                    replacementFirstRecordingDate = replacementValues.firstRecordingDate;
+
+                }
+
+                firstRecordingDate = (typeof jsonObj.firstRecordingDate === 'undefined') ? replacementFirstRecordingDate : jsonObj.firstRecordingDate;
+
+                let replacementLastRecordingDate;
+
+                if (typeof replacementValues.lastRecordingDate === 'undefined' || replacementValues.lastRecordingDate === '') {
+
+                    replacementLastRecordingDate = '';
+
+                } else {
+
+                    replacementLastRecordingDate = replacementValues.lastRecordingDate;
+
+                }
+
+                lastRecordingDate = (typeof jsonObj.lastRecordingDate === 'undefined') ? replacementLastRecordingDate : jsonObj.lastRecordingDate;
+
+                passFiltersEnabled = (typeof jsonObj.passFiltersEnabled === 'undefined') ? replacementValues.passFiltersEnabled : jsonObj.passFiltersEnabled;
+
+                filterType = (typeof jsonObj.filterType === 'undefined') ? replacementValues.filterType : jsonObj.filterType;
+
+                // With older versions of the config app, filter type didn't exist
+                filterType = !passFiltersEnabled ? 'none' : filterType;
+
+                lowerFilter = (typeof jsonObj.lowerFilter === 'undefined') ? replacementValues.lowerFilter : jsonObj.lowerFilter;
+                higherFilter = (typeof jsonObj.higherFilter === 'undefined') ? replacementValues.higherFilter : jsonObj.higherFilter;
+
+                const sampleRateHz = sampleRate * 1000;
+
+                if (filterType === 'low') {
+
+                    if (higherFilter < 0) {
+
+                        throw new Error('Filter frequency must be greater than 0.');
+
+                    }
+
+                    if (higherFilter > sampleRateHz / 2) {
+
+                        throw new Error('Filter frequency must be less than half current sample rate (' + (sampleRate / 2) + ' kHz).');
+
+                    }
+
+                }
+
+                if (filterType === 'band') {
+
+                    if (lowerFilter < 0) {
+
+                        throw new Error('Filter frequencies must be greater than 0.');
+
+                    }
+
+                    if (lowerFilter > higherFilter) {
+
+                        throw new Error('Lower filter frequency must be less than higher filter frequency for bandpass filter type.');
+
+                    }
+
+                    if (higherFilter > sampleRateHz / 2) {
+
+                        throw new Error('Higher filter frequency must be less than half current sample rate (' + (sampleRate / 2) + ' kHz).');
+
+                    }
+
+                }
+
+                if (filterType === 'high') {
+
+                    if (lowerFilter <= 0) {
+
+                        throw new Error('Filter frequency must be greater than 0.');
+
+                    }
+
+                    if (lowerFilter > sampleRateHz / 2) {
+
+                        throw new Error('Lower filter frequency must be less than half current sample rate (' + (sampleRate / 2) + ' kHz).');
+
+                    }
+
+                }
+
+                if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
+
+                    amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
+
+                } else if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
+
+                    amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
+
+                } else {
+
+                    amplitudeThresholdingEnabled = replacementValues.amplitudeThresholdingEnabled;
+
+                }
+
+                amplitudeThreshold = (typeof jsonObj.amplitudeThreshold === 'undefined') ? replacementValues.amplitudeThreshold : jsonObj.amplitudeThreshold;
+
+                frequencyTriggerEnabled = (typeof jsonObj.frequencyTriggerEnabled === 'undefined') ? replacementValues.frequencyTriggerEnabled : jsonObj.frequencyTriggerEnabled;
+                frequencyTriggerWindowLength = (typeof jsonObj.frequencyTriggerWindowLength === 'undefined') ? replacementValues.frequencyTriggerWindowLength : jsonObj.frequencyTriggerWindowLength;
+                frequencyTriggerCentreFrequency = (typeof jsonObj.frequencyTriggerCentreFrequency === 'undefined') ? replacementValues.frequencyTriggerCentreFrequency : jsonObj.frequencyTriggerCentreFrequency;
+                minimumFrequencyTriggerDuration = (typeof jsonObj.minimumFrequencyTriggerDuration === 'undefined') ? replacementValues.minimumFrequencyTriggerDuration : jsonObj.minimumFrequencyTriggerDuration;
+                frequencyTriggerThreshold = (typeof jsonObj.frequencyTriggerThreshold === 'undefined') ? replacementValues.frequencyTriggerThreshold : jsonObj.frequencyTriggerThreshold;
+
+                requireAcousticConfig = (typeof jsonObj.requireAcousticConfig === 'undefined') ? replacementValues.requireAcousticConfig : jsonObj.requireAcousticConfig;
+                requireLocationInChime = (typeof jsonObj.requireLocationInChime === 'undefined') ? replacementValues.requireLocationInChime : jsonObj.requireLocationInChime;
+                useTimeZoneInChime = (typeof jsonObj.useTimeZoneInChime === 'undefined') ? replacementValues.useTimeZoneInChime : jsonObj.useTimeZoneInChime;
+                adjustScheduleUsingTimezoneFromAcousticChime = (typeof jsonObj.adjustScheduleUsingTimezoneFromAcousticChime === 'undefined') ? replacementValues.adjustScheduleUsingTimezoneFromAcousticChime : jsonObj.adjustScheduleUsingTimezoneFromAcousticChime;
+
+                prerecordingPrepTime = (typeof jsonObj.prerecordingPrepTime === 'undefined') ? replacementValues.prerecordingPrepTime : jsonObj.prerecordingPrepTime;
+
+                dailyFolders = (typeof jsonObj.dailyFolders === 'undefined') ? replacementValues.dailyFolders : jsonObj.dailyFolders;
+
+                displayVoltageRange = (typeof jsonObj.displayVoltageRange === 'undefined') ? replacementValues.displayVoltageRange : jsonObj.displayVoltageRange;
+
+                minimumAmplitudeThresholdDuration = (typeof jsonObj.minimumAmplitudeThresholdDuration === 'undefined') ? replacementValues.minimumAmplitudeThresholdDuration : jsonObj.minimumAmplitudeThresholdDuration;
+
+                const amplitudeThresholdScale = (typeof jsonObj.amplitudeThresholdScale === 'undefined') ? replacementValues.amplitudeThresholdScale : jsonObj.amplitudeThresholdScale;
+
+                /* Previous versions of the app used 0 - 32768 as the amplitude threshold scale. If the scale index isn't in the save file, assume it's from an older app version and match threshold and scale to old range */
+
+                switch (amplitudeThresholdScale) {
+
+                case 'percentage':
+                    amplitudeThresholdingScaleIndex = 0;
+                    break;
+                case '16bit':
+                    amplitudeThresholdingScaleIndex = 1;
+                    break;
+                case 'decibel':
+                    amplitudeThresholdingScaleIndex = 2;
+                    break;
+                default:
+                    amplitudeThresholdingScaleIndex = 1;
+                    break;
+
+                }
+
+                if (amplitudeThresholdScale === 'percentage' && (amplitudeThreshold > constants.MAX_AMPLITUDE_THRESHOLD_PERCENTAGE || amplitudeThreshold < 0)) {
+
+                    throw new Error('Percentage amplitude threshold must be between 0 and 100.');
+
+                } else if (amplitudeThresholdScale === '16bit' && (amplitudeThreshold > constants.MAX_AMPLITUDE_THRESHOLD_16BIT || amplitudeThreshold < 0)) {
+
+                    throw new Error('16-bit amplitude threshold must be between 0 and 32768.');
+
+                } else if (amplitudeThresholdScale === 'decibel' && (amplitudeThreshold > constants.MAX_AMPLITUDE_THRESHOLD_DECIBEL || amplitudeThreshold < constants.MIN_AMPLITUDE_THRESHOLD_DECIBEL)) {
+
+                    throw new Error('Decibel amplitude threshold must be between -100 and 0.');
+
+                }
+
+                energySaverModeEnabled = (typeof jsonObj.energySaverModeEnabled === 'undefined') ? replacementValues.energySaverModeEnabled : jsonObj.energySaverModeEnabled;
+
+                disable48DCFilter = (typeof jsonObj.disable48DCFilter === 'undefined') ? replacementValues.disable48DCFilter : jsonObj.disable48DCFilter;
+
+                lowGainRangeEnabled = (typeof jsonObj.lowGainRangeEnabled === 'undefined') ? replacementValues.lowGainRangeEnabled : jsonObj.lowGainRangeEnabled;
+
+                timeSettingFromGPSEnabled = (typeof jsonObj.timeSettingFromGPSEnabled === 'undefined') ? replacementValues.timeSettingFromGPSEnabled : jsonObj.timeSettingFromGPSEnabled;
+
+                gpsFixTime = (typeof jsonObj.gpsFixTime === 'undefined') ? replacementValues.gpsFixTime : jsonObj.gpsFixTime;
+
+                if (!constants.VALID_GPS_FIX_TIMES.includes(gpsFixTime)) {
+
+                    throw new Error('GPS fix time must be one of the following values: ' + constants.VALID_GPS_FIX_TIMES.join(', ') + '.');
+
+                }
+
+                ignoreExternalMicrophoneForAcousticChime = (typeof jsonObj.ignoreExternalMicrophoneForAcousticChime === 'undefined') ? replacementValues.ignoreExternalMicrophoneForAcousticChime : jsonObj.ignoreExternalMicrophoneForAcousticChime;
+
+                acquireGpsFixBeforeAfter = (typeof jsonObj.acquireGpsFixBeforeAfter === 'undefined') ? replacementValues.acquireGpsFixBeforeAfter : jsonObj.acquireGpsFixBeforeAfter;
+
+                magneticSwitchEnabled = (typeof jsonObj.magneticSwitchEnabled === 'undefined') ? replacementValues.magneticSwitchEnabled : jsonObj.magneticSwitchEnabled;
+
+                sunScheduleEnabled = (typeof jsonObj.sunScheduleEnabled === 'undefined') ? replacementValues.sunScheduleEnabled : jsonObj.sunScheduleEnabled;
+
+                if (typeof jsonObj.sunScheduleEnabled === 'undefined') {
+
+                    if (timePeriods.length > 0) {
+
+                        sunScheduleEnabled = false;
+
+                    } else {
+
+                        sunScheduleEnabled = replacementValues.sunScheduleEnabled;
+
+                    }
+
+                } else {
+
+                    sunScheduleEnabled = jsonObj.sunScheduleEnabled;
+
+                }
+
+                latitude = (typeof jsonObj.latitude === 'undefined') ? replacementValues.latitude : jsonObj.latitude;
+                longitude = (typeof jsonObj.longitude === 'undefined') ? replacementValues.longitude : jsonObj.longitude;
+
+                sunMode = (typeof jsonObj.sunMode === 'undefined') ? replacementValues.sunMode : jsonObj.sunMode;
+
+                sunPeriods = (typeof jsonObj.sunPeriods === 'undefined') ? replacementValues.sunPeriods : jsonObj.sunPeriods;
+
+                sunRounding = (typeof jsonObj.sunRounding === 'undefined') ? replacementValues.sunRounding : jsonObj.sunRounding;
+
+                sunDefinition = (typeof jsonObj.sunDefinition === 'undefined') ? replacementValues.sunDefinition : jsonObj.sunDefinition;
+
+            } catch (error) {
+
+                console.error(error);
+
+                dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+                    type: 'error',
+                    title: 'Incorrect value',
+                    message: 'Cannot load configuration file.\n' + error.message
+                });
+
+                return;
 
             }
-
-            const latitude = (typeof jsonObj.latitude === 'undefined') ? replacementValues.latitude : jsonObj.latitude;
-            const longitude = (typeof jsonObj.longitude === 'undefined') ? replacementValues.longitude : jsonObj.longitude;
-
-            const sunMode = (typeof jsonObj.sunMode === 'undefined') ? replacementValues.sunMode : jsonObj.sunMode;
-
-            const sunPeriods = (typeof jsonObj.sunPeriods === 'undefined') ? replacementValues.sunPeriods : jsonObj.sunPeriods;
-
-            const sunRounding = (typeof jsonObj.sunRounding === 'undefined') ? replacementValues.sunRounding : jsonObj.sunRounding;
-
-            const sunDefinition = (typeof jsonObj.sunDefinition === 'undefined') ? replacementValues.sunDefinition : jsonObj.sunDefinition;
 
             callback(timePeriods,
                 ledEnabled, batteryLevelCheckEnabled,
@@ -776,9 +938,9 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
                 passFiltersEnabled, filterType, lowerFilter, higherFilter,
                 amplitudeThresholdingEnabled, amplitudeThreshold,
                 frequencyTriggerEnabled, frequencyTriggerWindowLength, frequencyTriggerCentreFrequency, minimumFrequencyTriggerDuration, frequencyTriggerThreshold,
-                requireAcousticConfig, displayVoltageRange,
+                requireAcousticConfig, requireLocationInChime, useTimeZoneInChime, adjustScheduleUsingTimezoneFromAcousticChime, prerecordingPrepTime, displayVoltageRange,
                 minimumAmplitudeThresholdDuration, amplitudeThresholdingScaleIndex,
-                energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, acquireGpsFixBeforeAfter, gpsFixTime, magneticSwitchEnabled, dailyFolders,
+                energySaverModeEnabled, disable48DCFilter, lowGainRangeEnabled, timeSettingFromGPSEnabled, acquireGpsFixBeforeAfter, gpsFixTime, ignoreExternalMicrophoneForAcousticChime, magneticSwitchEnabled, dailyFolders,
                 sunScheduleEnabled, latitude, longitude, sunMode, sunPeriods, sunRounding, sunDefinition);
 
             version = version === '0.0.0' ? '< 1.5.0' : version;

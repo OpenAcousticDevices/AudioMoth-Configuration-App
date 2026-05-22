@@ -14,14 +14,16 @@ const path = require('path');
 
 const constants = require('./constants.js');
 
-const ProgressBar = require('electron-progressbar');
-
 require('electron-debug')({
     showDevTools: true,
     devToolsMode: 'undocked'
 });
 
 let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, alignWindow, timeZoneSelectionWindow, mapWindow;
+
+let progressBarWindow;
+let progressBarMaxValue = 100;
+let allowProgressWindowClose = false;
 
 const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
 const standardWindowSettings = {
@@ -36,13 +38,6 @@ const standardWindowSettings = {
         nodeIntegration: true,
         contextIsolation: false
     }
-};
-
-let expandProgressBar, splitProgressBar, downsampleProgressBar, summariseProgressBar, alignProgressBar;
-
-const standardProgressBarSettings = {
-    closeOnComplete: false,
-    indeterminate: false
 };
 
 let timeZoneMode = constants.TIME_ZONE_MODE_UTC;
@@ -63,33 +58,6 @@ function generateSettings (width, height, title) {
 
     const settings = Object.assign({}, standardWindowSettings, uniqueSettings);
     settings.parent = mainWindow;
-
-    return settings;
-
-}
-
-function generateProgressBarSettings (title, text, detail, fileCount, parent) {
-
-    const uniqueSettings = {
-        title,
-        text,
-        detail,
-        maxValue: fileCount * 100
-    };
-
-    const settings = Object.assign({}, standardProgressBarSettings, uniqueSettings);
-
-    settings.browserWindow = {
-        parent,
-        webPreferences: {
-            enableRemoteModule: true,
-            nodeIntegration: true,
-            contextIsolation: false
-        },
-        closable: true,
-        modal: false,
-        height: process.platform === 'linux' ? 140 : 175
-    };
 
     return settings;
 
@@ -149,7 +117,7 @@ function openSplitWindow () {
 
         e.preventDefault();
 
-        if (splitProgressBar) {
+        if (progressBarWindow) {
 
             return;
 
@@ -213,7 +181,7 @@ function openExpansionWindow () {
 
         e.preventDefault();
 
-        if (expandProgressBar) {
+        if (progressBarWindow) {
 
             return;
 
@@ -277,7 +245,7 @@ function openDownsamplingWindow () {
 
         e.preventDefault();
 
-        if (downsampleProgressBar) {
+        if (progressBarWindow) {
 
             return;
 
@@ -341,7 +309,9 @@ function openSummariseWindow () {
 
         e.preventDefault();
 
-        if (summariseProgressBar) {
+        summariseWindow.webContents.send('summarise-close');
+
+        if (progressBarWindow) {
 
             return;
 
@@ -403,7 +373,7 @@ function openAlignWindow () {
 
         e.preventDefault();
 
-        if (alignProgressBar) {
+        if (progressBarWindow) {
 
             return;
 
@@ -917,55 +887,148 @@ app.on('window-all-closed', () => {
 
 app.disableHardwareAcceleration();
 
+/* Progress bar functions */
+
+function createProgressBar (windowTitle, heading, detail, maxValue, cancelable, parentWindow) {
+
+    if (!progressBarWindow) {
+
+        let windowWidth = 500;
+        const windowHeight = 200;
+
+        if (process.platform === 'linux') {
+
+            windowWidth = 495;
+
+        } else if (process.platform === 'darwin') {
+
+            windowWidth = 495;
+
+        }
+
+        const settings = generateSettings(windowWidth, windowHeight, '');
+        progressBarWindow = new BrowserWindow(settings);
+
+        progressBarWindow.setMenu(null);
+        progressBarWindow.loadURL(path.join('file://', __dirname, '/progressBar.html'));
+
+        require('@electron/remote/main').enable(progressBarWindow.webContents);
+
+        allowProgressWindowClose = cancelable;
+
+        progressBarWindow.on('close', (e) => {
+
+            if (!allowProgressWindowClose) {
+
+                e.preventDefault();
+
+            }
+
+        });
+
+    } else {
+
+        progressBarWindow.show();
+
+    }
+
+    setTimeout(() => {
+
+        progressBarWindow.webContents.send('create-progress-bar', {
+            windowTitle,
+            heading,
+            detail,
+            maxValue,
+            cancelable
+        });
+
+        progressBarMaxValue = maxValue;
+
+    }, 250);
+
+}
+
+function cancelProgressBarWindow () {
+
+    if (progressBarWindow) {
+
+        allowProgressWindowClose = true;
+        closeProgressBarWindow();
+
+    }
+
+}
+
+function closeProgressBarWindow () {
+
+    if (progressBarWindow) {
+
+        progressBarWindow.close();
+        progressBarWindow = null;
+
+    }
+
+}
+
+ipcMain.on('cancel-progress-bar', cancelProgressBarWindow);
+
+function setBarProgress (event, fileNum, progress) {
+
+    if (progressBarWindow) {
+
+        progressBarWindow.webContents.send('set-progress-bar-value', (fileNum * 100) + progress);
+
+    }
+
+}
+
+function setProgressBarError (verb, name) {
+
+    if (progressBarWindow) {
+
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Error when ' + verb + ' ' + name + '.');
+
+    }
+
+}
+
+function pollCancelled (event) {
+
+    if (progressBarWindow) {
+
+        event.returnValue = false;
+
+    } else {
+
+        event.returnValue = true;
+
+    }
+
+}
+
 /* Expansion progress bar functions */
 
 ipcMain.on('start-expansion-bar', (event, fileCount) => {
-
-    if (expandProgressBar) {
-
-        return;
-
-    }
 
     let detail = 'Starting to expand file';
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    const settings = generateProgressBarSettings('AudioMoth Configuration App - Expansion', 'Expanding files...', detail, fileCount, expansionWindow);
-
-    expandProgressBar = new ProgressBar(settings);
-
-    expandProgressBar.on('aborted', () => {
-
-        if (expandProgressBar) {
-
-            expandProgressBar.close();
-            expandProgressBar = null;
-
-        }
-
-    });
+    createProgressBar('AudioMoth Configuration App - Expansion', 'Expanding files...', detail, fileCount * 100, true, expansionWindow);
 
 });
 
-ipcMain.on('set-expansion-bar-progress', (event, fileNum, progress) => {
-
-    if (expandProgressBar) {
-
-        expandProgressBar.value = (fileNum * 100) + progress;
-
-    }
-
-});
+ipcMain.on('set-expansion-bar-progress', setBarProgress);
 
 ipcMain.on('set-expansion-bar-file', (event, fileNum, name) => {
 
-    if (expandProgressBar) {
+    if (progressBarWindow) {
 
         const index = fileNum + 1;
-        const fileCount = expandProgressBar.getOptions().maxValue / 100;
 
-        expandProgressBar.detail = 'Expanding ' + name + ' (' + index + ' of ' + fileCount + ').';
+        const fileCount = progressBarMaxValue / 100;
+
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Expanding ' + name + ' (' + index + ' of ' + fileCount + ').');
 
     }
 
@@ -973,27 +1036,23 @@ ipcMain.on('set-expansion-bar-file', (event, fileNum, name) => {
 
 ipcMain.on('set-expansion-bar-error', (event, name) => {
 
-    if (expandProgressBar) {
-
-        expandProgressBar.detail = 'Error when expanding ' + name + '.';
-
-    }
+    setProgressBarError('expanding', name);
 
 });
 
 ipcMain.on('set-expansion-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
-    if (expandProgressBar) {
+    if (progressBarWindow) {
 
         let messageText;
 
-        expandProgressBar.setCompleted();
+        progressBarWindow.webContents.send('set-progress-bar-completed');
 
         if (errorCount > 0) {
 
             messageText = 'Errors occurred in ' + errorCount + ' file';
             messageText += (errorCount === 1 ? '' : 's');
-            messageText += '.<br>';
+            messageText += '. ';
 
             if (errorWritingLog) {
 
@@ -1013,16 +1072,15 @@ ipcMain.on('set-expansion-bar-completed', (event, successCount, errorCount, erro
 
         }
 
-        expandProgressBar.detail = messageText;
+        progressBarWindow.webContents.send('set-progress-bar-detail', messageText);
 
         setTimeout(() => {
 
-            expandProgressBar.close();
-            expandProgressBar = null;
+            closeProgressBarWindow();
 
             if (expansionWindow) {
 
-                expansionWindow.send('expansion-summary-closed');
+                expansionWindow.webContents.send('expansion-summary-closed');
 
             }
 
@@ -1032,69 +1090,31 @@ ipcMain.on('set-expansion-bar-completed', (event, successCount, errorCount, erro
 
 });
 
-ipcMain.on('poll-expansion-cancelled', (event) => {
-
-    if (expandProgressBar) {
-
-        event.returnValue = false;
-
-    } else {
-
-        event.returnValue = true;
-
-    }
-
-});
+ipcMain.on('poll-expansion-cancelled', pollCancelled);
 
 /* Splitting progress bar functions */
 
 ipcMain.on('start-split-bar', (event, fileCount) => {
 
-    if (splitProgressBar) {
-
-        return;
-
-    }
-
     let detail = 'Starting to split file';
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    const settings = generateProgressBarSettings('AudioMoth Configuration App - Splitting', 'Splitting files...', detail, fileCount, splitWindow);
-
-    splitProgressBar = new ProgressBar(settings);
-
-    splitProgressBar.on('aborted', () => {
-
-        if (splitProgressBar) {
-
-            splitProgressBar.close();
-            splitProgressBar = null;
-
-        }
-
-    });
+    createProgressBar('AudioMoth Configuration App - Splitting', 'Splitting files...', detail, fileCount * 100, true, splitWindow);
 
 });
 
-ipcMain.on('set-split-bar-progress', (event, fileNum, progress) => {
-
-    if (splitProgressBar) {
-
-        splitProgressBar.value = (fileNum * 100) + progress;
-
-    }
-
-});
+ipcMain.on('set-split-bar-progress', setBarProgress);
 
 ipcMain.on('set-split-bar-file', (event, fileNum, name) => {
 
-    if (splitProgressBar) {
+    if (progressBarWindow) {
 
         const index = fileNum + 1;
-        const fileCount = splitProgressBar.getOptions().maxValue / 100;
 
-        splitProgressBar.detail = 'Splitting ' + name + ' (' + index + ' of ' + fileCount + ').';
+        const fileCount = progressBarMaxValue / 100;
+
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Splitting ' + name + ' (' + index + ' of ' + fileCount + ').');
 
     }
 
@@ -1102,27 +1122,23 @@ ipcMain.on('set-split-bar-file', (event, fileNum, name) => {
 
 ipcMain.on('set-split-bar-error', (event, name) => {
 
-    if (splitProgressBar) {
-
-        splitProgressBar.detail = 'Error when splitting ' + name + '.';
-
-    }
+    setProgressBarError('splitting', name);
 
 });
 
 ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
-    if (splitProgressBar) {
+    if (progressBarWindow) {
 
         let messageText;
 
-        splitProgressBar.setCompleted();
+        progressBarWindow.webContents.send('set-progress-bar-completed');
 
         if (errorCount > 0) {
 
             messageText = 'Errors occurred in ' + errorCount + ' file';
             messageText += (errorCount === 1 ? '' : 's');
-            messageText += '.<br>';
+            messageText += '. ';
 
             if (errorWritingLog) {
 
@@ -1142,16 +1158,15 @@ ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWri
 
         }
 
-        splitProgressBar.detail = messageText;
+        progressBarWindow.webContents.send('set-progress-bar-detail', messageText);
 
         setTimeout(() => {
 
-            splitProgressBar.close();
-            splitProgressBar = null;
+            closeProgressBarWindow();
 
             if (splitWindow) {
 
-                splitWindow.send('split-summary-closed');
+                splitWindow.webContents.send('split-summary-closed');
 
             }
 
@@ -1161,69 +1176,30 @@ ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWri
 
 });
 
-ipcMain.on('poll-split-cancelled', (event) => {
-
-    if (splitProgressBar) {
-
-        event.returnValue = false;
-
-    } else {
-
-        event.returnValue = true;
-
-    }
-
-});
+ipcMain.on('poll-split-cancelled', pollCancelled);
 
 /* Downsampling progress bar functions */
 
 ipcMain.on('start-downsample-bar', (event, fileCount) => {
 
-    if (downsampleProgressBar) {
-
-        return;
-
-    }
-
     let detail = 'Starting to downsample file';
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    const settings = generateProgressBarSettings('AudioMoth Configuration App - Downsampling', 'Downsampling files...', detail, fileCount, downsampleWindow);
-
-    downsampleProgressBar = new ProgressBar(settings);
-
-    downsampleProgressBar.on('aborted', () => {
-
-        if (downsampleProgressBar) {
-
-            downsampleProgressBar.close();
-            downsampleProgressBar = null;
-
-        }
-
-    });
+    createProgressBar('AudioMoth Configuration App - Downsampling', 'Downsampling files...', detail, fileCount * 100, true, downsampleWindow);
 
 });
 
-ipcMain.on('set-downsample-bar-progress', (event, fileNum, progress) => {
-
-    if (downsampleProgressBar) {
-
-        downsampleProgressBar.value = (fileNum * 100) + progress;
-
-    }
-
-});
+ipcMain.on('set-downsample-bar-progress', setBarProgress);
 
 ipcMain.on('set-downsample-bar-file', (event, fileNum, name) => {
 
-    if (downsampleProgressBar) {
+    if (progressBarWindow) {
 
         const index = fileNum + 1;
-        const fileCount = downsampleProgressBar.getOptions().maxValue / 100;
+        const fileCount = progressBarMaxValue / 100;
 
-        downsampleProgressBar.detail = 'Downsampling ' + name + ' (' + index + ' of ' + fileCount + ').';
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Downsampling ' + name + ' (' + index + ' of ' + fileCount + ').');
 
     }
 
@@ -1231,27 +1207,23 @@ ipcMain.on('set-downsample-bar-file', (event, fileNum, name) => {
 
 ipcMain.on('set-downsample-bar-error', (event, name) => {
 
-    if (downsampleProgressBar) {
-
-        downsampleProgressBar.detail = 'Error when downsampling ' + name + '.';
-
-    }
+    setProgressBarError('downsampling', name);
 
 });
 
 ipcMain.on('set-downsample-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
-    if (downsampleProgressBar) {
+    if (progressBarWindow) {
 
         let messageText;
 
-        downsampleProgressBar.setCompleted();
+        progressBarWindow.webContents.send('set-progress-bar-completed');
 
         if (errorCount > 0) {
 
             messageText = 'Errors occurred in ' + errorCount + ' file';
             messageText += (errorCount === 1 ? '' : 's');
-            messageText += '.<br>';
+            messageText += '. ';
 
             if (errorWritingLog) {
 
@@ -1271,16 +1243,15 @@ ipcMain.on('set-downsample-bar-completed', (event, successCount, errorCount, err
 
         }
 
-        downsampleProgressBar.detail = messageText;
+        progressBarWindow.webContents.send('set-progress-bar-detail', messageText);
 
         setTimeout(() => {
 
-            downsampleProgressBar.close();
-            downsampleProgressBar = null;
+            closeProgressBarWindow();
 
             if (downsampleWindow) {
 
-                downsampleWindow.send('downsample-summary-closed');
+                downsampleWindow.webContents.send('downsample-summary-closed');
 
             }
 
@@ -1290,69 +1261,30 @@ ipcMain.on('set-downsample-bar-completed', (event, successCount, errorCount, err
 
 });
 
-ipcMain.on('poll-downsample-cancelled', (event) => {
-
-    if (downsampleProgressBar) {
-
-        event.returnValue = false;
-
-    } else {
-
-        event.returnValue = true;
-
-    }
-
-});
+ipcMain.on('poll-downsample-cancelled', pollCancelled);
 
 /* Summarising progress bar functions */
 
 ipcMain.on('start-summarise-bar', (event, fileCount) => {
 
-    if (summariseProgressBar) {
-
-        return;
-
-    }
-
     let detail = 'Starting to summarise file';
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    const settings = generateProgressBarSettings('AudioMoth Configuration App - Summarising', 'Summarising files...', detail, fileCount, summariseWindow);
-
-    summariseProgressBar = new ProgressBar(settings);
-
-    summariseProgressBar.on('aborted', () => {
-
-        if (summariseProgressBar) {
-
-            summariseProgressBar.close();
-            summariseProgressBar = null;
-
-        }
-
-    });
+    createProgressBar('AudioMoth Configuration App - Summarising', 'Summarising files...', detail, fileCount * 100, true, summariseWindow);
 
 });
 
-ipcMain.on('set-summarise-bar-progress', (event, fileNum, progress) => {
-
-    if (summariseProgressBar) {
-
-        summariseProgressBar.value = (fileNum * 100) + progress;
-
-    }
-
-});
+ipcMain.on('set-summarise-bar-progress', setBarProgress);
 
 ipcMain.on('set-summarise-bar-file', (event, fileNum, name) => {
 
-    if (summariseProgressBar) {
+    if (progressBarWindow) {
 
         const index = fileNum + 1;
-        const fileCount = summariseProgressBar.getOptions().maxValue / 100;
+        const fileCount = progressBarMaxValue / 100;
 
-        summariseProgressBar.detail = 'Summarising ' + name + ' (' + index + ' of ' + fileCount + ').';
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Summarising ' + name + ' (' + index + ' of ' + fileCount + ').');
 
     }
 
@@ -1360,21 +1292,17 @@ ipcMain.on('set-summarise-bar-file', (event, fileNum, name) => {
 
 ipcMain.on('set-summarise-bar-error', (event, name) => {
 
-    if (summariseProgressBar) {
-
-        summariseProgressBar.detail = 'Error when summarising ' + name + '.';
-
-    }
+    setProgressBarError('summarising', name);
 
 });
 
 ipcMain.on('set-summarise-bar-completed', (event, successCount, finaliseResult) => {
 
-    if (summariseProgressBar) {
+    if (progressBarWindow) {
 
         let messageText;
 
-        summariseProgressBar.setCompleted();
+        progressBarWindow.webContents.send('set-progress-bar-completed');
 
         if (finaliseResult.success) {
 
@@ -1389,16 +1317,15 @@ ipcMain.on('set-summarise-bar-completed', (event, successCount, finaliseResult) 
 
         }
 
-        summariseProgressBar.detail = messageText;
+        progressBarWindow.webContents.send('set-progress-bar-detail', messageText);
 
         setTimeout(() => {
 
-            summariseProgressBar.close();
-            summariseProgressBar = null;
+            closeProgressBarWindow();
 
             if (summariseWindow) {
 
-                summariseWindow.send('summarise-summary-closed');
+                summariseWindow.webContents.send('summarise-summary-closed');
 
             }
 
@@ -1408,69 +1335,30 @@ ipcMain.on('set-summarise-bar-completed', (event, successCount, finaliseResult) 
 
 });
 
-ipcMain.on('poll-summarise-cancelled', (event) => {
-
-    if (summariseProgressBar) {
-
-        event.returnValue = false;
-
-    } else {
-
-        event.returnValue = true;
-
-    }
-
-});
+ipcMain.on('poll-summarise-cancelled', pollCancelled);
 
 /* Aligning progress bar functions */
 
 ipcMain.on('start-align-bar', (event, fileCount) => {
 
-    if (alignProgressBar) {
-
-        return;
-
-    }
-
     let detail = 'Starting to synchronise file';
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    const settings = generateProgressBarSettings('AudioMoth Configuration App - Synchronising', 'Synchronising files...', detail, fileCount, alignWindow);
-
-    alignProgressBar = new ProgressBar(settings);
-
-    alignProgressBar.on('aborted', () => {
-
-        if (alignProgressBar) {
-
-            alignProgressBar.close();
-            alignProgressBar = null;
-
-        }
-
-    });
+    createProgressBar('AudioMoth Configuration App - Synchronising', 'Synchronising files...', detail, fileCount * 100, true, alignWindow);
 
 });
 
-ipcMain.on('set-align-bar-progress', (event, fileNum, progress) => {
-
-    if (alignProgressBar) {
-
-        alignProgressBar.value = (fileNum * 100) + progress;
-
-    }
-
-});
+ipcMain.on('set-align-bar-progress', setBarProgress);
 
 ipcMain.on('set-align-bar-file', (event, fileNum, name) => {
 
-    if (alignProgressBar) {
+    if (progressBarWindow) {
 
         const index = fileNum + 1;
-        const fileCount = alignProgressBar.getOptions().maxValue / 100;
+        const fileCount = progressBarMaxValue / 100;
 
-        alignProgressBar.detail = 'Synchronising ' + name + ' (' + index + ' of ' + fileCount + ').';
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Synchronising ' + name + ' (' + index + ' of ' + fileCount + ').');
 
     }
 
@@ -1478,9 +1366,9 @@ ipcMain.on('set-align-bar-file', (event, fileNum, name) => {
 
 ipcMain.on('set-align-bar-initialise-error', (event, error) => {
 
-    if (alignProgressBar) {
+    if (progressBarWindow) {
 
-        alignProgressBar.detail = 'Error when initialising: ' + error;
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Error when initialising: ' + error);
 
     }
 
@@ -1488,9 +1376,9 @@ ipcMain.on('set-align-bar-initialise-error', (event, error) => {
 
 ipcMain.on('set-align-bar-file-error', (event, name) => {
 
-    if (alignProgressBar) {
+    if (progressBarWindow) {
 
-        alignProgressBar.detail = 'Error when synchronising ' + name + '.';
+        progressBarWindow.webContents.send('set-progress-bar-detail', 'Error when synchronising ' + name + '.');
 
     }
 
@@ -1498,17 +1386,17 @@ ipcMain.on('set-align-bar-file-error', (event, name) => {
 
 ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
 
-    if (alignProgressBar) {
+    if (progressBarWindow) {
 
         let messageText;
 
-        alignProgressBar.setCompleted();
+        progressBarWindow.webContents.send('set-progress-bar-completed');
 
         if (errorCount > 0) {
 
             messageText = 'Errors occurred in ' + errorCount + ' file';
             messageText += (errorCount === 1 ? '' : 's');
-            messageText += '.<br>';
+            messageText += '. ';
             messageText += 'See ERRORS.TXT for details.';
 
         } else {
@@ -1519,16 +1407,15 @@ ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
 
         }
 
-        alignProgressBar.detail = messageText;
+        progressBarWindow.webContents.send('set-progress-bar-detail', messageText);
 
         setTimeout(() => {
 
-            alignProgressBar.close();
-            alignProgressBar = null;
+            closeProgressBarWindow();
 
             if (alignWindow) {
 
-                alignWindow.send('align-summary-closed');
+                alignWindow.webContents.send('align-summary-closed');
 
             }
 
@@ -1538,19 +1425,7 @@ ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
 
 });
 
-ipcMain.on('poll-align-cancelled', (event) => {
-
-    if (alignProgressBar) {
-
-        event.returnValue = false;
-
-    } else {
-
-        event.returnValue = true;
-
-    }
-
-});
+ipcMain.on('poll-align-cancelled', pollCancelled);
 
 /* Update which amplitude threshold scale option is checked in menu */
 
