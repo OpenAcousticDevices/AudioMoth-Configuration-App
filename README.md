@@ -21,7 +21,7 @@ npm run dist [win64/win32/mac/linux]
 
 This will place a packaged version of the app and an installer for the platform this command was run on into the `/dist` folder. Note that to sign the binary in macOS you will need to run the command above as 'sudo'. The codesign application will retreive the appropriate certificate from Keychain Access.
 
-For detailed usage instructions of the app itself and to download prebuilt installers of the latest stable version for all platforms, visit the app support site [here](http://www.openacousticdevices.info/config).
+For detailed usage instructions of the app itself and to download prebuilt installers of the latest stable version for all platforms, visit the app support site [here](https://www.openacousticdevices.info/applications).
 
 ### Related Repositories ###
 * [AudioMoth-HID](https://github.com/OpenAcousticDevices/AudioMoth-HID)
