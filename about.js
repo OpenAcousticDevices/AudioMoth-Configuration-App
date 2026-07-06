@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global document */
-
 const electron = require('electron');
 const {app, process} = require('@electron/remote');
 const audiomoth = require('audiomoth-hid');

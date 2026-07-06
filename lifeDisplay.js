@@ -8,8 +8,6 @@
 
 const constants = require('./constants.js');
 
-/* global document */
-
 const MAX_WAV_SIZE = 4294966806;
 
 /* UI components */
@@ -223,7 +221,7 @@ function calculateGpsEnergyUsage (schedule, acquireGpsFixBeforeAfter, waitMinsBe
 
             const overflow = periodLengthSecs % (recSecs + sleepSecs);
 
-            let gapCount = 0;
+            let gapCount;
 
             if (overflow === 0) {
 
@@ -336,7 +334,7 @@ exports.updateLifeDisplay = (schedule, configuration, recLength, sleepLength, am
 
     let totalSleepTime = 0;
     let totalSize = 0;
-    let maxLength = 0;
+    let maxLength;
 
     let recordingTimes = [];
 

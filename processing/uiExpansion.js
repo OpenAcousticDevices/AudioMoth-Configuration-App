@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global document */
-
 const electron = require('electron');
 const {dialog, getCurrentWindow} = require('@electron/remote');
 
@@ -184,7 +182,7 @@ function expandFiles () {
 
     let errorFilePath;
 
-    let maxLength = null;
+    let maxLength;
 
     let sleepAmount = DEFAULT_SLEEP_AMOUNT;
     let successesWithoutError = 0;

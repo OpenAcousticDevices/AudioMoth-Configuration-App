@@ -63,7 +63,7 @@ function startEndOverlaps (startTime1, endTime1, startTime2, endTime2) {
 
 }
 
-function startOverlaps (startTime1, endTime1, startTime2, endTime2) {
+function startOverlaps (startTime1, endTime1, startTime2) {
 
     const a = startTime1 < endTime1 && startTime2 >= startTime1 && startTime2 <= endTime1;
     const b = startTime1 > endTime1 && startTime2 >= startTime1;
@@ -144,7 +144,7 @@ function addTime (startMins, endMins, timePeriods) {
 
         }
 
-        if (startOverlaps(existingStartMins, existingEndMins, startMins, endMins)) {
+        if (startOverlaps(existingStartMins, existingEndMins, startMins)) {
 
             console.log('Start overlaps');
 

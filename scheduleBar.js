@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global window, document */
-
 const ui = require('./ui.js');
 const timeHandler = require('./timeHandler.js');
 const schedule = require('./schedule/schedule.js');

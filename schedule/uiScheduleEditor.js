@@ -4,8 +4,6 @@
  * November 2019
  *****************************************************************************/
 
-/* global Event */
-
 const electron = require('electron');
 
 const ariaSpeak = require('../ariaSpeak.js');

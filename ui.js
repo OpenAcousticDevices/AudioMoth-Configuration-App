@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global document */
-
 const electron = require('electron');
 
 const strftime = require('strftime');

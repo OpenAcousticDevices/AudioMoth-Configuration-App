@@ -5,7 +5,6 @@
  *****************************************************************************/
 
 /* global L */
-/* eslint-disable new-cap */
 
 const electron = require('electron');
 

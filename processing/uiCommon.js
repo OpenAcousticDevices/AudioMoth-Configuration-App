@@ -25,7 +25,7 @@ exports.getSelectedRadioValue = getSelectedRadioValue;
 exports.sleep = (milliseconds) => {
 
     const date = Date.now();
-    let currentDate = null;
+    let currentDate;
 
     do {
 

@@ -1,5 +1,5 @@
 /****************************************************************************
- * uiAlign.js
+ * uiSynchronise.js
  * openacousticdevices.info
  * October 2024
  *****************************************************************************/
@@ -17,6 +17,9 @@ const path = require('path');
 const fs = require('fs');
 
 const selectionRadios = document.getElementsByName('selection-radio');
+
+const algorithmSelect = document.getElementById('algorithm-select');
+const RESAMPLING_ALGORITHMS = [audiomothUtils.aligner.INTERPOLATION, audiomothUtils.aligner.NEAREST_NEIGHBOUR];
 
 const fileLabel = document.getElementById('file-label');
 const fileButton = document.getElementById('file-button');
@@ -527,6 +530,8 @@ function alignFiles () {
 
     const prefix = (prefixCheckbox.checked && prefixInput.value !== '') ? prefixInput.value : null;
 
+    const algorithm = RESAMPLING_ALGORITHMS[parseInt(algorithmSelect.value)];
+
     let fileIndex = 0;
 
     for (let i = 0; i < synchronisationDict.length; i++) {
@@ -624,7 +629,7 @@ function alignFiles () {
 
                 console.log('Aligning:', wavFilePath);
 
-                const alignResult = audiomothUtils.aligner.align(wavFilePath, outputPath, prefix, betweenFixesCheckbox.checked, (progress) => {
+                const alignResult = audiomothUtils.aligner.align(wavFilePath, outputPath, prefix, algorithm, betweenFixesCheckbox.checked, (progress) => {
 
                     electron.ipcRenderer.send('set-align-bar-progress', fileIndex, progress);
                     electron.ipcRenderer.send('set-align-bar-file', fileIndex, path.basename(wavFilePath));

@@ -1,7 +1,5 @@
 'use strict';
 
-/* global document */
-
 const ui = require('./ui.js');
 
 const dateInputs = document.getElementsByClassName('custom-date-input');

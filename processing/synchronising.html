@@ -23,12 +23,24 @@
 
                     <div style="border: #cdcdcd thin solid;">
 
-                        <div class="row" style="margin-top: 12px; margin-bottom: 12px;">
+                        <div class="row" style="margin-top: 12px; margin-bottom: 8px;">
                             <div class="col-9" style="padding: 0px; padding-left: 12px; text-align: left;">
                                 <label for="between-fixes-checkbox" style="margin-left: 20px; margin-bottom: 0px;">Only process files between GPS fixes:</label>
                             </div>
                             <div class="col-3" style="text-align: right; padding: 0px; padding-right: 12px;">
                                 <input id="between-fixes-checkbox" type="checkbox" style="margin-right: 20px;" checked>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-top: 0px; margin-bottom: 12px;">
+                            <div class="col-7" style="padding: 0px; padding-left: 12px; text-align: left;">
+                                <label for="algorithm-select" style="margin-left: 20px; margin-bottom: 0px; height: 100%; display: flex; align-items: center;" id="algorithm-label">Resampling algorithm:</label>
+                            </div>
+                            <div class="col-5" style="text-align: right; padding-right: 28px;" title="Which alignment algorithm to use.">
+                                <select class="form-select" id="algorithm-select" style="max-height: 32px; font-size: 10pt;">
+                                    <option selected value="0">Interpolation</option>
+                                    <option value="1">Nearest Neighbour</option>
+                                </select>
                             </div>
                         </div>
 
@@ -181,6 +193,6 @@
     </body>
 
     <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
-    <script src="uiAlign.js" charset="utf-8"></script>
+    <script src="uiSynchronise.js" charset="utf-8"></script>
 
 </html>

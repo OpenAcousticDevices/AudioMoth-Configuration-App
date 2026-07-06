@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global document */
-
 const electron = require('electron');
 
 const constants = require('../constants.js');
@@ -57,11 +55,9 @@ function dateObjectToFormattedString (d) {
 
 exports.updateTimeZoneStatus = () => {
 
-    let timeZoneText = 'UTC';
-
     timeHandler.storeTimeZoneOffset();
 
-    timeZoneText = timeHandler.getTimeZoneText();
+    let timeZoneText = timeHandler.getTimeZoneText();
 
     firstRecordingDateLabel.innerHTML = 'First recording date (' + timeZoneText + '):';
     lastRecordingDateLabel.innerHTML = 'Last recording date (' + timeZoneText + '):';

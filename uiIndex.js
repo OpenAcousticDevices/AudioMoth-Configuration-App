@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global document */
-
 const {ipcRenderer} = require('electron');
 
 const audiomoth = require('audiomoth-hid');

@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global document */
-
 const {dialog} = require('@electron/remote');
 
 const outputCheckbox = document.getElementById('output-checkbox');

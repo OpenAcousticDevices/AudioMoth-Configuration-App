@@ -6,24 +6,22 @@
 
 'use strict';
 
+/* global process, __dirname */
+
 const {app, Menu, shell, ipcMain, BrowserWindow} = require('electron');
 
-require('@electron/remote/main').initialize();
+const remoteMain = require('@electron/remote/main');
+remoteMain.initialize();
 
 const path = require('path');
 
 const constants = require('./constants.js');
-
-require('electron-debug')({
-    showDevTools: true,
-    devToolsMode: 'undocked'
-});
+const electronDebug = require('electron-debug');
 
 let mainWindow, aboutWindow, expansionWindow, splitWindow, downsampleWindow, summariseWindow, alignWindow, timeZoneSelectionWindow, mapWindow;
 
 let progressBarWindow;
 let progressBarMaxValue = 100;
-let allowProgressWindowClose = false;
 
 const iconLocation = (process.platform === 'linux') ? '/build/icon.png' : '/build/icon.ico';
 const standardWindowSettings = {
@@ -34,9 +32,9 @@ const standardWindowSettings = {
     icon: path.join(__dirname, iconLocation),
     useContentSize: true,
     webPreferences: {
-        enableRemoteModule: true,
+        contextIsolation: false,
         nodeIntegration: true,
-        contextIsolation: false
+        sandbox: false
     }
 };
 
@@ -92,10 +90,16 @@ function openSplitWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'Split AudioMoth WAV Files');
     splitWindow = new BrowserWindow(settings);
 
-    splitWindow.setMenu(null);
-    splitWindow.loadURL(path.join('file://', __dirname, 'processing/split.html'));
-
     require('@electron/remote/main').enable(splitWindow.webContents);
+
+    splitWindow.setMenu(null);
+    splitWindow.loadFile('processing/split.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(splitWindow);
+
+    }
 
     splitWindow.webContents.on('dom-ready', () => {
 
@@ -117,7 +121,7 @@ function openSplitWindow () {
 
         e.preventDefault();
 
-        if (progressBarWindow) {
+        if (progressBarWindow && !progressBarWindow.isDestroyed()) {
 
             return;
 
@@ -156,10 +160,16 @@ function openExpansionWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'Expand AudioMoth T.WAV Files');
     expansionWindow = new BrowserWindow(settings);
 
-    expansionWindow.setMenu(null);
-    expansionWindow.loadURL(path.join('file://', __dirname, 'processing/expansion.html'));
-
     require('@electron/remote/main').enable(expansionWindow.webContents);
+
+    expansionWindow.setMenu(null);
+    expansionWindow.loadFile('processing/expansion.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(expansionWindow);
+
+    }
 
     expansionWindow.webContents.on('dom-ready', () => {
 
@@ -181,7 +191,7 @@ function openExpansionWindow () {
 
         e.preventDefault();
 
-        if (progressBarWindow) {
+        if (progressBarWindow && !progressBarWindow.isDestroyed()) {
 
             return;
 
@@ -220,10 +230,16 @@ function openDownsamplingWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'Downsample AudioMoth WAV Files');
     downsampleWindow = new BrowserWindow(settings);
 
-    downsampleWindow.setMenu(null);
-    downsampleWindow.loadURL(path.join('file://', __dirname, 'processing/downsampling.html'));
-
     require('@electron/remote/main').enable(downsampleWindow.webContents);
+
+    downsampleWindow.setMenu(null);
+    downsampleWindow.loadFile('processing/downsampling.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(downsampleWindow);
+
+    }
 
     downsampleWindow.webContents.on('dom-ready', () => {
 
@@ -245,7 +261,7 @@ function openDownsamplingWindow () {
 
         e.preventDefault();
 
-        if (progressBarWindow) {
+        if (progressBarWindow && !progressBarWindow.isDestroyed()) {
 
             return;
 
@@ -284,10 +300,16 @@ function openSummariseWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'Summarise AudioMoth Files');
     summariseWindow = new BrowserWindow(settings);
 
-    summariseWindow.setMenu(null);
-    summariseWindow.loadURL(path.join('file://', __dirname, 'processing/summarise.html'));
-
     require('@electron/remote/main').enable(summariseWindow.webContents);
+
+    summariseWindow.setMenu(null);
+    summariseWindow.loadFile('processing/summarise.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(summariseWindow);
+
+    }
 
     summariseWindow.webContents.on('dom-ready', () => {
 
@@ -311,7 +333,7 @@ function openSummariseWindow () {
 
         summariseWindow.webContents.send('summarise-close');
 
-        if (progressBarWindow) {
+        if (progressBarWindow && !progressBarWindow.isDestroyed()) {
 
             return;
 
@@ -333,7 +355,7 @@ function openAlignWindow () {
     }
 
     let windowWidth = 565;
-    const windowHeight = 422;
+    const windowHeight = 462;
 
     if (process.platform === 'linux') {
 
@@ -348,10 +370,16 @@ function openAlignWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'Synchronise AudioMoth Files');
     alignWindow = new BrowserWindow(settings);
 
-    alignWindow.setMenu(null);
-    alignWindow.loadURL(path.join('file://', __dirname, 'processing/aligning.html'));
-
     require('@electron/remote/main').enable(alignWindow.webContents);
+
+    alignWindow.setMenu(null);
+    alignWindow.loadFile('processing/synchronising.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(alignWindow);
+
+    }
 
     alignWindow.webContents.on('dom-ready', () => {
 
@@ -373,7 +401,7 @@ function openAlignWindow () {
 
         e.preventDefault();
 
-        if (progressBarWindow) {
+        if (progressBarWindow && !progressBarWindow.isDestroyed()) {
 
             return;
 
@@ -412,10 +440,16 @@ function openAboutWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'About');
     aboutWindow = new BrowserWindow(settings);
 
-    aboutWindow.setMenu(null);
-    aboutWindow.loadURL(path.join('file://', __dirname, '/about.html'));
-
     require('@electron/remote/main').enable(aboutWindow.webContents);
+
+    aboutWindow.setMenu(null);
+    aboutWindow.loadFile('about.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(aboutWindow);
+
+    }
 
     aboutWindow.on('close', (e) => {
 
@@ -463,12 +497,18 @@ function openMapWindow (event, lat, lon) {
     settings.resizable = true;
     mapWindow = new BrowserWindow(settings);
 
-    mapWindow.webContents.userAgent = 'AudioMoth Configuration App/1.12.2 (+https://openacousticdevices.info; contact: theteam@openacousticdevices.info)';
+    require('@electron/remote/main').enable(mapWindow.webContents);
 
     mapWindow.setMenu(null);
-    mapWindow.loadURL(path.join('file://', __dirname, '/map.html'));
+    mapWindow.loadFile('map.html');
 
-    require('@electron/remote/main').enable(mapWindow.webContents);
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(mapWindow);
+
+    }
+
+    mapWindow.webContents.userAgent = 'AudioMoth Configuration App/1.12.2 (+https://openacousticdevices.info; contact: theteam@openacousticdevices.info)';
 
     mapWindow.on('close', (e) => {
 
@@ -528,10 +568,16 @@ function openTimeZoneSelectionWindow () {
     const settings = generateSettings(windowWidth, windowHeight, 'Select Custom Time Zone');
     timeZoneSelectionWindow = new BrowserWindow(settings);
 
-    timeZoneSelectionWindow.setMenu(null);
-    timeZoneSelectionWindow.loadURL(path.join('file://', __dirname, '/timeZoneSelection.html'));
-
     require('@electron/remote/main').enable(timeZoneSelectionWindow.webContents);
+
+    timeZoneSelectionWindow.setMenu(null);
+    timeZoneSelectionWindow.loadFile('timeZoneSelection.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(timeZoneSelectionWindow);
+
+    }
 
     timeZoneSelectionWindow.on('close', (e) => {
 
@@ -612,7 +658,7 @@ function updateSunDefinition (index) {
 app.on('ready', () => {
 
     let windowWidth = 565;
-    let windowHeight = 675;
+    let windowHeight = 628;
 
     if (process.platform === 'linux') {
 
@@ -622,7 +668,7 @@ app.on('ready', () => {
     } else if (process.platform === 'darwin') {
 
         windowWidth = 560;
-        windowHeight = 656;
+        windowHeight = 685;
 
     }
 
@@ -641,7 +687,7 @@ app.on('ready', () => {
         }
     });
 
-    require('@electron/remote/main').enable(mainWindow.webContents);
+    mainWindow.setSize(windowWidth, windowHeight);
 
     const fileMenu = {
         label: 'File',
@@ -875,7 +921,15 @@ app.on('ready', () => {
 
     Menu.setApplicationMenu(menu);
 
-    mainWindow.loadURL(path.join('file://', __dirname, '/index.html'));
+    require('@electron/remote/main').enable(mainWindow.webContents);
+
+    mainWindow.loadFile('index.html');
+
+    if (!app.isPackaged) {
+
+        electronDebug.openDevTools(mainWindow);
+
+    }
 
 });
 
@@ -889,9 +943,9 @@ app.disableHardwareAcceleration();
 
 /* Progress bar functions */
 
-function createProgressBar (windowTitle, heading, detail, maxValue, cancelable, parentWindow) {
+function createProgressBar (windowTitle, heading, detail, maxValue, parentWindow) {
 
-    if (!progressBarWindow) {
+    if (!progressBarWindow || progressBarWindow.isDestroyed()) {
 
         let windowWidth = 500;
         const windowHeight = 200;
@@ -907,22 +961,26 @@ function createProgressBar (windowTitle, heading, detail, maxValue, cancelable, 
         }
 
         const settings = generateSettings(windowWidth, windowHeight, '');
-        progressBarWindow = new BrowserWindow(settings);
-
-        progressBarWindow.setMenu(null);
-        progressBarWindow.loadURL(path.join('file://', __dirname, '/progressBar.html'));
+        progressBarWindow = new BrowserWindow({
+            ...settings,
+            modal: true,
+            parent: parentWindow
+        });
 
         require('@electron/remote/main').enable(progressBarWindow.webContents);
 
-        allowProgressWindowClose = cancelable;
+        progressBarWindow.setMenu(null);
+        progressBarWindow.loadFile('progressBar.html');
+
+        if (!app.isPackaged) {
+
+            electronDebug.openDevTools(progressBarWindow);
+
+        }
 
         progressBarWindow.on('close', (e) => {
 
-            if (!allowProgressWindowClose) {
-
-                e.preventDefault();
-
-            }
+            e.preventDefault();
 
         });
 
@@ -932,27 +990,26 @@ function createProgressBar (windowTitle, heading, detail, maxValue, cancelable, 
 
     }
 
-    setTimeout(() => {
+    progressBarWindow.webContents.once('dom-ready', () => {
 
         progressBarWindow.webContents.send('create-progress-bar', {
             windowTitle,
             heading,
             detail,
             maxValue,
-            cancelable
+            cancelable: true
         });
 
         progressBarMaxValue = maxValue;
 
-    }, 250);
+    });
 
 }
 
 function cancelProgressBarWindow () {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
-        allowProgressWindowClose = true;
         closeProgressBarWindow();
 
     }
@@ -961,10 +1018,9 @@ function cancelProgressBarWindow () {
 
 function closeProgressBarWindow () {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
-        progressBarWindow.close();
-        progressBarWindow = null;
+        progressBarWindow.destroy();
 
     }
 
@@ -974,7 +1030,7 @@ ipcMain.on('cancel-progress-bar', cancelProgressBarWindow);
 
 function setBarProgress (event, fileNum, progress) {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         progressBarWindow.webContents.send('set-progress-bar-value', (fileNum * 100) + progress);
 
@@ -984,7 +1040,7 @@ function setBarProgress (event, fileNum, progress) {
 
 function setProgressBarError (verb, name) {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         progressBarWindow.webContents.send('set-progress-bar-detail', 'Error when ' + verb + ' ' + name + '.');
 
@@ -994,7 +1050,7 @@ function setProgressBarError (verb, name) {
 
 function pollCancelled (event) {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         event.returnValue = false;
 
@@ -1014,7 +1070,7 @@ ipcMain.on('start-expansion-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    createProgressBar('AudioMoth Configuration App - Expansion', 'Expanding files...', detail, fileCount * 100, true, expansionWindow);
+    createProgressBar('AudioMoth Configuration App - Expansion', 'Expanding files...', detail, fileCount * 100, expansionWindow);
 
 });
 
@@ -1022,7 +1078,7 @@ ipcMain.on('set-expansion-bar-progress', setBarProgress);
 
 ipcMain.on('set-expansion-bar-file', (event, fileNum, name) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         const index = fileNum + 1;
 
@@ -1042,7 +1098,7 @@ ipcMain.on('set-expansion-bar-error', (event, name) => {
 
 ipcMain.on('set-expansion-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         let messageText;
 
@@ -1100,7 +1156,7 @@ ipcMain.on('start-split-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    createProgressBar('AudioMoth Configuration App - Splitting', 'Splitting files...', detail, fileCount * 100, true, splitWindow);
+    createProgressBar('AudioMoth Configuration App - Splitting', 'Splitting files...', detail, fileCount * 100, splitWindow);
 
 });
 
@@ -1108,7 +1164,7 @@ ipcMain.on('set-split-bar-progress', setBarProgress);
 
 ipcMain.on('set-split-bar-file', (event, fileNum, name) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         const index = fileNum + 1;
 
@@ -1128,7 +1184,7 @@ ipcMain.on('set-split-bar-error', (event, name) => {
 
 ipcMain.on('set-split-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         let messageText;
 
@@ -1186,7 +1242,7 @@ ipcMain.on('start-downsample-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    createProgressBar('AudioMoth Configuration App - Downsampling', 'Downsampling files...', detail, fileCount * 100, true, downsampleWindow);
+    createProgressBar('AudioMoth Configuration App - Downsampling', 'Downsampling files...', detail, fileCount * 100, downsampleWindow);
 
 });
 
@@ -1194,7 +1250,7 @@ ipcMain.on('set-downsample-bar-progress', setBarProgress);
 
 ipcMain.on('set-downsample-bar-file', (event, fileNum, name) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         const index = fileNum + 1;
         const fileCount = progressBarMaxValue / 100;
@@ -1213,7 +1269,7 @@ ipcMain.on('set-downsample-bar-error', (event, name) => {
 
 ipcMain.on('set-downsample-bar-completed', (event, successCount, errorCount, errorWritingLog) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         let messageText;
 
@@ -1271,7 +1327,7 @@ ipcMain.on('start-summarise-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    createProgressBar('AudioMoth Configuration App - Summarising', 'Summarising files...', detail, fileCount * 100, true, summariseWindow);
+    createProgressBar('AudioMoth Configuration App - Summarising', 'Summarising files...', detail, fileCount * 100, summariseWindow);
 
 });
 
@@ -1279,7 +1335,7 @@ ipcMain.on('set-summarise-bar-progress', setBarProgress);
 
 ipcMain.on('set-summarise-bar-file', (event, fileNum, name) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         const index = fileNum + 1;
         const fileCount = progressBarMaxValue / 100;
@@ -1298,7 +1354,7 @@ ipcMain.on('set-summarise-bar-error', (event, name) => {
 
 ipcMain.on('set-summarise-bar-completed', (event, successCount, finaliseResult) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         let messageText;
 
@@ -1345,7 +1401,7 @@ ipcMain.on('start-align-bar', (event, fileCount) => {
     detail += (fileCount > 1) ? 's' : '';
     detail += '.';
 
-    createProgressBar('AudioMoth Configuration App - Synchronising', 'Synchronising files...', detail, fileCount * 100, true, alignWindow);
+    createProgressBar('AudioMoth Configuration App - Synchronising', 'Synchronising files...', detail, fileCount * 100, alignWindow);
 
 });
 
@@ -1353,7 +1409,7 @@ ipcMain.on('set-align-bar-progress', setBarProgress);
 
 ipcMain.on('set-align-bar-file', (event, fileNum, name) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         const index = fileNum + 1;
         const fileCount = progressBarMaxValue / 100;
@@ -1366,7 +1422,7 @@ ipcMain.on('set-align-bar-file', (event, fileNum, name) => {
 
 ipcMain.on('set-align-bar-initialise-error', (event, error) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         progressBarWindow.webContents.send('set-progress-bar-detail', 'Error when initialising: ' + error);
 
@@ -1376,7 +1432,7 @@ ipcMain.on('set-align-bar-initialise-error', (event, error) => {
 
 ipcMain.on('set-align-bar-file-error', (event, name) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         progressBarWindow.webContents.send('set-progress-bar-detail', 'Error when synchronising ' + name + '.');
 
@@ -1386,7 +1442,7 @@ ipcMain.on('set-align-bar-file-error', (event, name) => {
 
 ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
 
-    if (progressBarWindow) {
+    if (!progressBarWindow.isDestroyed()) {
 
         let messageText;
 
@@ -1420,6 +1476,10 @@ ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
             }
 
         }, 5000);
+
+    } else {
+
+        alignWindow.webContents.send('align-summary-closed');
 
     }
 

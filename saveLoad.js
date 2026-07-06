@@ -797,10 +797,6 @@ function useLoadedConfiguration (err, currentConfig, data, callback) {
 
                     amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
 
-                } else if (typeof jsonObj.amplitudeThresholdingEnabled !== 'undefined') {
-
-                    amplitudeThresholdingEnabled = jsonObj.amplitudeThresholdingEnabled;
-
                 } else {
 
                     amplitudeThresholdingEnabled = replacementValues.amplitudeThresholdingEnabled;

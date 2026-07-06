@@ -88,7 +88,7 @@ electron.ipcRenderer.on('set-progress-bar-value', (event, value) => {
 
 });
 
-electron.ipcRenderer.on('set-progress-bar-completed', (event) => {
+electron.ipcRenderer.on('set-progress-bar-completed', () => {
 
     setProgressBarValue(progressBarMaxValue);
 

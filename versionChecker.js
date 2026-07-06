@@ -6,8 +6,6 @@
 
 'use strict';
 
-/* global XMLHttpRequest */
-
 const {app} = require('@electron/remote');
 
 const semver = require('semver');
