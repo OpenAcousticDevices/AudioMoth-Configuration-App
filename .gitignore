@@ -4,4 +4,3 @@ dist/
 package-lock.json
 .DS_Store
 .vscode/tasks.json
-package-lock.json

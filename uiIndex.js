@@ -427,28 +427,18 @@ function getTrueFirmwareVersion () {
 
 /* Send configuration packet to AudioMoth */
 
-async function sendAudioMothPacket (packet) {
+async function sendAudioMothPacket (sentPacket) {
 
-    const showError = () => {
-
-        dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
-            type: 'error',
-            title: 'Configuration failed',
-            message: 'The connected AudioMoth did not respond correctly and the configuration may not have been applied. Please try again.'
-        });
-
-        configureButton.classList.remove('grey');
-
-    };
+    let responsePacket;
 
     try {
 
-        const data = await callWithRetry(setPacket, packet, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
+        responsePacket = await callWithRetry(setPacket, sentPacket, DEFAULT_RETRY_INTERVAL, MAXIMUM_RETRIES);
 
         /* Check if the firmware version of the device being configured has a known packet length */
         /* If not, the length of the packet sent/received is used */
 
-        let packetLength = Math.min(packet.length, data.length - 1);
+        let packetLength = Math.min(sentPacket.length, responsePacket.length - 1);
 
         const trueFirmwareVersion = getTrueFirmwareVersion();
 
@@ -474,9 +464,9 @@ async function sendAudioMothPacket (packet) {
 
         for (let j = 0; j < packetLength; j++) {
 
-            if (packet[j] !== data[j + 1]) {
+            if (sentPacket[j] !== responsePacket[j + 1]) {
 
-                console.log('(' + j + ')  ' + packet[j] + ' - ' + data[j + 1]);
+                console.log('(' + j + ')  ' + sentPacket[j] + ' - ' + responsePacket[j + 1]);
 
                 matches = false;
 
@@ -486,11 +476,44 @@ async function sendAudioMothPacket (packet) {
 
         }
 
+        if (responsePacket[1] === constants.AM_USB_MSG_TYPE_ERROR_RESPONSE) throw ('Custom error');
+
         if (matches === false) throw ('Packet does not match');
 
     } catch (e) {
 
-        showError();
+        let errorTitle = 'Configuration failed';
+        let errorMessage = 'The connected AudioMoth did not respond correctly and the configuration may not have been applied. Please try again.';
+
+        if (e === 'Custom error' && responsePacket) {
+
+            console.log('Custom message received. Parsing...');
+            console.log(responsePacket);
+
+            const customErrorData = responsePacket ? responsePacket.slice(1) : [];
+            const nullTerminatorIndex = customErrorData.indexOf(0);
+
+            if (nullTerminatorIndex >= 0) {
+
+                const customErrorTextBytes = customErrorData.slice(4, nullTerminatorIndex);
+
+                if (customErrorTextBytes.length > 0 && customErrorTextBytes.every((byte) => (byte >= 32 && byte <= 126) || byte === 9 || byte === 10 || byte === 13)) {
+
+                    errorMessage = String.fromCharCode(...customErrorTextBytes);
+
+                }
+
+            }
+
+        }
+
+        dialog.showMessageBox(BrowserWindow.getFocusedWindow(), {
+            type: 'error',
+            title: errorTitle,
+            message: errorMessage
+        });
+
+        configureButton.classList.remove('grey');
 
     }
 

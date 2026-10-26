@@ -1,6 +1,6 @@
 {
   "name": "AudioMoth-Config",
-  "version": "1.13.2",
+  "version": "1.13.3",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "author": "openacousticdevices.info <theteam@openacousticdevices.info>",
@@ -24,7 +24,10 @@
     "mac": {
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.inherit.plist",
-      "target": "dmg"
+      "target": {
+        "target": "dmg",
+        "arch": "universal"
+      }
     },
     "dmg": {
       "contents": [
@@ -63,14 +66,14 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "clean-css-cli": "^5.6.3",
-    "electron": "42.5.0",
-    "electron-builder": "^26.15.3",
-    "eslint": "^10.6.0",
-    "globals": "^17.7.0",
-    "sass": "^1.101.0"
+    "electron": "43.8.3",
+    "electron-builder": "^26.18.0",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "sass": "^1.105.2"
   },
   "dependencies": {
-    "@electron/rebuild": "^4.0.6",
+    "@electron/rebuild": "^4.2.1",
     "@electron/remote": "^2.1.3",
     "@popperjs/core": "^2.11.8",
     "audiomoth-hid": "^2.3.0",
@@ -78,9 +81,9 @@
     "bootstrap": "^5.3.8",
     "bootstrap-5-vertical-tabs": "^2.0.1",
     "bootstrap-slider": "^11.0.2",
-    "electron-debug": "4.1.0",
+    "electron-debug": "5.0.0",
     "electron-localshortcut": "^3.2.1",
-    "http-cache-semantics": "^4.2.0",
+    "http-cache-semantics": "^4.3.0",
     "jquery": "^4.0.0",
     "jsonschema": "1.5.0",
     "semver": "^7.8.5",
