@@ -437,7 +437,7 @@ function openAboutWindow () {
 
     }
 
-    const settings = generateSettings(windowWidth, windowHeight, 'About');
+    const settings = generateSettings(windowWidth, windowHeight, 'About AudioMoth Configuration App');
     aboutWindow = new BrowserWindow(settings);
 
     require('@electron/remote/main').enable(aboutWindow.webContents);
@@ -624,15 +624,7 @@ function toggleNightMode () {
 
 function updateAmplitudeThreshold (index) {
 
-    const menu = Menu.getApplicationMenu();
-
-    for (let i = 0; i < 3; i++) {
-
-        const menuItem = menu.getMenuItemById('scale_' + i);
-
-        menuItem.checked = i === index;
-
-    }
+    setMenuItemsChecked(['scale_0', 'scale_1', 'scale_2'], index);
 
     mainWindow.webContents.send('amplitude-threshold-scale', index);
 
@@ -640,15 +632,7 @@ function updateAmplitudeThreshold (index) {
 
 function updateSunDefinition (index) {
 
-    const menu = Menu.getApplicationMenu();
-
-    for (let i = 0; i < 4; i++) {
-
-        const menuItem = menu.getMenuItemById('sun_' + i);
-
-        menuItem.checked = i === index;
-
-    }
+    setMenuItemsChecked(['sun_0', 'sun_1', 'sun_2', 'sun_3'], index);
 
     sunDefinitionIndex = index;
     mainWindow.webContents.send('sun-definition-change', sunDefinitionIndex);
@@ -827,7 +811,6 @@ app.on('ready', () => {
                 setTimeZoneModeMenu(constants.TIME_ZONE_MODE_UTC);
 
                 mainWindow.webContents.send('change-time-zone-mode', constants.TIME_ZONE_MODE_UTC);
-                mainWindow.webContents.send('update-schedule');
 
             }
         }, {
@@ -840,7 +823,6 @@ app.on('ready', () => {
                 setTimeZoneModeMenu(constants.TIME_ZONE_MODE_LOCAL);
 
                 mainWindow.webContents.send('change-time-zone-mode', constants.TIME_ZONE_MODE_LOCAL);
-                mainWindow.webContents.send('update-schedule');
 
             }
         }, {
@@ -1487,15 +1469,30 @@ ipcMain.on('set-align-bar-completed', (event, successCount, errorCount) => {
 
 ipcMain.on('poll-align-cancelled', pollCancelled);
 
+/* Generalised function to update which menu item is checked */
+
+function setMenuItemsChecked (menuItemIds, index) {
+
+    const menu = Menu.getApplicationMenu();
+
+    const menuItems = menuItemIds.map(id => menu.getMenuItemById(id));
+
+    index = Math.max(0, index);
+    index = Math.min(menuItems.length - 1, index);
+
+    for (let i = 0; i < menuItems.length; i++) {
+
+        menuItems[i].checked = i === index;
+
+    }
+
+}
+
 /* Update which amplitude threshold scale option is checked in menu */
 
 ipcMain.on('set-amplitude-threshold-scale', (event, index) => {
 
-    const menu = Menu.getApplicationMenu();
-
-    const scaleMenuItems = [menu.getMenuItemById('scale_0'), menu.getMenuItemById('scale_1'), menu.getMenuItemById('scale_2')];
-
-    scaleMenuItems[index].checked = true;
+    setMenuItemsChecked(['scale_0', 'scale_1', 'scale_2'], index);
 
 });
 
@@ -1503,15 +1500,7 @@ ipcMain.on('set-amplitude-threshold-scale', (event, index) => {
 
 function updateTimeZoneMenuCheckbox () {
 
-    const menu = Menu.getApplicationMenu();
-
-    const timeZoneMenuItems = [menu.getMenuItemById('timeZone_0'), menu.getMenuItemById('timeZone_1'), menu.getMenuItemById('timeZone_2')];
-
-    for (let i = 0; i < timeZoneMenuItems.length; i++) {
-
-        timeZoneMenuItems[i].checked = i === timeZoneMode;
-
-    }
+    setMenuItemsChecked(['timeZone_0', 'timeZone_1', 'timeZone_2'], timeZoneMode);
 
 }
 
@@ -1538,7 +1527,6 @@ ipcMain.on('set-custom-time-zone', (event, tz) => {
     customTimeZone = tz;
 
     mainWindow.webContents.send('change-time-zone-mode', newTimeZoneMode);
-    mainWindow.webContents.send('update-schedule');
 
 });
 
@@ -1558,10 +1546,7 @@ ipcMain.on('set-sun-definition-index', (event, index) => {
 
     sunDefinitionIndex = index;
 
-    const menu = Menu.getApplicationMenu();
-    const sunDefinitionRadioButtons = [menu.getMenuItemById('sun_0'), menu.getMenuItemById('sun_1'), menu.getMenuItemById('sun_2'), menu.getMenuItemById('sun_3')];
-
-    sunDefinitionRadioButtons[sunDefinitionIndex].checked = true;
+    setMenuItemsChecked(['sun_0', 'sun_1', 'sun_2', 'sun_3'], index);
 
 });
 

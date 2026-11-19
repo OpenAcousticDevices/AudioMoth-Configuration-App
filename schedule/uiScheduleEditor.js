@@ -169,8 +169,6 @@ function updateTimeList () {
 
 exports.updateTimeList = updateTimeList;
 
-electron.ipcRenderer.on('update-schedule', updateTimeList);
-
 function clearTimesOnClick () {
 
     schedule.setTimePeriods([]);

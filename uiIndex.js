@@ -1504,7 +1504,7 @@ electron.ipcRenderer.on('update-check', () => {
                 type: 'info',
                 buttons: ['OK'],
                 title: 'Update not needed',
-                message: 'Your app is on the latest version (' + response.latestVersion + ').'
+                message: 'AudioMoth Configuration App is on the latest version (' + response.latestVersion + ').'
             });
 
             return;
@@ -1545,6 +1545,7 @@ electron.ipcRenderer.on('night-mode', toggleNightMode);
 electron.ipcRenderer.on('change-time-zone-mode', (e, timeZoneMode) => {
 
     changeTimeZoneStatus(timeZoneMode);
+    uiSchedule.updateTimeList();
 
 });
 

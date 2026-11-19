@@ -1,6 +1,6 @@
 {
   "name": "AudioMoth-Config",
-  "version": "1.13.3",
+  "version": "1.13.4",
   "description": "The configuration app for the AudioMoth acoustic monitoring device.",
   "main": "main.js",
   "author": "openacousticdevices.info <theteam@openacousticdevices.info>",
@@ -12,9 +12,10 @@
   "scripts": {
     "postinstall": "install-app-deps && node scripts/install-electron-binary.js",
     "start": "electron .",
-    "dist": "node builder.js",
+    "dist": "rimraf dist && node builder.js",
     "buildcss": "npx sass --load-path=node_modules VerticalTabs/verticalTabs.scss VerticalTabs/verticalTabs.css",
-    "install-electron-binary": "node scripts/install-electron-binary.js"
+    "install-electron-binary": "node scripts/install-electron-binary.js",
+    "sign": "xcrun notarytool submit dist/AudioMothConfigurationAppSetup${npm_package_version}.dmg --keychain-profile \"oad\" --wait && sudo xcrun stapler staple dist/AudioMothConfigurationAppSetup${npm_package_version}.dmg"
   },
   "build": {
     "asar": {
@@ -30,6 +31,7 @@
       }
     },
     "dmg": {
+      "title": "AudioMoth-Config ${version}",
       "contents": [
         {
           "x": 110,
@@ -70,7 +72,8 @@
     "electron-builder": "^26.18.0",
     "eslint": "^10.13.0",
     "globals": "^17.13.0",
-    "sass": "^1.105.2"
+    "sass": "^1.105.2",
+    "rimraf": "^6.1.4"
   },
   "dependencies": {
     "@electron/rebuild": "^4.2.1",
